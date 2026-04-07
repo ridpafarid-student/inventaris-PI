@@ -5,6 +5,7 @@
 import { useState, useRef } from 'react';
 import { useTransaksi } from '@/hooks/useTransaksi';
 import { useBarang } from '@/hooks/useBarang';
+import { useServices } from '@/hooks/useServices';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,11 +30,13 @@ import { FileDown } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
 
 
 export default function Laporan() {
   const { transaksiList } = useTransaksi();
   const { kategoriList, barangList } = useBarang();
+  const { services } = useServices();
   const reportRef = useRef<HTMLDivElement>(null);
   
   const [startDate, setStartDate] = useState('');
@@ -56,6 +59,17 @@ export default function Laporan() {
     return matchesStart && matchesEnd && matchesTipe && matchesKategori;
   });
 
+  const filteredServices = services.filter((service) => {
+    const serviceDate = service.createdAt instanceof Timestamp
+      ? service.createdAt.toDate()
+      : new Date(service.createdAt);
+
+    const matchesStart = !startDate || serviceDate >= new Date(startDate);
+    const matchesEnd = !endDate || serviceDate <= new Date(endDate + 'T23:59:59');
+
+    return matchesStart && matchesEnd;
+  });
+
   // Calculate summary
   const summary = {
     totalMasuk: filteredTransaksi
@@ -72,6 +86,18 @@ export default function Laporan() {
       .reduce((sum, t) => sum + t.totalHarga, 0),
   };
 
+  const serviceSummary = {
+    totalServis: filteredServices.length,
+    pending: filteredServices.filter((service) => service.status === 'pending').length,
+    proses: filteredServices.filter((service) => service.status === 'proses').length,
+    menungguSparepart: filteredServices.filter((service) => service.status === 'menunggu-sparepart').length,
+    selesai: filteredServices.filter((service) => service.status === 'selesai').length,
+    totalSparepart: filteredServices.reduce(
+      (total, service) => total + (service.sparepartDigunakan?.reduce((sum, item) => sum + item.jumlah, 0) ?? 0),
+      0
+    ),
+  };
+
   // Format currency
   const formatRupiah = (value: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -81,7 +107,7 @@ export default function Laporan() {
     }).format(value);
   };
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: TransaksiStok['createdAt'] | ServiceItem['createdAt']) => {
     const date = timestamp instanceof Timestamp
       ? timestamp.toDate()
       : new Date(timestamp);
@@ -92,6 +118,36 @@ export default function Laporan() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getServiceStatusBadgeClass = (status: ServiceStatus) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-slate-100 text-slate-700';
+      case 'proses':
+        return 'bg-blue-100 text-blue-700';
+      case 'menunggu-sparepart':
+        return 'bg-amber-100 text-amber-700';
+      case 'selesai':
+        return 'bg-emerald-100 text-emerald-700';
+      default:
+        return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getServiceStatusLabel = (status: ServiceStatus) => {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'proses':
+        return 'Proses';
+      case 'menunggu-sparepart':
+        return 'Menunggu Sparepart';
+      case 'selesai':
+        return 'Selesai';
+      default:
+        return status;
+    }
   };
 
   // Export PDF
@@ -224,11 +280,40 @@ export default function Laporan() {
         </Card>
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-sky-50 border-sky-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-sky-700">Total Servis</p>
+            <p className="text-2xl font-bold text-sky-800">{serviceSummary.totalServis}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-amber-700">Belum Selesai</p>
+            <p className="text-2xl font-bold text-amber-800">
+              {serviceSummary.pending + serviceSummary.proses + serviceSummary.menungguSparepart}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-emerald-50 border-emerald-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-emerald-700">Servis Selesai</p>
+            <p className="text-2xl font-bold text-emerald-800">{serviceSummary.selesai}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-violet-50 border-violet-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-violet-700">Sparepart Terpakai</p>
+            <p className="text-2xl font-bold text-violet-800">{serviceSummary.totalSparepart}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Report Content (for PDF export) */}
       <div ref={reportRef} className="bg-white p-8">
         {/* Report Header */}
         <div className="text-center mb-8 border-b pb-4">
-          <h2 className="text-2xl font-bold text-gray-900">LAPORAN INVENTARIS BARANG</h2>
+          <h2 className="text-2xl font-bold text-gray-900">LAPORAN INVENTARIS & SERVIS</h2>
           <p className="text-gray-500 mt-1">
             Periode: {startDate ? new Date(startDate).toLocaleDateString('id-ID') : 'Semua'} - {endDate ? new Date(endDate).toLocaleDateString('id-ID') : 'Semua'}
           </p>
@@ -253,9 +338,19 @@ export default function Laporan() {
             <p className="text-sm text-gray-500">Total Nilai</p>
             <p className="text-xl font-bold">{formatRupiah(summary.nilaiMasuk + summary.nilaiKeluar)}</p>
           </div>
+          <div className="border p-3 rounded">
+            <p className="text-sm text-gray-500">Total Servis</p>
+            <p className="text-xl font-bold">{serviceSummary.totalServis}</p>
+          </div>
+          <div className="border p-3 rounded">
+            <p className="text-sm text-gray-500">Servis Selesai</p>
+            <p className="text-xl font-bold">{serviceSummary.selesai}</p>
+          </div>
         </div>
 
         {/* Table */}
+        <div className="mb-8">
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">Transaksi Stok</h3>
         <Table>
           <TableHeader>
             <TableRow>
@@ -300,10 +395,61 @@ export default function Laporan() {
             )}
           </TableBody>
         </Table>
+        </div>
+
+        <div>
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">Manajemen Servis</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No</TableHead>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Pelanggan</TableHead>
+                <TableHead>Perangkat</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sparepart</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredServices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Tidak ada data servis
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredServices.map((service, index) => (
+                  <TableRow key={service.id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{formatDate(service.createdAt)}</TableCell>
+                    <TableCell>
+                      <p className="font-medium">{service.namaPelanggan}</p>
+                      <p className="text-xs text-gray-500">{service.nomorHp}</p>
+                    </TableCell>
+                    <TableCell>
+                      <p className="font-medium">{service.modelPerangkat}</p>
+                      <p className="text-xs text-gray-500">{service.jenisPerangkat}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getServiceStatusBadgeClass(service.status)}>
+                        {getServiceStatusLabel(service.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {service.sparepartDigunakan?.length
+                        ? service.sparepartDigunakan.map((item) => `${item.namaProduk} x${item.jumlah}`).join(', ')
+                        : '-'}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Footer */}
         <div className="mt-8 pt-4 border-t text-center text-sm text-gray-500">
-          <p>Laporan ini digenerate secara otomatis dari sistem inventaris</p>
+          <p>Laporan ini digenerate secara otomatis dari sistem inventaris dan servis</p>
         </div>
       </div>
     </div>

@@ -92,3 +92,28 @@ export interface LaporanFilter {
   tipeTransaksi: 'all' | 'masuk' | 'keluar';
   kategoriId: string;
 }
+
+// Status Servis
+export type ServiceStatus = 'pending' | 'proses' | 'menunggu-sparepart' | 'selesai';
+
+// Sparepart pada Servis
+export interface ServiceSparepartItem {
+  productId: string;
+  namaProduk: string;
+  jumlah: number;
+}
+
+// Data Servis
+export interface ServiceItem {
+  id: string;
+  namaPelanggan: string;
+  nomorHp: string;
+  jenisPerangkat: 'Laptop' | 'Smartphone' | 'CPU';
+  modelPerangkat: string;
+  deskripsiMasalah: string;
+  status: ServiceStatus;
+  sparepartDigunakan?: ServiceSparepartItem[];
+  stokDikurangi?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

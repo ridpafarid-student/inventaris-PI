@@ -12,6 +12,7 @@ import TransaksiStok from '@/pages/TransaksiStok';
 import Riwayat from '@/pages/Riwayat';
 import Laporan from '@/pages/Laporan';
 import Users from '@/pages/Users';
+import ServiceStatus from '@/pages/ServiceStatus';
 import { Toaster } from '@/components/ui/sonner';
 
 // Main App Component
@@ -34,6 +35,8 @@ function AppContent() {
         return <Laporan />;
       case 'users':
         return <Users />;
+      case 'servis':
+        return <ServiceStatus />;
       default:
         return <Dashboard />;
     }
