@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
-  Package,
   LayoutDashboard,
   Boxes,
   ArrowLeftRight,
@@ -65,14 +64,9 @@ function LayoutNavContent({
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Package className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg text-gray-900">Inventaris</h1>
-            <p className="text-xs text-gray-500">Manajemen Stok</p>
-          </div>
+        <div>
+          <h1 className="font-bold text-lg text-gray-900">Inventaris</h1>
+          <p className="text-xs text-gray-500">Manajemen Stok</p>
         </div>
       </div>
 
@@ -158,12 +152,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
       {/* Mobile Header */}
       <header className="lg:hidden bg-white border-b sticky top-0 z-50">
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Package className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-gray-900">Inventaris</span>
-          </div>
+          <span className="font-bold text-gray-900">Inventaris</span>
           
           <div className="flex items-center gap-2">
             <span className="text-xs bg-gray-100 px-2 py-1 rounded">

@@ -57,6 +57,11 @@ export default function Dashboard() {
     }).format(value);
   };
 
+  const renderPieLabel = ({ name, payload }: { name: string; payload?: { value?: number } }) => {
+    if (!payload?.value) return '';
+    return `${name} ${payload.value}`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -248,7 +253,7 @@ export default function Dashboard() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, payload }) => `${name} ${payload.value}`}
+                    label={renderPieLabel}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="chartValue"
@@ -279,7 +284,7 @@ export default function Dashboard() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, payload }) => `${name} ${payload.value}`}
+                    label={renderPieLabel}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="chartValue"
