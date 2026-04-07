@@ -26,11 +26,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown } from 'lucide-react';
+import { FileDown, FileSpreadsheet } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
+import * as XLSX from 'xlsx';
 
 
 export default function Laporan() {
@@ -150,6 +151,70 @@ export default function Laporan() {
     }
   };
 
+  const exportExcel = () => {
+    const workbook = XLSX.utils.book_new();
+
+    const summarySheet = XLSX.utils.json_to_sheet([
+      {
+        periodeMulai: startDate || 'Semua',
+        periodeSelesai: endDate || 'Semua',
+        totalTransaksi: filteredTransaksi.length,
+        totalStokMasuk: summary.totalMasuk,
+        totalStokKeluar: summary.totalKeluar,
+        nilaiMasuk: summary.nilaiMasuk,
+        nilaiKeluar: summary.nilaiKeluar,
+        totalServis: serviceSummary.totalServis,
+        servisPending: serviceSummary.pending,
+        servisProses: serviceSummary.proses,
+        servisMenungguSparepart: serviceSummary.menungguSparepart,
+        servisSelesai: serviceSummary.selesai,
+        totalSparepartTerpakai: serviceSummary.totalSparepart,
+      },
+    ]);
+
+    const transaksiSheet = XLSX.utils.json_to_sheet(
+      filteredTransaksi.map((transaksi, index) => ({
+        no: index + 1,
+        tanggal: formatDate(transaksi.createdAt),
+        barang: transaksi.barangNama,
+        kodeBarang: transaksi.barangKode,
+        tipe: transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar',
+        jumlah: transaksi.jumlah,
+        stokSebelum: transaksi.stokSebelum,
+        stokSesudah: transaksi.stokSesudah,
+        hargaSatuan: transaksi.hargaSatuan,
+        totalHarga: transaksi.totalHarga,
+        keterangan: transaksi.keterangan,
+        user: transaksi.userName,
+      }))
+    );
+
+    const servicesSheet = XLSX.utils.json_to_sheet(
+      filteredServices.map((service, index) => ({
+        no: index + 1,
+        tanggalMasuk: formatDate(service.createdAt),
+        pelanggan: service.namaPelanggan,
+        nomorHp: service.nomorHp,
+        jenisPerangkat: service.jenisPerangkat,
+        modelPerangkat: service.modelPerangkat,
+        deskripsiMasalah: service.deskripsiMasalah,
+        status: getServiceStatusLabel(service.status),
+        sparepart: service.sparepartDigunakan?.length
+          ? service.sparepartDigunakan.map((item) => `${item.namaProduk} x${item.jumlah}`).join(', ')
+          : '-',
+        stokDikurangi: service.stokDikurangi ? 'Ya' : 'Belum',
+        terakhirUpdate: formatDate(service.updatedAt),
+      }))
+    );
+
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Ringkasan');
+    XLSX.utils.book_append_sheet(workbook, transaksiSheet, 'Transaksi');
+    XLSX.utils.book_append_sheet(workbook, servicesSheet, 'Servis');
+
+    const fileName = `Laporan_Inventaris_Servis_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
   // Export PDF
   const exportPDF = async () => {
     if (!reportRef.current) return;
@@ -192,10 +257,16 @@ export default function Laporan() {
           <p className="text-gray-500">Generate dan export laporan transaksi</p>
         </div>
         
-        <Button onClick={exportPDF} className="w-full sm:w-auto">
-          <FileDown className="w-4 h-4 mr-2" />
-          Export PDF
-        </Button>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <Button onClick={exportExcel} variant="outline" className="w-full sm:w-auto">
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Export Excel
+          </Button>
+          <Button onClick={exportPDF} className="w-full sm:w-auto">
+            <FileDown className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
