@@ -11,7 +11,9 @@ import {
   Tags, 
   ArrowLeftRight, 
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Wrench,
+  CheckCircle2
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -30,10 +32,13 @@ import {
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 export default function Dashboard() {
-  const { stats, alertStok, stokByKategori, transaksi7Hari, loading } = useDashboard();
+  const { stats, alertStok, stokByKategori, aktivitas7Hari, servisByStatus, loading } = useDashboard();
   const pieChartData = stokByKategori.every((item) => item.value === 0)
     ? stokByKategori.map((item) => ({ ...item, chartValue: 1 }))
     : stokByKategori.map((item) => ({ ...item, chartValue: item.value }));
+  const servicePieChartData = servisByStatus.every((item) => item.value === 0)
+    ? servisByStatus.map((item) => ({ ...item, chartValue: 1 }))
+    : servisByStatus.map((item) => ({ ...item, chartValue: item.value }));
 
   if (loading) {
     return (
@@ -57,7 +62,7 @@ export default function Dashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">Ringkasan inventaris barang</p>
+        <p className="text-gray-500">Ringkasan inventaris barang dan manajemen servis</p>
       </div>
 
       {/* Alert Stok Menipis */}
@@ -144,6 +149,72 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Servis</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
+                  {stats.totalServis}
+                </p>
+              </div>
+              <div className="p-2 bg-sky-100 rounded-lg">
+                <Wrench className="w-5 h-5 text-sky-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Servis Hari Ini</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
+                  {stats.servisHariIni}
+                </p>
+              </div>
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <ArrowLeftRight className="w-5 h-5 text-indigo-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Servis Aktif</p>
+                <p className="text-2xl lg:text-3xl font-bold text-amber-600 mt-1">
+                  {stats.servisAktif}
+                </p>
+              </div>
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Wrench className="w-5 h-5 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Servis Selesai</p>
+                <p className="text-2xl lg:text-3xl font-bold text-emerald-600 mt-1">
+                  {stats.servisSelesai}
+                </p>
+              </div>
+              <div className="p-2 bg-emerald-100 rounded-lg">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Nilai Inventori */}
       <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
         <CardContent className="p-6">
@@ -194,26 +265,58 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Transaksi 7 Hari */}
+        {/* Servis by Status */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Aktivitas 7 Hari Terakhir</CardTitle>
+            <CardTitle className="text-lg">Status Servis</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={transaksi7Hari}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#3B82F6" name="Total Transaksi" />
-                </BarChart>
+                <PieChart>
+                  <Pie
+                    data={servicePieChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, payload }) => `${name} ${payload.value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="chartValue"
+                  >
+                    {servicePieChartData.map((_, index) => (
+                      <Cell key={`service-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(_, __, item) => item?.payload?.value ?? 0} />
+                  <Legend />
+                </PieChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Aktivitas 7 Hari Terakhir</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={aktivitas7Hari}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="transaksi" fill="#3B82F6" name="Transaksi" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="servis" fill="#10B981" name="Servis" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Alert Stok Detail */}
       {alertStok.length > 0 && (

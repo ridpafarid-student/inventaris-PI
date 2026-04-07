@@ -71,18 +71,51 @@ export default function Laporan() {
     return matchesStart && matchesEnd;
   });
 
+  const serviceStockTransaksi = filteredServices.flatMap((service) =>
+    (service.sparepartDigunakan ?? [])
+      .filter(() => service.stokDikurangi)
+      .map((item) => {
+        const barang = barangList.find((product) => product.id === item.productId);
+        const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
+
+        return {
+          id: `service-${service.id}-${item.productId}`,
+          barangId: item.productId,
+          barangNama: item.namaProduk,
+          barangKode: barang?.kodeBarang ?? '-',
+          tipe: 'keluar' as const,
+          jumlah: item.jumlah,
+          stokSebelum: 0,
+          stokSesudah: 0,
+          hargaSatuan,
+          totalHarga: hargaSatuan * item.jumlah,
+          keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
+          userId: '',
+          userName: 'Servis',
+          createdAt: service.updatedAt ?? service.createdAt,
+        };
+      })
+  );
+
+  const filteredTransaksiGabungan = [...filteredTransaksi, ...serviceStockTransaksi]
+    .sort((a, b) => {
+      const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
+
   // Calculate summary
   const summary = {
-    totalMasuk: filteredTransaksi
+    totalMasuk: filteredTransaksiGabungan
       .filter(t => t.tipe === 'masuk')
       .reduce((sum, t) => sum + t.jumlah, 0),
-    totalKeluar: filteredTransaksi
+    totalKeluar: filteredTransaksiGabungan
       .filter(t => t.tipe === 'keluar')
       .reduce((sum, t) => sum + t.jumlah, 0),
-    nilaiMasuk: filteredTransaksi
+    nilaiMasuk: filteredTransaksiGabungan
       .filter(t => t.tipe === 'masuk')
       .reduce((sum, t) => sum + t.totalHarga, 0),
-    nilaiKeluar: filteredTransaksi
+    nilaiKeluar: filteredTransaksiGabungan
       .filter(t => t.tipe === 'keluar')
       .reduce((sum, t) => sum + t.totalHarga, 0),
   };
@@ -98,6 +131,9 @@ export default function Laporan() {
       0
     ),
   };
+
+  const getServiceSparepartTotal = (service: ServiceItem) =>
+    service.sparepartDigunakan?.reduce((sum, item) => sum + item.jumlah, 0) ?? 0;
 
   // Format currency
   const formatRupiah = (value: number) => {
@@ -158,7 +194,7 @@ export default function Laporan() {
       {
         periodeMulai: startDate || 'Semua',
         periodeSelesai: endDate || 'Semua',
-        totalTransaksi: filteredTransaksi.length,
+        totalTransaksi: filteredTransaksiGabungan.length,
         totalStokMasuk: summary.totalMasuk,
         totalStokKeluar: summary.totalKeluar,
         nilaiMasuk: summary.nilaiMasuk,
@@ -173,7 +209,7 @@ export default function Laporan() {
     ]);
 
     const transaksiSheet = XLSX.utils.json_to_sheet(
-      filteredTransaksi.map((transaksi, index) => ({
+      filteredTransaksiGabungan.map((transaksi, index) => ({
         no: index + 1,
         tanggal: formatDate(transaksi.createdAt),
         barang: transaksi.barangNama,
@@ -186,6 +222,7 @@ export default function Laporan() {
         totalHarga: transaksi.totalHarga,
         keterangan: transaksi.keterangan,
         user: transaksi.userName,
+        sumber: transaksi.userName === 'Servis' ? 'Servis' : 'Transaksi Stok',
       }))
     );
 
@@ -202,6 +239,7 @@ export default function Laporan() {
         sparepart: service.sparepartDigunakan?.length
           ? service.sparepartDigunakan.map((item) => `${item.namaProduk} x${item.jumlah}`).join(', ')
           : '-',
+        totalSparepart: getServiceSparepartTotal(service),
         stokDikurangi: service.stokDikurangi ? 'Ya' : 'Belum',
         terakhirUpdate: formatDate(service.updatedAt),
       }))
@@ -403,7 +441,7 @@ export default function Laporan() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="border p-3 rounded">
             <p className="text-sm text-gray-500">Total Transaksi</p>
-            <p className="text-xl font-bold">{filteredTransaksi.length}</p>
+            <p className="text-xl font-bold">{filteredTransaksiGabungan.length}</p>
           </div>
           <div className="border p-3 rounded">
             <p className="text-sm text-gray-500">Total Nilai</p>
@@ -435,20 +473,23 @@ export default function Laporan() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransaksi.length === 0 ? (
+            {filteredTransaksiGabungan.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8">
                   Tidak ada data transaksi
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTransaksi.map((transaksi, index) => (
+              filteredTransaksiGabungan.map((transaksi, index) => (
                 <TableRow key={transaksi.id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{formatDate(transaksi.createdAt)}</TableCell>
                   <TableCell>
                     <p className="font-medium">{transaksi.barangNama}</p>
                     <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
+                    {transaksi.userName === 'Servis' && (
+                      <p className="text-xs text-blue-600">{transaksi.keterangan}</p>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge 
@@ -476,15 +517,16 @@ export default function Laporan() {
                 <TableHead>No</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Pelanggan</TableHead>
-                <TableHead>Perangkat</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Sparepart</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredServices.length === 0 ? (
+              <TableHead>Perangkat</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Sparepart</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredServices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Tidak ada data servis
                   </TableCell>
                 </TableRow>
@@ -510,6 +552,9 @@ export default function Laporan() {
                       {service.sparepartDigunakan?.length
                         ? service.sparepartDigunakan.map((item) => `${item.namaProduk} x${item.jumlah}`).join(', ')
                         : '-'}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {getServiceSparepartTotal(service)}
                     </TableCell>
                   </TableRow>
                 ))

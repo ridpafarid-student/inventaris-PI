@@ -77,6 +77,11 @@ export interface DashboardStats {
   totalTransaksiHariIni: number;
   stokMenipis: number;
   nilaiInventori: number;
+  totalServis: number;
+  servisHariIni: number;
+  servisAktif: number;
+  servisSelesai: number;
+  totalSparepartTerpakai: number;
 }
 
 // Chart Data
