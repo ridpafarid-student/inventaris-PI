@@ -419,7 +419,7 @@ export default function Laporan() {
       </div>
 
       {/* Report Content (for PDF export) */}
-      <div ref={reportRef} className="bg-white p-8">
+      <div ref={reportRef} className="bg-white p-4 md:p-8">
         {/* Report Header */}
         <div className="text-center mb-8 border-b pb-4">
           <h2 className="text-2xl font-bold text-gray-900">LAPORAN INVENTARIS & SERVIS</h2>
@@ -438,7 +438,7 @@ export default function Laporan() {
         </div>
 
         {/* Summary */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <div className="border p-3 rounded">
             <p className="text-sm text-gray-500">Total Transaksi</p>
             <p className="text-xl font-bold">{filteredTransaksiGabungan.length}</p>
@@ -460,6 +460,50 @@ export default function Laporan() {
         {/* Table */}
         <div className="mb-8">
           <h3 className="mb-3 text-lg font-semibold text-gray-900">Transaksi Stok</h3>
+          <div className="md:hidden space-y-3">
+            {filteredTransaksiGabungan.length === 0 ? (
+              <div className="rounded-lg border py-8 text-center text-gray-500">
+                Tidak ada data transaksi
+              </div>
+            ) : (
+              filteredTransaksiGabungan.map((transaksi, index) => (
+                <div key={transaksi.id} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">#{index + 1} - {formatDate(transaksi.createdAt)}</p>
+                      <p className="font-semibold text-gray-900 break-words">{transaksi.barangNama}</p>
+                      <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
+                      {transaksi.userName === 'Servis' && (
+                        <p className="text-xs text-blue-600 mt-1">{transaksi.keterangan}</p>
+                      )}
+                    </div>
+                    <Badge
+                      variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
+                      className={transaksi.tipe === 'masuk' ? 'bg-green-100 text-green-700 shrink-0' : 'bg-red-100 text-red-700 shrink-0'}
+                    >
+                      {transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-sm">
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Jumlah</p>
+                      <p className="mt-1 font-medium">{transaksi.jumlah}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Harga</p>
+                      <p className="mt-1 font-medium break-words">{formatRupiah(transaksi.hargaSatuan)}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Total</p>
+                      <p className="mt-1 font-semibold break-words">{formatRupiah(transaksi.totalHarga)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -507,10 +551,52 @@ export default function Laporan() {
             )}
           </TableBody>
         </Table>
+          </div>
         </div>
 
         <div>
           <h3 className="mb-3 text-lg font-semibold text-gray-900">Manajemen Servis</h3>
+          <div className="md:hidden space-y-3">
+            {filteredServices.length === 0 ? (
+              <div className="rounded-lg border py-8 text-center text-gray-500">
+                Tidak ada data servis
+              </div>
+            ) : (
+              filteredServices.map((service, index) => (
+                <div key={service.id} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">#{index + 1} - {formatDate(service.createdAt)}</p>
+                      <p className="font-semibold text-gray-900">{service.namaPelanggan}</p>
+                      <p className="text-xs text-gray-500">{service.nomorHp}</p>
+                    </div>
+                    <Badge className={`${getServiceStatusBadgeClass(service.status)} shrink-0`}>
+                      {getServiceStatusLabel(service.status)}
+                    </Badge>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 p-3">
+                    <p className="text-gray-500 text-sm">Perangkat</p>
+                    <p className="mt-1 font-medium text-gray-900">{service.modelPerangkat}</p>
+                    <p className="text-xs text-gray-500">{service.jenisPerangkat}</p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 p-3">
+                    <p className="text-gray-500 text-sm">Sparepart</p>
+                    <p className="mt-1 text-sm text-gray-900 break-words">
+                      {service.sparepartDigunakan?.length
+                        ? service.sparepartDigunakan.map((item) => `${item.namaProduk} x${item.jumlah}`).join(', ')
+                        : '-'}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 p-3">
+                    <p className="text-gray-500 text-sm">Total</p>
+                    <p className="mt-1 font-semibold text-gray-900">{getServiceSparepartTotal(service)}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -561,6 +647,7 @@ export default function Laporan() {
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
 
         {/* Footer */}

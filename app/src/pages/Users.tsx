@@ -83,6 +83,8 @@ export default function Users() {
     setError('');
   };
 
+  const getErrorMessage = (error: unknown) => getFirebaseAuthErrorMessage(error);
+
   // Handle register
   const handleRegister = async () => {
     setError('');
@@ -111,8 +113,8 @@ export default function Users() {
       await register(formData.email, formData.password, formData.name, formData.role);
       setIsDialogOpen(false);
       resetForm();
-    } catch (err: any) {
-      setError(getFirebaseAuthErrorMessage(err));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setRegisterLoading(false);
     }
@@ -128,7 +130,7 @@ export default function Users() {
     if (confirm(`Yakin ingin menghapus user ${user.name}?`)) {
       try {
         await deleteDoc(doc(db, 'users', user.uid));
-      } catch (err) {
+      } catch {
         alert('Gagal menghapus user');
       }
     }
@@ -260,7 +262,71 @@ export default function Users() {
       {/* Users Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden divide-y">
+            {loading ? (
+              <div className="py-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="py-8 text-center">
+                <User className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                <p className="text-gray-500">Tidak ada data pengguna</p>
+              </div>
+            ) : (
+              filteredUsers.map((user) => (
+                <div key={user.uid} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                        <span className="font-semibold text-gray-600">
+                          {user.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{user.name}</p>
+                        <p className="text-sm text-gray-500 break-all">{user.email}</p>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={user.role === 'admin' ? 'default' : 'secondary'}
+                      className={user.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-100 shrink-0' : 'bg-blue-100 text-blue-700 hover:bg-blue-100 shrink-0'}
+                    >
+                      {user.role === 'admin' ? (
+                        <Shield className="w-3 h-3 mr-1" />
+                      ) : (
+                        <UserCircle className="w-3 h-3 mr-1" />
+                      )}
+                      {user.role === 'admin' ? 'Administrator' : 'Staff'}
+                    </Badge>
+                  </div>
+
+                  <div className="rounded-lg bg-gray-50 p-3 text-sm">
+                    <p className="text-gray-500">Bergabung</p>
+                    <p className="mt-1 font-medium text-gray-900">
+                      {user.createdAt && new Date(user.createdAt).toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+
+                  {user.uid !== currentUser?.uid && (
+                    <Button
+                      variant="outline"
+                      className="w-full text-red-600 hover:text-red-700"
+                      onClick={() => handleDelete(user)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Hapus Pengguna
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

@@ -24,6 +24,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowDownLeft, ArrowUpRight, Search, Calendar, User, History } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
+import type { TransaksiStok } from '@/types';
 
 export default function Riwayat() {
   const { transaksiList, loading } = useTransaksi();
@@ -47,7 +48,7 @@ export default function Riwayat() {
     }).format(value);
   };
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: TransaksiStok['createdAt']) => {
     const date = timestamp instanceof Timestamp
       ? timestamp.toDate()
       : new Date(timestamp);
@@ -98,7 +99,66 @@ export default function Riwayat() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden divide-y">
+            {loading ? (
+              <div className="py-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              </div>
+            ) : filteredTransaksi.length === 0 ? (
+              <div className="py-8 text-center">
+                <History className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                <p className="text-gray-500">Tidak ada riwayat transaksi</p>
+              </div>
+            ) : (
+              filteredTransaksi.map((transaksi) => (
+                <div key={transaksi.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 break-words">{transaksi.barangNama}</p>
+                      <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
+                    </div>
+                    <Badge
+                      variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
+                      className={transaksi.tipe === 'masuk' ? 'bg-green-100 text-green-700 hover:bg-green-100 shrink-0' : 'bg-red-100 text-red-700 hover:bg-red-100 shrink-0'}
+                    >
+                      {transaksi.tipe === 'masuk' ? (
+                        <ArrowDownLeft className="w-3 h-3 mr-1" />
+                      ) : (
+                        <ArrowUpRight className="w-3 h-3 mr-1" />
+                      )}
+                      {transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar'}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Waktu</p>
+                      <p className="mt-1 font-medium text-gray-900">{formatDate(transaksi.createdAt)}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Jumlah</p>
+                      <p className="mt-1 font-medium text-gray-900">{transaksi.jumlah}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Stok</p>
+                      <p className="mt-1 font-medium text-gray-900">{transaksi.stokSebelum} ke {transaksi.stokSesudah}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Total</p>
+                      <p className="mt-1 font-medium text-gray-900 break-words">{formatRupiah(transaksi.totalHarga)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <User className="w-4 h-4" />
+                    <span>{transaksi.userName}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

@@ -84,7 +84,10 @@ export default function AddServiceModal({
   };
 
   const availableProducts = useMemo(
-    () => products.filter((product) => product.stok > 0),
+    () => products.filter((product) => {
+      const kategoriNama = product.kategoriNama?.toLowerCase() ?? '';
+      return product.stok > 0 && kategoriNama.includes('sparepart');
+    }),
     [products]
   );
 

@@ -469,7 +469,74 @@ export default function DataBarang() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="md:hidden divide-y">
+            {filteredBarang.length === 0 ? (
+              <div className="py-8 text-center">
+                <Package className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                <p className="text-gray-500">Tidak ada data barang</p>
+              </div>
+            ) : (
+              filteredBarang.map((barang) => (
+                <div key={barang.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">{barang.kodeBarang}</p>
+                      <p className="font-semibold text-gray-900 break-words">{barang.nama}</p>
+                      <p className="text-xs text-gray-500">{barang.satuan}</p>
+                    </div>
+                    <Badge variant="secondary" className="shrink-0 max-w-28 truncate">
+                      {barang.kategoriNama}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Stok</p>
+                      <div className="mt-1 flex items-center gap-2">
+                        {barang.stok <= barang.stokMinimum && (
+                          <AlertTriangle className="w-4 h-4 text-orange-500" />
+                        )}
+                        <span className={barang.stok <= barang.stokMinimum ? 'font-semibold text-orange-600' : 'font-semibold text-gray-900'}>
+                          {barang.stok}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Harga Beli</p>
+                      <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(barang.hargaBeli)}</p>
+                    </div>
+                    <div className="col-span-2 rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Harga Jual</p>
+                      <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(barang.hargaJual)}</p>
+                    </div>
+                  </div>
+
+                  {isAdmin && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => openEditDialog(barang)}
+                      >
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-red-600 hover:text-red-700"
+                        onClick={() => handleDelete(barang)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Hapus
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

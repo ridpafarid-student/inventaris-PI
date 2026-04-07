@@ -171,7 +171,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
             </span>
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 self-center">
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
