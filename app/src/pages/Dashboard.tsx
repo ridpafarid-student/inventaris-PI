@@ -123,6 +123,9 @@ export default function Dashboard() {
                 <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
                   {stats.totalTransaksiHariIni}
                 </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Stok harian + servis selesai hari ini
+                </p>
               </div>
               <div className="p-2 bg-purple-100 rounded-lg">
                 <ArrowLeftRight className="w-5 h-5 text-purple-600" />
@@ -175,9 +178,12 @@ export default function Dashboard() {
           <CardContent className="p-4 lg:p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-gray-500">Servis Hari Ini</p>
+                <p className="text-sm text-gray-500">Servis Masuk Hari Ini</p>
                 <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
                   {stats.servisHariIni}
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Unit baru yang dicatat hari ini
                 </p>
               </div>
               <div className="p-2 bg-indigo-100 rounded-lg">

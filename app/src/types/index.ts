@@ -119,6 +119,7 @@ export interface ServiceItem {
   status: ServiceStatus;
   sparepartDigunakan?: ServiceSparepartItem[];
   stokDikurangi?: boolean;
+  completedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

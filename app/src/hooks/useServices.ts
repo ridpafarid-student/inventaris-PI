@@ -150,6 +150,9 @@ export function useServices() {
         const spareparts = payload.sparepartDigunakan ?? currentService.sparepartDigunakan ?? [];
         const alreadyDeducted = currentService.stokDikurangi ?? false;
         const deductStock = shouldDeductStock(nextStatus, spareparts, alreadyDeducted);
+        const wasCompleted = currentService.status === 'selesai';
+        const isCompletingNow = nextStatus === 'selesai' && !wasCompleted;
+        const isReopened = nextStatus !== 'selesai' && wasCompleted;
 
         if (deductStock) {
           await applySparepartUsage(spareparts, transaction);
@@ -159,6 +162,8 @@ export function useServices() {
           ...payload,
           sparepartDigunakan: spareparts,
           stokDikurangi: alreadyDeducted || deductStock,
+          ...(isCompletingNow ? { completedAt: serverTimestamp() } : {}),
+          ...(isReopened ? { completedAt: null } : {}),
           updatedAt: serverTimestamp(),
         });
       });

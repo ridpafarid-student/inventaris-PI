@@ -79,26 +79,31 @@ export function useDashboard() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const isSameDayOrAfterStart = (value: Date | Timestamp | string | null | undefined) => {
+      if (!value) {
+        return false;
+      }
+
+      const date = value instanceof Timestamp ? value.toDate() : new Date(value);
+      return !Number.isNaN(date.getTime()) && date >= today;
+    };
+
     const totalBarang = barangList.length;
     const kategoriSet = new Set(barangList.map(b => b.kategoriId));
     const totalKategori = kategoriSet.size;
-    const totalTransaksiHariIni = transaksiList.filter((transaksi) => {
-      const tDate = transaksi.createdAt instanceof Timestamp
-        ? transaksi.createdAt.toDate()
-        : new Date(transaksi.createdAt);
-      return tDate >= today;
-    }).length;
+    const totalTransaksiStokHariIni = transaksiList.filter((transaksi) =>
+      isSameDayOrAfterStart(transaksi.createdAt)
+    ).length;
     const stokMenipis = barangList.filter(b => b.stok <= b.stokMinimum).length;
     const nilaiInventori = barangList.reduce((sum, barang) => sum + (barang.stok * barang.hargaBeli), 0);
     const totalServis = services.length;
-    const servisHariIni = services.filter((service) => {
-      const serviceDate = service.createdAt instanceof Timestamp
-        ? service.createdAt.toDate()
-        : new Date(service.createdAt);
-      return serviceDate >= today;
-    }).length;
+    const servisHariIni = services.filter((service) => isSameDayOrAfterStart(service.createdAt)).length;
     const servisAktif = services.filter((service) => service.status !== 'selesai').length;
     const servisSelesai = services.filter((service) => service.status === 'selesai').length;
+    const servisSelesaiHariIni = services.filter((service) =>
+      service.status === 'selesai' &&
+      isSameDayOrAfterStart(service.completedAt ?? service.updatedAt ?? service.createdAt)
+    ).length;
     const totalSparepartTerpakai = services.reduce(
       (sum, service) => sum + (service.sparepartDigunakan?.reduce((subtotal, item) => subtotal + item.jumlah, 0) ?? 0),
       0
@@ -107,7 +112,7 @@ export function useDashboard() {
     return {
       totalBarang,
       totalKategori,
-      totalTransaksiHariIni,
+      totalTransaksiHariIni: totalTransaksiStokHariIni + servisSelesaiHariIni,
       stokMenipis,
       nilaiInventori,
       totalServis,
