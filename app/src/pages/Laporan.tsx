@@ -2,7 +2,7 @@
 // PAGE - Laporan dengan Export PDF
 // ============================================
 
-import { useState, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTransaksi } from '@/hooks/useTransaksi';
 import { useBarang } from '@/hooks/useBarang';
 import { useServices } from '@/hooks/useServices';
@@ -26,12 +26,50 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, FileSpreadsheet } from 'lucide-react';
+import { FileDown, FileSpreadsheet, Sparkles } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
 import * as XLSX from 'xlsx';
+
+type RecommendationPriority = 'Tinggi' | 'Sedang' | 'Rendah';
+
+interface RecommendationItem {
+  title: string;
+  priority: RecommendationPriority;
+  reason: string;
+  action: string;
+}
+
+const PRIORITY_STYLES: Record<RecommendationPriority, string> = {
+  Tinggi: 'bg-red-100 text-red-700',
+  Sedang: 'bg-amber-100 text-amber-700',
+  Rendah: 'bg-emerald-100 text-emerald-700',
+};
+
+const startOfDay = (date: Date) => {
+  const nextDate = new Date(date);
+  nextDate.setHours(0, 0, 0, 0);
+  return nextDate;
+};
+
+const endOfDay = (date: Date) => {
+  const nextDate = new Date(date);
+  nextDate.setHours(23, 59, 59, 999);
+  return nextDate;
+};
+
+const daysBetweenInclusive = (start: Date, end: Date) => {
+  const milliseconds = endOfDay(end).getTime() - startOfDay(start).getTime();
+  return Math.max(1, Math.floor(milliseconds / (1000 * 60 * 60 * 24)) + 1);
+};
+
+const getRecommendationPriority = (score: number): RecommendationPriority => {
+  if (score >= 8) return 'Tinggi';
+  if (score >= 5) return 'Sedang';
+  return 'Rendah';
+};
 
 
 export default function Laporan() {
@@ -71,6 +109,46 @@ export default function Laporan() {
     return matchesStart && matchesEnd;
   });
 
+  const recommendationPeriod = useMemo(() => {
+    const today = new Date();
+
+    if (startDate && endDate) {
+      return {
+        start: startOfDay(new Date(startDate)),
+        end: endOfDay(new Date(endDate)),
+      };
+    }
+
+    if (startDate) {
+      const start = startOfDay(new Date(startDate));
+      const end = endOfDay(new Date(start.getFullYear(), start.getMonth() + 1, 0));
+      return { start, end };
+    }
+
+    if (endDate) {
+      const end = endOfDay(new Date(endDate));
+      const start = startOfDay(new Date(end.getFullYear(), end.getMonth(), 1));
+      return { start, end };
+    }
+
+    return {
+      start: startOfDay(new Date(today.getFullYear(), today.getMonth(), 1)),
+      end: endOfDay(new Date(today.getFullYear(), today.getMonth() + 1, 0)),
+    };
+  }, [endDate, startDate]);
+
+  const previousRecommendationPeriod = useMemo(() => {
+    const totalDays = daysBetweenInclusive(recommendationPeriod.start, recommendationPeriod.end);
+    const previousEnd = endOfDay(new Date(recommendationPeriod.start.getTime() - 24 * 60 * 60 * 1000));
+    const previousStart = startOfDay(new Date(previousEnd.getTime() - (totalDays - 1) * 24 * 60 * 60 * 1000));
+
+    return {
+      start: previousStart,
+      end: previousEnd,
+      totalDays,
+    };
+  }, [recommendationPeriod]);
+
   const serviceStockTransaksi = filteredServices.flatMap((service) =>
     (service.sparepartDigunakan ?? [])
       .filter(() => service.stokDikurangi)
@@ -97,12 +175,228 @@ export default function Laporan() {
       })
   );
 
+  const allServiceStockTransaksi = useMemo(() => (
+    services.flatMap((service) =>
+      (service.sparepartDigunakan ?? [])
+        .filter(() => service.stokDikurangi)
+        .map((item) => {
+          const barang = barangList.find((product) => product.id === item.productId);
+          const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
+
+          return {
+            id: `service-${service.id}-${item.productId}`,
+            barangId: item.productId,
+            barangNama: item.namaProduk,
+            barangKode: barang?.kodeBarang ?? '-',
+            tipe: 'keluar' as const,
+            jumlah: item.jumlah,
+            stokSebelum: 0,
+            stokSesudah: 0,
+            hargaSatuan,
+            totalHarga: hargaSatuan * item.jumlah,
+            keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
+            userId: '',
+            userName: 'Servis',
+            createdAt: service.updatedAt ?? service.createdAt,
+          };
+        })
+    )
+  ), [barangList, services]);
+
   const filteredTransaksiGabungan = [...filteredTransaksi, ...serviceStockTransaksi]
     .sort((a, b) => {
       const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(a.createdAt);
       const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(b.createdAt);
       return dateB.getTime() - dateA.getTime();
     });
+
+  const monthlyRecommendations = useMemo(() => {
+    const isInRange = (value: Date | Timestamp | string, start: Date, end: Date) => {
+      const date = value instanceof Timestamp ? value.toDate() : new Date(value);
+      return date >= start && date <= end;
+    };
+
+    const matchesKategoriFilter = (barangId: string) => {
+      if (filterKategori === 'all') return true;
+      const barang = barangList.find((item) => item.id === barangId);
+      return barang?.kategoriId === filterKategori;
+    };
+
+    const currentMovements = [...transaksiList, ...allServiceStockTransaksi].filter(
+      (item) =>
+        item.tipe === 'keluar' &&
+        matchesKategoriFilter(item.barangId) &&
+        isInRange(item.createdAt, recommendationPeriod.start, recommendationPeriod.end)
+    );
+
+    const previousMovements = [...transaksiList, ...allServiceStockTransaksi].filter(
+      (item) =>
+        item.tipe === 'keluar' &&
+        matchesKategoriFilter(item.barangId) &&
+        isInRange(item.createdAt, previousRecommendationPeriod.start, previousRecommendationPeriod.end)
+    );
+
+    const currentUsage = currentMovements.reduce<Record<string, number>>((acc, item) => {
+      acc[item.barangId] = (acc[item.barangId] ?? 0) + item.jumlah;
+      return acc;
+    }, {});
+
+    const previousUsage = previousMovements.reduce<Record<string, number>>((acc, item) => {
+      acc[item.barangId] = (acc[item.barangId] ?? 0) + item.jumlah;
+      return acc;
+    }, {});
+
+    const restock = barangList
+      .filter((barang) => matchesKategoriFilter(barang.id))
+      .map((barang) => {
+        const current = currentUsage[barang.id] ?? 0;
+        const previous = previousUsage[barang.id] ?? 0;
+        const coverage = current > 0 ? barang.stok / current : barang.stok;
+        const score =
+          (barang.stok <= barang.stokMinimum ? 5 : 0) +
+          (coverage <= 1 ? 3 : coverage <= 2 ? 2 : 0) +
+          (current > previous ? 2 : current > 0 ? 1 : 0);
+
+        return {
+          barang,
+          current,
+          previous,
+          score,
+          coverage,
+        };
+      })
+      .filter(({ current, score }) => current > 0 && score >= 4)
+      .sort((a, b) => b.score - a.score || b.current - a.current)
+      .slice(0, 3)
+      .map<RecommendationItem>(({ barang, current, previous, score, coverage }) => ({
+        title: `Restock ${barang.nama}`,
+        priority: getRecommendationPriority(score),
+        reason: `${barang.nama} keluar ${current} unit pada periode ini, stok tersisa ${barang.stok} ${barang.satuan}${previous > 0 ? `, sebelumnya ${previous} unit` : ''}.`,
+        action: coverage <= 1
+          ? 'Siapkan pembelian di awal bulan depan agar servis tidak tertahan.'
+          : 'Tambahkan stok buffer untuk antisipasi kebutuhan bulan depan.',
+      }));
+
+    const slowMoving = barangList
+      .filter((barang) => matchesKategoriFilter(barang.id))
+      .map((barang) => {
+        const current = currentUsage[barang.id] ?? 0;
+        const previous = previousUsage[barang.id] ?? 0;
+        const score =
+          (barang.stok > barang.stokMinimum * 2 ? 4 : 0) +
+          (current === 0 ? 3 : current <= 1 ? 2 : 0) +
+          (previous > current ? 1 : 0);
+
+        return {
+          barang,
+          current,
+          previous,
+          score,
+        };
+      })
+      .filter(({ barang, current, score }) => barang.stok > 0 && score >= 5 && current <= 1)
+      .sort((a, b) => b.score - a.score || b.barang.stok - a.barang.stok)
+      .slice(0, 3)
+      .map<RecommendationItem>(({ barang, current, previous, score }) => ({
+        title: `Evaluasi stok ${barang.nama}`,
+        priority: getRecommendationPriority(score),
+        reason: `Stok saat ini ${barang.stok} ${barang.satuan}, pergerakan periode ini ${current} unit${previous > 0 ? `, turun dari ${previous} unit` : ''}.`,
+        action: current === 0
+          ? 'Tahan pembelian ulang dan pertimbangkan bundling atau promo agar stok bergerak.'
+          : 'Batasi pembelian berikutnya sampai pergerakan stok kembali stabil.',
+      }));
+
+    const currentServicesInPeriod = services.filter((service) =>
+      isInRange(service.createdAt, recommendationPeriod.start, recommendationPeriod.end)
+    );
+    const previousServicesInPeriod = services.filter((service) =>
+      isInRange(service.createdAt, previousRecommendationPeriod.start, previousRecommendationPeriod.end)
+    );
+
+    const currentWaiting = currentServicesInPeriod.filter((service) => service.status === 'menunggu-sparepart').length;
+    const previousWaiting = previousServicesInPeriod.filter((service) => service.status === 'menunggu-sparepart').length;
+    const currentCompleted = currentServicesInPeriod.filter((service) => service.status === 'selesai').length;
+    const completionRate = currentServicesInPeriod.length > 0
+      ? Math.round((currentCompleted / currentServicesInPeriod.length) * 100)
+      : 0;
+
+    const currentSparepartTrend = currentServicesInPeriod.reduce<Record<string, number>>((acc, service) => {
+      for (const item of service.sparepartDigunakan ?? []) {
+        acc[item.namaProduk] = (acc[item.namaProduk] ?? 0) + item.jumlah;
+      }
+      return acc;
+    }, {});
+
+    const topSparepart = Object.entries(currentSparepartTrend)
+      .sort((a, b) => b[1] - a[1])[0];
+
+    const serviceTrendItems: RecommendationItem[] = [];
+
+    if (currentWaiting > 0) {
+      const score = 6 + (currentWaiting > previousWaiting ? 2 : 0);
+      serviceTrendItems.push({
+        title: 'Evaluasi antrean menunggu sparepart',
+        priority: getRecommendationPriority(score),
+        reason: `${currentWaiting} servis berada di status menunggu sparepart pada periode ini${previousWaiting > 0 ? `, sebelumnya ${previousWaiting}` : ''}.`,
+        action: 'Review supplier dan siapkan stok buffer untuk komponen yang paling sering menahan pengerjaan.',
+      });
+    }
+
+    if (topSparepart) {
+      const [, usageCount] = topSparepart;
+      serviceTrendItems.push({
+        title: `Siapkan sparepart untuk layanan ${topSparepart[0]}`,
+        priority: getRecommendationPriority(usageCount >= 8 ? 8 : usageCount >= 4 ? 6 : 4),
+        reason: `${topSparepart[0]} dipakai ${usageCount} kali di servis periode ini, menunjukkan permintaan perbaikan yang konsisten.`,
+        action: 'Pastikan stok sparepart ini aman dan pertimbangkan paket layanan yang relevan bulan depan.',
+      });
+    }
+
+    if (currentServicesInPeriod.length > 0) {
+      const trendDelta = currentServicesInPeriod.length - previousServicesInPeriod.length;
+      serviceTrendItems.push({
+        title: trendDelta >= 0 ? 'Permintaan servis sedang naik' : 'Permintaan servis sedang melambat',
+        priority: getRecommendationPriority(
+          trendDelta > 3 || completionRate < 60 ? 7 : Math.abs(trendDelta) > 0 ? 5 : 4
+        ),
+        reason: `Total servis periode ini ${currentServicesInPeriod.length} unit${previousServicesInPeriod.length > 0 ? `, dibanding ${previousServicesInPeriod.length} unit pada periode sebelumnya` : ''}. Tingkat penyelesaian saat ini ${completionRate}%.`,
+        action: trendDelta >= 0
+          ? 'Siapkan kapasitas teknisi dan sparepart untuk menjaga waktu pengerjaan tetap stabil.'
+          : 'Pertimbangkan follow up pelanggan lama atau promo layanan agar permintaan kembali naik.',
+      });
+    }
+
+    const fallback = (title: string, action: string): RecommendationItem[] => ([
+      {
+        title,
+        priority: 'Rendah',
+        reason: 'Belum ada pola yang cukup kuat pada periode ini untuk memunculkan rekomendasi prioritas tinggi.',
+        action,
+      },
+    ]);
+
+    return {
+      periodLabel: recommendationPeriod.start.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+      comparisonLabel: `${previousRecommendationPeriod.totalDays} hari sebelumnya`,
+      restock: restock.length > 0
+        ? restock
+        : fallback('Stok restock relatif aman', 'Lanjutkan pemantauan pemakaian sparepart untuk bulan berikutnya.'),
+      slowMoving: slowMoving.length > 0
+        ? slowMoving
+        : fallback('Belum ada stok lambat bergerak yang kritis', 'Pertahankan pola pembelian saat ini dan evaluasi lagi bulan depan.'),
+      service: serviceTrendItems.slice(0, 3).length > 0
+        ? serviceTrendItems.slice(0, 3)
+        : fallback('Tren layanan masih stabil', 'Pantau kembali permintaan servis dan status pengerjaan pada periode berikutnya.'),
+    };
+  }, [
+    allServiceStockTransaksi,
+    barangList,
+    filterKategori,
+    previousRecommendationPeriod,
+    recommendationPeriod,
+    services,
+    transaksiList,
+  ]);
 
   // Calculate summary
   const summary = {
@@ -418,6 +712,59 @@ export default function Laporan() {
         </Card>
       </div>
 
+      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+                <Sparkles className="h-5 w-5 text-blue-600" />
+                Rekomendasi Bulanan
+              </CardTitle>
+              <p className="mt-1 text-sm text-gray-500">
+                Insight otomatis untuk {monthlyRecommendations.periodLabel} dengan pembanding {monthlyRecommendations.comparisonLabel}.
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {[
+              {
+                title: 'Restock Bulan Depan',
+                items: monthlyRecommendations.restock,
+                accent: 'border-red-200 bg-red-50/80',
+              },
+              {
+                title: 'Evaluasi Stok Lambat Bergerak',
+                items: monthlyRecommendations.slowMoving,
+                accent: 'border-amber-200 bg-amber-50/80',
+              },
+              {
+                title: 'Evaluasi Layanan / Service',
+                items: monthlyRecommendations.service,
+                accent: 'border-blue-200 bg-blue-50/80',
+              },
+            ].map((section) => (
+              <div key={section.title} className={`rounded-xl border p-4 ${section.accent}`}>
+                <h3 className="text-base font-semibold text-gray-900">{section.title}</h3>
+                <div className="mt-4 space-y-3">
+                  {section.items.map((item) => (
+                    <div key={item.title} className="rounded-lg border border-white/70 bg-white/90 p-3 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-medium text-gray-900">{item.title}</p>
+                        <Badge className={PRIORITY_STYLES[item.priority]}>{item.priority}</Badge>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
+                      <p className="mt-2 text-sm font-medium text-gray-800">Saran: {item.action}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Report Content (for PDF export) */}
       <div ref={reportRef} className="bg-white p-4 md:p-8">
         {/* Report Header */}
@@ -454,6 +801,42 @@ export default function Laporan() {
           <div className="border p-3 rounded">
             <p className="text-sm text-gray-500">Servis Selesai</p>
             <p className="text-xl font-bold">{serviceSummary.selesai}</p>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">Rekomendasi Bulanan</h3>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {[
+              {
+                title: 'Restock Bulan Depan',
+                items: monthlyRecommendations.restock,
+              },
+              {
+                title: 'Evaluasi Stok Lambat Bergerak',
+                items: monthlyRecommendations.slowMoving,
+              },
+              {
+                title: 'Evaluasi Layanan / Service',
+                items: monthlyRecommendations.service,
+              },
+            ].map((section) => (
+              <div key={section.title} className="rounded-lg border p-4">
+                <p className="font-semibold text-gray-900">{section.title}</p>
+                <div className="mt-3 space-y-3">
+                  {section.items.map((item) => (
+                    <div key={item.title} className="rounded-md border p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-medium text-gray-900">{item.title}</p>
+                        <span className="text-xs font-semibold text-gray-500">{item.priority}</span>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
+                      <p className="mt-2 text-sm text-gray-800">Saran: {item.action}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
