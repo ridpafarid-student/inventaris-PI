@@ -80,6 +80,7 @@ export interface DashboardStats {
   totalServis: number;
   servisHariIni: number;
   servisAktif: number;
+  servisMenungguSparepart: number;
   servisSelesai: number;
   totalSparepartTerpakai: number;
 }

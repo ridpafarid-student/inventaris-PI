@@ -99,6 +99,7 @@ export function useDashboard() {
     const totalServis = services.length;
     const servisHariIni = services.filter((service) => isSameDayOrAfterStart(service.createdAt)).length;
     const servisAktif = services.filter((service) => service.status !== 'selesai').length;
+    const servisMenungguSparepart = services.filter((service) => service.status === 'menunggu-sparepart').length;
     const servisSelesai = services.filter((service) => service.status === 'selesai').length;
     const servisSelesaiHariIni = services.filter((service) =>
       service.status === 'selesai' &&
@@ -118,6 +119,7 @@ export function useDashboard() {
       totalServis,
       servisHariIni,
       servisAktif,
+      servisMenungguSparepart,
       servisSelesai,
       totalSparepartTerpakai
     };

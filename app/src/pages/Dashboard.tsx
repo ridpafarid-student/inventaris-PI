@@ -6,36 +6,32 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Package, 
-  Tags, 
-  ArrowLeftRight, 
+import {
+  Package,
+  ArrowLeftRight,
   AlertTriangle,
   TrendingUp,
   Wrench,
-  CheckCircle2
+  CheckCircle2,
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
 } from 'recharts';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 export default function Dashboard() {
-  const { stats, alertStok, stokByKategori, aktivitas7Hari, servisByStatus, loading } = useDashboard();
-  const pieChartData = stokByKategori.every((item) => item.value === 0)
-    ? stokByKategori.map((item) => ({ ...item, chartValue: 1 }))
-    : stokByKategori.map((item) => ({ ...item, chartValue: item.value }));
+  const { stats, alertStok, aktivitas7Hari, servisByStatus, loading } = useDashboard();
   const servicePieChartData = servisByStatus.every((item) => item.value === 0)
     ? servisByStatus.map((item) => ({ ...item, chartValue: 1 }))
     : servisByStatus.map((item) => ({ ...item, chartValue: item.value }));
@@ -48,12 +44,11 @@ export default function Dashboard() {
     );
   }
 
-  // Format currency
   const formatRupiah = (value: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(value);
   };
 
@@ -64,13 +59,11 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-500">Ringkasan inventaris barang dan manajemen servis</p>
       </div>
 
-      {/* Alert Stok Menipis */}
       {alertStok.length > 0 && (
         <Alert variant="destructive" className="border-orange-200 bg-orange-50">
           <AlertTriangle className="h-4 w-4 text-orange-600" />
@@ -81,152 +74,166 @@ export default function Dashboard() {
         </Alert>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Barang</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                  {stats.totalBarang}
-                </p>
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Fokus Utama</h2>
+          <p className="text-sm text-gray-500">Area yang paling cepat butuh tindakan operasional harian.</p>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Servis Aktif</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-amber-600 mt-1">
+                    {stats.servisAktif}
+                  </p>
+                </div>
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Wrench className="w-5 h-5 text-amber-600" />
+                </div>
               </div>
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="w-5 h-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Kategori</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                  {stats.totalKategori}
-                </p>
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Menunggu Sparepart</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-orange-600 mt-1">
+                    {stats.servisMenungguSparepart}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Servis tertahan karena komponen</p>
+                </div>
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Package className="w-5 h-5 text-orange-600" />
+                </div>
               </div>
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Tags className="w-5 h-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Transaksi Hari Ini</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                  {stats.totalTransaksiHariIni}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Stok harian + servis selesai hari ini
-                </p>
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Stok Menipis</p>
+                  <p
+                    className={`text-2xl lg:text-3xl font-bold mt-1 ${
+                      stats.stokMenipis > 0 ? 'text-red-600' : 'text-gray-900'
+                    }`}
+                  >
+                    {stats.stokMenipis}
+                  </p>
+                </div>
+                <div
+                  className={`p-2 rounded-lg ${
+                    stats.stokMenipis > 0 ? 'bg-red-100' : 'bg-gray-100'
+                  }`}
+                >
+                  <AlertTriangle
+                    className={`w-5 h-5 ${
+                      stats.stokMenipis > 0 ? 'text-red-600' : 'text-gray-500'
+                    }`}
+                  />
+                </div>
               </div>
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <ArrowLeftRight className="w-5 h-5 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Stok Menipis</p>
-                <p className={`text-2xl lg:text-3xl font-bold mt-1 ${
-                  stats.stokMenipis > 0 ? 'text-red-600' : 'text-gray-900'
-                }`}>
-                  {stats.stokMenipis}
-                </p>
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Servis Masuk Hari Ini</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
+                    {stats.servisHariIni}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Unit baru yang dicatat hari ini</p>
+                </div>
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <ArrowLeftRight className="w-5 h-5 text-indigo-600" />
+                </div>
               </div>
-              <div className={`p-2 rounded-lg ${
-                stats.stokMenipis > 0 ? 'bg-red-100' : 'bg-gray-100'
-              }`}>
-                <AlertTriangle className={`w-5 h-5 ${
-                  stats.stokMenipis > 0 ? 'text-red-600' : 'text-gray-500'
-                }`} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Servis</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                  {stats.totalServis}
-                </p>
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Ringkasan Pendukung</h2>
+          <p className="text-sm text-gray-500">Metrik pelengkap untuk melihat ritme kerja dan kapasitas inventaris.</p>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Servis Selesai</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-emerald-600 mt-1">
+                    {stats.servisSelesai}
+                  </p>
+                </div>
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                </div>
               </div>
-              <div className="p-2 bg-sky-100 rounded-lg">
-                <Wrench className="w-5 h-5 text-sky-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Servis Masuk Hari Ini</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                  {stats.servisHariIni}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Unit baru yang dicatat hari ini
-                </p>
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Transaksi Hari Ini</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
+                    {stats.totalTransaksiHariIni}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Stok harian + servis selesai hari ini</p>
+                </div>
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <ArrowLeftRight className="w-5 h-5 text-purple-600" />
+                </div>
               </div>
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <ArrowLeftRight className="w-5 h-5 text-indigo-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Servis Aktif</p>
-                <p className="text-2xl lg:text-3xl font-bold text-amber-600 mt-1">
-                  {stats.servisAktif}
-                </p>
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Sparepart Terpakai</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-sky-600 mt-1">
+                    {stats.totalSparepartTerpakai}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">Total item pada semua servis</p>
+                </div>
+                <div className="p-2 bg-sky-100 rounded-lg">
+                  <Package className="w-5 h-5 text-sky-600" />
+                </div>
               </div>
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Wrench className="w-5 h-5 text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Servis Selesai</p>
-                <p className="text-2xl lg:text-3xl font-bold text-emerald-600 mt-1">
-                  {stats.servisSelesai}
-                </p>
+          <Card>
+            <CardContent className="p-4 lg:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">Total Barang</p>
+                  <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
+                    {stats.totalBarang}
+                  </p>
+                </div>
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Package className="w-5 h-5 text-blue-600" />
+                </div>
               </div>
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Nilai Inventori */}
       <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
@@ -243,40 +250,7 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Stok by Kategori */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Stok per Kategori</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderPieLabel}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="chartValue"
-                  >
-                    {pieChartData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(_, __, item) => item?.payload?.value ?? 0} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Servis by Status */}
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Status Servis</CardTitle>
@@ -329,7 +303,6 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Alert Stok Detail */}
       {alertStok.length > 0 && (
         <Card className="border-orange-200">
           <CardHeader>
@@ -341,7 +314,7 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-2">
               {alertStok.slice(0, 5).map((alert) => (
-                <div 
+                <div
                   key={alert.barangId}
                   className="flex items-center justify-between p-3 bg-orange-50 rounded-lg"
                 >
@@ -353,9 +326,7 @@ export default function Dashboard() {
                     <Badge variant="destructive" className="bg-orange-100 text-orange-700 border-orange-200">
                       Stok: {alert.stok}
                     </Badge>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Min: {alert.stokMinimum}
-                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Min: {alert.stokMinimum}</p>
                   </div>
                 </div>
               ))}
