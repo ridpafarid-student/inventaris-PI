@@ -39,6 +39,8 @@ export default function Users() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState('');
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [confirmDeleteUserId, setConfirmDeleteUserId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -132,17 +134,13 @@ export default function Users() {
 
   // Handle delete
   const handleDelete = async (user: UserData) => {
-    if (user.uid === currentUser?.uid) {
-      alert('Tidak dapat menghapus akun sendiri');
-      return;
-    }
-
-    if (confirm(`Yakin ingin menghapus user ${user.name}?`)) {
-      try {
-        await deleteDoc(doc(db, 'users', user.uid));
-      } catch {
-        alert('Gagal menghapus user');
-      }
+    if (user.uid === currentUser?.uid) return;
+    setDeleteError('');
+    try {
+      await deleteDoc(doc(db, 'users', user.uid));
+      setConfirmDeleteUserId(null);
+    } catch {
+      setDeleteError('Gagal menghapus user. Silakan coba lagi.');
     }
   };
 
@@ -317,15 +315,43 @@ export default function Users() {
                     </p>
                   </div>
 
+                  {deleteError && confirmDeleteUserId === user.uid && (
+                    <p className="text-xs text-red-600 font-medium">{deleteError}</p>
+                  )}
+
                   {user.uid !== currentUser?.uid && (
-                    <Button
-                      variant="outline"
-                      className="w-full text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(user)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Hapus Pengguna
-                    </Button>
+                    confirmDeleteUserId === user.uid ? (
+                      <div className="rounded-lg bg-red-50 border border-red-200 p-3 space-y-2">
+                        <p className="text-xs text-red-700 font-medium">⚠ Yakin hapus pengguna ini?</p>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => handleDelete(user)}
+                          >
+                            Ya, Hapus
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setConfirmDeleteUserId(null)}
+                          >
+                            Batal
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="w-full text-red-600 hover:text-red-700"
+                        onClick={() => setConfirmDeleteUserId(user.uid)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Hapus Pengguna
+                      </Button>
+                    )
                   )}
                 </div>
               ))
@@ -390,14 +416,35 @@ export default function Users() {
                       </TableCell>
                       <TableCell className="text-center">
                         {user.uid !== currentUser?.uid && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => handleDelete(user)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          confirmDeleteUserId === user.uid ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                onClick={() => handleDelete(user)}
+                              >
+                                Hapus
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                onClick={() => setConfirmDeleteUserId(null)}
+                              >
+                                Batal
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => setConfirmDeleteUserId(user.uid)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )
                         )}
                       </TableCell>
                     </TableRow>

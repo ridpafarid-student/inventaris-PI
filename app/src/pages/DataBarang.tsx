@@ -56,6 +56,8 @@ export default function DataBarang() {
   const [selectedBarang, setSelectedBarang] = useState<Barang | null>(null);
   const [error, setError] = useState('');
   const [kategoriError, setKategoriError] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDeleteBarangId, setConfirmDeleteBarangId] = useState<string | null>(null);
   const [kategoriForm, setKategoriForm] = useState({
     nama: '',
     deskripsi: ''
@@ -148,9 +150,10 @@ export default function DataBarang() {
   };
 
   // Handle delete
-  const handleDelete = async (barang: Barang) => {
-    if (confirm(`Yakin ingin menghapus ${barang.nama}?`)) {
-      await deleteBarang(barang.id);
+  const handleDelete = async (id: string) => {
+    const success = await deleteBarang(id);
+    if (success) {
+      setConfirmDeleteBarangId(null);
     }
   };
 
@@ -192,12 +195,13 @@ export default function DataBarang() {
     }
   };
 
-  const handleDeleteKategori = async (id: string, nama: string) => {
-    if (confirm(`Yakin ingin menghapus kategori ${nama}?`)) {
-      const success = await deleteKategori(id);
-      if (!success) {
-        setKategoriError('Kategori gagal dihapus. Pastikan kategori tidak sedang digunakan.');
-      }
+  const handleDeleteKategori = async (id: string) => {
+    setKategoriError('');
+    const success = await deleteKategori(id);
+    if (success) {
+      setConfirmDeleteId(null);
+    } else {
+      setKategoriError('Kategori gagal dihapus. Pastikan tidak ada barang yang menggunakan kategori ini.');
     }
   };
 
@@ -338,7 +342,7 @@ export default function DataBarang() {
         
         {isAdmin && (
           <div className="flex flex-col sm:flex-row gap-2">
-            <Dialog open={isKategoriDialogOpen} onOpenChange={setIsKategoriDialogOpen}>
+            <Dialog open={isKategoriDialogOpen} onOpenChange={(open) => { setIsKategoriDialogOpen(open); if (!open) { setConfirmDeleteId(null); setKategoriError(''); } }}>
               <DialogTrigger asChild>
                 <Button variant="outline" onClick={resetKategoriForm}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -378,19 +382,47 @@ export default function DataBarang() {
                         <p className="text-sm text-gray-500">Belum ada kategori.</p>
                       ) : (
                         kategoriList.map((kategori) => (
-                          <div key={kategori.id} className="flex items-center justify-between gap-3 rounded-md border p-2">
-                            <div className="min-w-0">
-                              <p className="font-medium text-sm text-gray-900">{kategori.nama}</p>
-                              <p className="text-xs text-gray-500">{kategori.deskripsi || 'Tanpa deskripsi'}</p>
+                          <div key={kategori.id} className="rounded-md border p-2 space-y-2">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm text-gray-900">{kategori.nama}</p>
+                                <p className="text-xs text-gray-500">{kategori.deskripsi || 'Tanpa deskripsi'}</p>
+                              </div>
+                              {confirmDeleteId === kategori.id ? (
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="h-7 text-xs px-2"
+                                    onClick={() => handleDeleteKategori(kategori.id)}
+                                  >
+                                    Hapus
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs px-2"
+                                    onClick={() => setConfirmDeleteId(null)}
+                                  >
+                                    Batal
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-600 hover:text-red-700 shrink-0"
+                                  onClick={() => setConfirmDeleteId(kategori.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => handleDeleteKategori(kategori.id, kategori.nama)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {confirmDeleteId === kategori.id && (
+                              <p className="text-xs text-red-600 font-medium">
+                                ⚠ Yakin hapus kategori ini? Aksi tidak dapat dibatalkan.
+                              </p>
+                            )}
                           </div>
                         ))
                       )}
@@ -512,23 +544,49 @@ export default function DataBarang() {
                   </div>
 
                   {isAdmin && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => openEditDialog(barang)}
-                      >
-                        <Edit2 className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1 text-red-600 hover:text-red-700"
-                        onClick={() => handleDelete(barang)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Hapus
-                      </Button>
+                    <div className="space-y-2">
+                      {confirmDeleteBarangId === barang.id ? (
+                        <div className="rounded-lg bg-red-50 border border-red-200 p-3 space-y-2">
+                          <p className="text-xs text-red-700 font-medium">⚠ Yakin ingin menghapus barang ini? Aksi tidak dapat dibatalkan.</p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => handleDelete(barang.id)}
+                            >
+                              Ya, Hapus
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => setConfirmDeleteBarangId(null)}
+                            >
+                              Batal
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => openEditDialog(barang)}
+                          >
+                            <Edit2 className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-red-600 hover:text-red-700"
+                            onClick={() => setConfirmDeleteBarangId(barang.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Hapus
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -584,23 +642,44 @@ export default function DataBarang() {
                       <TableCell className="text-right">{formatRupiah(barang.hargaJual)}</TableCell>
                       {isAdmin && (
                         <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(barang)}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => handleDelete(barang)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                          {confirmDeleteBarangId === barang.id ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                onClick={() => handleDelete(barang.id)}
+                              >
+                                Hapus
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                onClick={() => setConfirmDeleteBarangId(null)}
+                              >
+                                Batal
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEditDialog(barang)}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => setConfirmDeleteBarangId(barang.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </TableCell>
                       )}
                     </TableRow>

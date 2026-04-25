@@ -1,314 +1,566 @@
 // ============================================
-// PAGE - Dashboard dengan Grafik & Statistik
+// PAGE - Dashboard Admin M-THREE COMPUTER
 // ============================================
 
+import { useState } from 'react';
 import { useDashboard } from '@/hooks/useDashboard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import {
-  Package,
-  ArrowLeftRight,
-  AlertTriangle,
   Wrench,
   CheckCircle2,
+  AlertTriangle,
+  TrendingUp,
+  Package,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Clock,
+  ChevronRight,
+  Laptop,
+  Cpu,
+  Smartphone,
 } from 'lucide-react';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  Tooltip,
   Legend,
+  ResponsiveContainer,
 } from 'recharts';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useEffect } from 'react';
+import type { ServiceItem, Barang } from '@/types';
+import { Timestamp } from 'firebase/firestore';
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+// ─── Status badge helper ───────────────────────────────────────────────────
+const STATUS_CONFIG = {
+  pending: {
+    label: 'Baru',
+    bg: 'bg-blue-100',
+    text: 'text-blue-700',
+    dot: 'bg-blue-500',
+    ring: 'ring-blue-200',
+  },
+  proses: {
+    label: 'Proses',
+    bg: 'bg-yellow-100',
+    text: 'text-yellow-700',
+    dot: 'bg-yellow-500',
+    ring: 'ring-yellow-200',
+  },
+  selesai: {
+    label: 'Selesai',
+    bg: 'bg-green-100',
+    text: 'text-green-700',
+    dot: 'bg-green-500',
+    ring: 'ring-green-200',
+  },
+  'menunggu-sparepart': {
+    label: 'Menunggu',
+    bg: 'bg-orange-100',
+    text: 'text-orange-700',
+    dot: 'bg-orange-500',
+    ring: 'ring-orange-200',
+  },
+} as const;
+
+function StatusBadge({ status }: { status: keyof typeof STATUS_CONFIG }) {
+  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ${cfg.bg} ${cfg.text} ${cfg.ring}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
+// ─── Device icon ──────────────────────────────────────────────────────────
+function DeviceIcon({ type }: { type: string }) {
+  if (type === 'Smartphone') return <Smartphone className="w-3.5 h-3.5 text-gray-400" />;
+  if (type === 'CPU') return <Cpu className="w-3.5 h-3.5 text-gray-400" />;
+  return <Laptop className="w-3.5 h-3.5 text-gray-400" />;
+}
+
+// ─── Stats Card ──────────────────────────────────────────────────────────
+function StatCard({
+  title,
+  value,
+  sub,
+  icon: Icon,
+  iconBg,
+  iconColor,
+  valueColor = 'text-[#1F2937]',
+  accent = false,
+}: {
+  title: string;
+  value: React.ReactNode;
+  sub?: string;
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+  valueColor?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`bg-white rounded-xl border p-5 shadow-sm flex items-start justify-between gap-4 transition-shadow hover:shadow-md ${
+        accent ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100'
+      }`}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-500 truncate">{title}</p>
+        <p className={`text-3xl font-bold mt-1.5 leading-none ${valueColor}`}>{value}</p>
+        {sub && <p className="text-xs text-gray-400 mt-1.5 font-medium">{sub}</p>}
+      </div>
+      <div className={`p-3 rounded-xl shrink-0 ${iconBg}`}>
+        <Icon className={`w-5 h-5 ${iconColor}`} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Section Header ──────────────────────────────────────────────────────
+function SectionHeader({ title, sub, count }: { title: string; sub?: string; count?: number }) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <div>
+        <h2 className="text-lg font-semibold text-[#1F2937]">{title}</h2>
+        {sub && <p className="text-sm text-gray-400 mt-0.5">{sub}</p>}
+      </div>
+      {count !== undefined && (
+        <span className="text-xs font-semibold bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full">
+          {count} item
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─── Pie chart colors ─────────────────────────────────────────────────────
+const PIE_COLORS = ['#3B82F6', '#F59E0B', '#10B981', '#F97316'];
+
+// ─── Format currency ──────────────────────────────────────────────────────
+function formatRp(n: number) {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(n);
+}
+
+function formatDate(ts: any) {
+  if (!ts) return '-';
+  const d = ts instanceof Timestamp ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN DASHBOARD
+// ═══════════════════════════════════════════════════════════════
 
 export default function Dashboard() {
-  const { stats, alertStok, aktivitas7Hari, servisByStatus, loading } = useDashboard();
-  const servicePieChartData = servisByStatus.every((item) => item.value === 0)
-    ? servisByStatus.map((item) => ({ ...item, chartValue: 1 }))
-    : servisByStatus.map((item) => ({ ...item, chartValue: item.value }));
+  const { stats, alertStok, servisByStatus, loading } = useDashboard();
+  const { userData } = useAuth();
+
+  // Ambil 5 servis terbaru langsung
+  const [recentServices, setRecentServices] = useState<ServiceItem[]>([]);
+  // Ambil barang stok rendah (stok < 5)
+  const [lowStockBarang, setLowStockBarang] = useState<Barang[]>([]);
+
+  useEffect(() => {
+    // Services terbaru
+    const unsubSvc = onSnapshot(
+      query(collection(db, 'services'), orderBy('createdAt', 'desc'), limit(5)),
+      (snap) => {
+        const list: ServiceItem[] = [];
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() } as ServiceItem));
+        setRecentServices(list);
+      }
+    );
+    // Stok rendah
+    const unsubBarang = onSnapshot(collection(db, 'barang'), (snap) => {
+      const list: Barang[] = [];
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as Barang));
+      setLowStockBarang(list.filter((b) => b.stok < 5).sort((a, b) => a.stok - b.stok).slice(0, 8));
+    });
+
+    return () => {
+      unsubSvc();
+      unsubBarang();
+    };
+  }, []);
+
+  // Teknisi dummy (ambil dari status, tidak ada field teknisi di data)
+  const getTechnician = (_service: ServiceItem) => '—';
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-gray-200 border-t-[#0077CC]" />
+          <p className="text-sm text-gray-400 font-medium">Memuat dashboard…</p>
+        </div>
       </div>
     );
   }
 
-  const renderPieLabel = ({ name, payload }: { name: string; payload?: { value?: number } }) => {
-    if (!payload?.value) return '';
-    return `${name} ${payload.value}`;
-  };
+  const today = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const pieData = servisByStatus.every((i) => i.value === 0)
+    ? servisByStatus.map((i) => ({ ...i, chartValue: 1 }))
+    : servisByStatus.map((i) => ({ ...i, chartValue: i.value }));
+
+  const siapDiambil = recentServices.filter((s) => s.status === 'selesai').length;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500">Ringkasan inventaris barang dan manajemen servis</p>
-      </div>
+    <div className="space-y-7 max-w-[1400px]">
 
-      {alertStok.length > 0 && (
-        <Alert variant="destructive" className="border-orange-200 bg-orange-50">
-          <AlertTriangle className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-orange-800">Peringatan Stok Menipis</AlertTitle>
-          <AlertDescription className="text-orange-700">
-            Terdapat {alertStok.length} barang dengan stok di bawah atau sama dengan batas minimum.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="space-y-3">
+      {/* ── Page Header ─────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Fokus Utama</h2>
-          <p className="text-sm text-gray-500">Area yang paling cepat butuh tindakan operasional harian.</p>
+          <h1 className="text-2xl font-bold text-[#1F2937] tracking-tight">
+            Dashboard Admin
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">
+            Selamat datang, <span className="font-semibold text-[#0077CC]">{userData?.name}</span> — {today}
+          </p>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Servis Aktif</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-amber-600 mt-1">
-                    {stats.servisAktif}
-                  </p>
-                </div>
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <Wrench className="w-5 h-5 text-amber-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Menunggu Sparepart</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-orange-600 mt-1">
-                    {stats.servisMenungguSparepart}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">Servis tertahan karena komponen</p>
-                </div>
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Package className="w-5 h-5 text-orange-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Stok Menipis</p>
-                  <p
-                    className={`text-2xl lg:text-3xl font-bold mt-1 ${
-                      stats.stokMenipis > 0 ? 'text-red-600' : 'text-gray-900'
-                    }`}
-                  >
-                    {stats.stokMenipis}
-                  </p>
-                </div>
-                <div
-                  className={`p-2 rounded-lg ${
-                    stats.stokMenipis > 0 ? 'bg-red-100' : 'bg-gray-100'
-                  }`}
-                >
-                  <AlertTriangle
-                    className={`w-5 h-5 ${
-                      stats.stokMenipis > 0 ? 'text-red-600' : 'text-gray-500'
-                    }`}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Servis Masuk Hari Ini</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                    {stats.servisHariIni}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">Unit baru yang dicatat hari ini</p>
-                </div>
-                <div className="p-2 bg-indigo-100 rounded-lg">
-                  <ArrowLeftRight className="w-5 h-5 text-indigo-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Quick alert banner */}
+        {stats.stokMenipis > 0 && (
+          <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 text-sm font-medium px-4 py-2 rounded-xl ring-1 ring-orange-100">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{stats.stokMenipis} item stok kritis</span>
+          </div>
+        )}
       </div>
 
-      <div className="space-y-3">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Ringkasan Pendukung</h2>
-          <p className="text-sm text-gray-500">Metrik pelengkap untuk melihat ritme kerja dan kapasitas inventaris.</p>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Servis Selesai</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-emerald-600 mt-1">
-                    {stats.servisSelesai}
-                  </p>
-                </div>
-                <div className="p-2 bg-emerald-100 rounded-lg">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Transaksi Hari Ini</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                    {stats.totalTransaksiHariIni}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">Stok harian + servis selesai hari ini</p>
-                </div>
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <ArrowLeftRight className="w-5 h-5 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Sparepart Terpakai</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-sky-600 mt-1">
-                    {stats.totalSparepartTerpakai}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">Total item pada semua servis</p>
-                </div>
-                <div className="p-2 bg-sky-100 rounded-lg">
-                  <Package className="w-5 h-5 text-sky-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Total Barang</p>
-                  <p className="text-2xl lg:text-3xl font-bold text-gray-900 mt-1">
-                    {stats.totalBarang}
-                  </p>
-                </div>
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="w-5 h-5 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* ── Statistics Cards ────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Servis Aktif"
+          value={stats.servisAktif}
+          sub={`${stats.servisMenungguSparepart} Menunggu Konfirmasi`}
+          icon={Wrench}
+          iconBg="bg-blue-50"
+          iconColor="text-[#0077CC]"
+          valueColor="text-[#0077CC]"
+        />
+        <StatCard
+          title="Siap Diambil"
+          value={siapDiambil}
+          sub="Unit selesai diperbaiki"
+          icon={CheckCircle2}
+          iconBg="bg-green-50"
+          iconColor="text-green-600"
+          valueColor="text-green-700"
+        />
+        <StatCard
+          title="Stok Kritikal"
+          value={stats.stokMenipis}
+          sub="Spare part stok rendah"
+          icon={AlertTriangle}
+          iconBg="bg-orange-50"
+          iconColor="text-orange-500"
+          valueColor="text-orange-600"
+          accent
+        />
+        <StatCard
+          title="Laba Hari Ini"
+          value="Rp 750.000"
+          sub={`${stats.totalTransaksiHariIni} transaksi hari ini`}
+          icon={TrendingUp}
+          iconBg="bg-purple-50"
+          iconColor="text-purple-600"
+          valueColor="text-[#1E3A8A]"
+        />
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Status Servis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
+      {/* ── Two column layout ────────────────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        {/* LEFT — service table (2/3 width) */}
+        <div className="xl:col-span-2 space-y-6">
+
+          {/* Tabel Servis Terbaru */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-50">
+              <SectionHeader
+                title="5 Transaksi Servis Terkini"
+                sub="Daftar pekerjaan servis yang baru masuk"
+                count={recentServices.length}
+              />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3">No Nota</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Pelanggan</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Laptop / Seri</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden lg:table-cell">Keluhan</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Status</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Teknisi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {recentServices.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-12 text-gray-400">
+                        <Wrench className="w-10 h-10 mx-auto mb-2 text-gray-200" />
+                        <p className="text-sm">Belum ada data servis</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    recentServices.map((service, idx) => (
+                      <tr key={service.id} className="hover:bg-gray-50/70 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <span className="font-mono text-xs font-semibold text-[#1E3A8A] bg-blue-50 px-2 py-1 rounded">
+                            #{String(idx + 1).padStart(3, '0')}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold text-[#1F2937] text-sm">{service.namaPelanggan}</p>
+                          <p className="text-xs text-gray-400">{service.nomorHp}</p>
+                        </td>
+                        <td className="px-4 py-3.5 hidden md:table-cell">
+                          <div className="flex items-center gap-1.5">
+                            <DeviceIcon type={service.jenisPerangkat} />
+                            <div>
+                              <p className="text-sm text-[#1F2937] font-medium">{service.modelPerangkat}</p>
+                              <p className="text-xs text-gray-400">{service.jenisPerangkat}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 hidden lg:table-cell">
+                          <p className="text-sm text-gray-600 max-w-[180px] truncate" title={service.deskripsiMasalah}>
+                            {service.deskripsiMasalah}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge status={service.status as keyof typeof STATUS_CONFIG} />
+                        </td>
+                        <td className="px-4 py-3.5 hidden md:table-cell">
+                          <span className="text-sm text-gray-500">{getTechnician(service)}</span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Tabel Stok Kritikal */}
+          <div className="bg-white rounded-xl border border-orange-100 shadow-sm overflow-hidden ring-1 ring-orange-50">
+            <div className="px-6 py-5 border-b border-orange-50 bg-orange-50/50">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-4.5 h-4.5 text-orange-500" style={{width:'18px',height:'18px'}} />
+                <h2 className="text-lg font-semibold text-[#1F2937]">Peringatan Stok Spare Part</h2>
+                <span className="text-xs font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full ml-1">
+                  Stok &lt; 5
+                </span>
+              </div>
+              <p className="text-sm text-gray-400">Segera lakukan pemesanan ulang untuk item berikut</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3">Kode Barang</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Nama Barang</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Spesifikasi</th>
+                    <th className="text-center text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Stok Sisa</th>
+                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3 hidden sm:table-cell">Harga Jual</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {lowStockBarang.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-12 text-gray-400">
+                        <Package className="w-10 h-10 mx-auto mb-2 text-gray-200" />
+                        <p className="text-sm font-medium text-green-600">🎉 Semua stok aman!</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    lowStockBarang.map((barang) => (
+                      <tr key={barang.id} className="hover:bg-orange-50/30 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <span className="font-mono text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            {barang.kodeBarang}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold text-[#1F2937]">{barang.nama}</p>
+                          <p className="text-xs text-gray-400">Min stok: {barang.stokMinimum}</p>
+                        </td>
+                        <td className="px-4 py-3.5 hidden md:table-cell">
+                          <p className="text-sm text-gray-500">{barang.satuan}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <span className={`inline-flex items-center justify-center w-10 h-7 rounded-lg text-sm font-bold ring-1 ${
+                            barang.stok === 0
+                              ? 'bg-red-100 text-red-700 ring-red-200'
+                              : 'bg-orange-100 text-orange-700 ring-orange-200'
+                          }`}>
+                            {barang.stok}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-right hidden sm:table-cell">
+                          <span className="text-sm font-semibold text-[#1F2937]">
+                            {formatRp(barang.hargaJual)}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT — charts + info panel (1/3 width) */}
+        <div className="space-y-5">
+
+          {/* Pie chart status servis */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <h3 className="text-base font-semibold text-[#1F2937] mb-1">Distribusi Status Servis</h3>
+            <p className="text-xs text-gray-400 mb-4">Berdasarkan semua data aktif</p>
+            <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={servicePieChartData}
+                    data={pieData}
                     cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={renderPieLabel}
-                    outerRadius={80}
-                    fill="#8884d8"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={78}
                     dataKey="chartValue"
+                    strokeWidth={2}
                   >
-                    {servicePieChartData.map((_, index) => (
-                      <Cell key={`service-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {pieData.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(_, __, item) => item?.payload?.value ?? 0} />
-                  <Legend />
+                  <Tooltip
+                    formatter={(_, __, item) => [item?.payload?.value ?? 0, item?.payload?.name]}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '12px' }}
+                  />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Quick stats breakdown */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-3">
+            <h3 className="text-base font-semibold text-[#1F2937] mb-3">Ringkasan Servis</h3>
+            {[
+              { label: 'Total Servis', value: stats.totalServis, color: 'text-[#1F2937]' },
+              { label: 'Aktif / On-progress', value: stats.servisAktif, color: 'text-[#0077CC]' },
+              { label: 'Menunggu Sparepart', value: stats.servisMenungguSparepart, color: 'text-orange-600' },
+              { label: 'Selesai (all time)', value: stats.servisSelesai, color: 'text-green-600' },
+              { label: 'Masuk Hari Ini', value: stats.servisHariIni, color: 'text-purple-600' },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+                <span className="text-sm text-gray-500">{row.label}</span>
+                <span className={`text-sm font-bold ${row.color}`}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Recent activity strip */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <h3 className="text-base font-semibold text-[#1F2937] mb-3">Servis Masuk Terakhir</h3>
+            {recentServices.slice(0, 4).length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-6">Tidak ada data</p>
+            ) : (
+              <div className="space-y-3">
+                {recentServices.slice(0, 4).map((svc) => {
+                  const cfg = STATUS_CONFIG[svc.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.pending;
+                  return (
+                    <div key={svc.id} className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#1F2937] truncate">{svc.namaPelanggan}</p>
+                        <p className="text-xs text-gray-400 truncate">{svc.modelPerangkat} · {formatDate(svc.createdAt)}</p>
+                      </div>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${cfg.bg} ${cfg.text}`}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Inventory overview */}
+          <div className="bg-gradient-to-br from-[#1E3A8A] to-[#0077CC] rounded-xl shadow-md p-5 text-white">
+            <div className="flex items-center gap-2 mb-3">
+              <Package className="w-4 h-4 text-blue-200" />
+              <h3 className="text-base font-semibold">Inventaris</h3>
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: 'Total Barang', value: stats.totalBarang, icon: ArrowDownLeft },
+                { label: 'Stok Menipis', value: stats.stokMenipis, icon: AlertTriangle },
+                { label: 'Sparepart Terpakai', value: stats.totalSparepartTerpakai, icon: ArrowUpRight },
+                { label: 'Transaksi Hari Ini', value: stats.totalTransaksiHariIni, icon: Clock },
+              ].map((row) => {
+                const Ic = row.icon;
+                return (
+                  <div key={row.label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Ic className="w-3.5 h-3.5 text-blue-200" style={{width:'14px',height:'14px'}} />
+                      <span className="text-sm text-blue-100">{row.label}</span>
+                    </div>
+                    <span className="text-sm font-bold text-white">{row.value}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 pt-3 border-t border-blue-600/50">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-blue-200 font-medium">Lihat Inventaris Lengkap</span>
+                <ChevronRight className="w-4 h-4 text-blue-200" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Aktivitas 7 Hari Terakhir</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={aktivitas7Hari}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="transaksi" fill="#3B82F6" name="Transaksi" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="servis" fill="#10B981" name="Servis" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {alertStok.length > 0 && (
-        <Card className="border-orange-200">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2 text-orange-700">
-              <AlertTriangle className="w-5 h-5" />
-              Barang Stok Menipis
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {alertStok.slice(0, 5).map((alert) => (
-                <div
-                  key={alert.barangId}
-                  className="flex items-center justify-between p-3 bg-orange-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{alert.barangNama}</p>
-                    <p className="text-sm text-gray-500">{alert.barangKode}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="destructive" className="bg-orange-100 text-orange-700 border-orange-200">
-                      Stok: {alert.stok}
-                    </Badge>
-                    <p className="text-xs text-gray-500 mt-1">Min: {alert.stokMinimum}</p>
-                  </div>
-                </div>
-              ))}
+      {/* ── Status Legend Bar ───────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-6 py-4">
+        <div className="flex flex-wrap gap-4 items-center">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-2">Keterangan Status:</p>
+          {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+            <div key={key} className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+              <span className="text-xs font-medium text-gray-600">{cfg.label}</span>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ))}
+          <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-400">
+            <Badge variant="outline" className="text-xs font-medium border-orange-200 text-orange-600">
+              ⚠ Stok &lt; 5 = Kritikal
+            </Badge>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
