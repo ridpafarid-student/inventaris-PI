@@ -3,7 +3,7 @@
 // ============================================
 
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -70,6 +70,16 @@ export default function Users() {
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return '-';
+    const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
 
   // Reset form
   const resetForm = () => {
@@ -303,11 +313,7 @@ export default function Users() {
                   <div className="rounded-lg bg-gray-50 p-3 text-sm">
                     <p className="text-gray-500">Bergabung</p>
                     <p className="mt-1 font-medium text-gray-900">
-                      {user.createdAt && new Date(user.createdAt).toLocaleDateString('id-ID', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
+                      {formatDate(user.createdAt)}
                     </p>
                   </div>
 
@@ -380,11 +386,7 @@ export default function Users() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {user.createdAt && new Date(user.createdAt).toLocaleDateString('id-ID', {
-                          day: '2-digit',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
+                        {formatDate(user.createdAt)}
                       </TableCell>
                       <TableCell className="text-center">
                         {user.uid !== currentUser?.uid && (
