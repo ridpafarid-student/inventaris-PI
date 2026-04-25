@@ -26,12 +26,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, FileSpreadsheet, Sparkles } from 'lucide-react';
+import { FileDown, Sparkles } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
-import * as XLSX from 'xlsx';
 
 type RecommendationPriority = 'Tinggi' | 'Sedang' | 'Rendah';
 
@@ -481,72 +480,6 @@ export default function Laporan() {
     }
   };
 
-  const exportExcel = () => {
-    const workbook = XLSX.utils.book_new();
-
-    const summarySheet = XLSX.utils.json_to_sheet([
-      {
-        periodeMulai: startDate || 'Semua',
-        periodeSelesai: endDate || 'Semua',
-        totalTransaksi: filteredTransaksiGabungan.length,
-        totalStokMasuk: summary.totalMasuk,
-        totalStokKeluar: summary.totalKeluar,
-        nilaiMasuk: summary.nilaiMasuk,
-        nilaiKeluar: summary.nilaiKeluar,
-        totalServis: serviceSummary.totalServis,
-        servisPending: serviceSummary.pending,
-        servisProses: serviceSummary.proses,
-        servisMenungguSparepart: serviceSummary.menungguSparepart,
-        servisSelesai: serviceSummary.selesai,
-        totalSparepartTerpakai: serviceSummary.totalSparepart,
-      },
-    ]);
-
-    const transaksiSheet = XLSX.utils.json_to_sheet(
-      filteredTransaksiGabungan.map((transaksi, index) => ({
-        no: index + 1,
-        tanggal: formatDate(transaksi.createdAt),
-        barang: transaksi.barangNama,
-        kodeBarang: transaksi.barangKode,
-        tipe: transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar',
-        jumlah: transaksi.jumlah,
-        stokSebelum: transaksi.stokSebelum,
-        stokSesudah: transaksi.stokSesudah,
-        hargaSatuan: transaksi.hargaSatuan,
-        totalHarga: transaksi.totalHarga,
-        keterangan: transaksi.keterangan,
-        user: transaksi.userName,
-        sumber: transaksi.userName === 'Servis' ? 'Servis' : 'Transaksi Stok',
-      }))
-    );
-
-    const servicesSheet = XLSX.utils.json_to_sheet(
-      filteredServices.map((service, index) => ({
-        no: index + 1,
-        tanggalMasuk: formatDate(service.createdAt),
-        pelanggan: service.namaPelanggan,
-        nomorHp: service.nomorHp,
-        jenisPerangkat: service.jenisPerangkat,
-        modelPerangkat: service.modelPerangkat,
-        deskripsiMasalah: service.deskripsiMasalah,
-        status: getServiceStatusLabel(service.status),
-        sparepart: service.sparepartDigunakan?.length
-          ? service.sparepartDigunakan.map((item) => `${item.namaProduk} x${item.jumlah}`).join(', ')
-          : '-',
-        totalSparepart: getServiceSparepartTotal(service),
-        stokDikurangi: service.stokDikurangi ? 'Ya' : 'Belum',
-        terakhirUpdate: formatDate(service.updatedAt),
-      }))
-    );
-
-    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Ringkasan');
-    XLSX.utils.book_append_sheet(workbook, transaksiSheet, 'Transaksi');
-    XLSX.utils.book_append_sheet(workbook, servicesSheet, 'Servis');
-
-    const fileName = `Laporan_Inventaris_Servis_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-  };
-
   // Export PDF
   const exportPDF = async () => {
     if (!reportRef.current) return;
@@ -590,10 +523,6 @@ export default function Laporan() {
         </div>
         
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button onClick={exportExcel} variant="outline" className="w-full sm:w-auto">
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Export Excel
-          </Button>
           <Button onClick={exportPDF} className="w-full sm:w-auto">
             <FileDown className="w-4 h-4 mr-2" />
             Export PDF
@@ -766,7 +695,11 @@ export default function Laporan() {
       </Card>
 
       {/* Report Content (for PDF export) */}
-      <div ref={reportRef} className="bg-white p-4 md:p-8">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed -left-[10000px] top-0 w-[1024px] overflow-hidden opacity-0"
+      >
+        <div ref={reportRef} className="bg-white p-4 md:p-8">
         {/* Report Header */}
         <div className="text-center mb-8 border-b pb-4">
           <h2 className="text-2xl font-bold text-gray-900">LAPORAN INVENTARIS & SERVIS</h2>
@@ -1034,8 +967,9 @@ export default function Laporan() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pt-4 border-t text-center text-sm text-gray-500">
-          <p>Laporan ini digenerate secara otomatis dari sistem inventaris dan servis</p>
+          <div className="mt-8 pt-4 border-t text-center text-sm text-gray-500">
+            <p>Laporan ini digenerate secara otomatis dari sistem inventaris dan servis</p>
+          </div>
         </div>
       </div>
     </div>

@@ -10,7 +10,6 @@ import {
   Package,
   ArrowLeftRight,
   AlertTriangle,
-  TrendingUp,
   Wrench,
   CheckCircle2,
 } from 'lucide-react';
@@ -43,14 +42,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const formatRupiah = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(value);
-  };
 
   const renderPieLabel = ({ name, payload }: { name: string; payload?: { value?: number } }) => {
     if (!payload?.value) return '';
@@ -233,22 +224,6 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-
-      <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100">Nilai Total Inventori</p>
-              <p className="text-3xl lg:text-4xl font-bold mt-2">
-                {formatRupiah(stats.nilaiInventori)}
-              </p>
-            </div>
-            <div className="p-4 bg-white/10 rounded-xl">
-              <TrendingUp className="w-8 h-8 text-white" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <div className="grid gap-6">
         <Card>
