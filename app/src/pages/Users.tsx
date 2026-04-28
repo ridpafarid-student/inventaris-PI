@@ -54,7 +54,7 @@ export default function Users() {
   // Subscribe to users
   useEffect(() => {
     const q = query(collection(db, 'users'));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const usersList: UserData[] = [];
       snapshot.forEach((doc) => {
@@ -68,7 +68,7 @@ export default function Users() {
   }, []);
 
   // Filter users
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -152,7 +152,7 @@ export default function Users() {
           <h1 className="text-2xl font-bold text-gray-900">Manajemen Pengguna</h1>
           <p className="text-gray-500">Kelola user dan hak akses</p>
         </div>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={resetForm} className="w-full sm:w-auto">
@@ -164,7 +164,7 @@ export default function Users() {
             <DialogHeader>
               <DialogTitle>Tambah Pengguna Baru</DialogTitle>
             </DialogHeader>
-            
+
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -399,7 +399,7 @@ export default function Users() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
+                        <Badge
                           variant={user.role === 'admin' ? 'default' : 'secondary'}
                           className={user.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-100' : 'bg-blue-100 text-blue-700 hover:bg-blue-100'}
                         >
