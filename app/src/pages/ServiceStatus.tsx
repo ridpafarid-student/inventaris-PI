@@ -84,13 +84,13 @@ export default function ServiceStatus() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Manajemen Servis</h1>
-          <p className="text-slate-500">Lacak progres perbaikan unit dan pemakaian sparepart.</p>
+          <h1 className="text-xl font-semibold text-gray-800">Manajemen Servis</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Lacak progres perbaikan unit dan pemakaian sparepart.</p>
         </div>
 
-        <Button onClick={handleCreate} className="sm:w-auto">
+        <Button onClick={handleCreate} size="sm" className="sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Servis
         </Button>
@@ -102,37 +102,33 @@ export default function ServiceStatus() {
         </Alert>
       )}
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Cari pelanggan, HP, atau model perangkat..."
-                className="pl-10"
-              />
-            </div>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Cari pelanggan, HP, atau model perangkat..."
+            className="pl-10"
+          />
+        </div>
 
-            <Select
-              value={selectedStatus}
-              onValueChange={(value) => setSelectedStatus(value as 'all' | ServiceStatus)}
-            >
-              <SelectTrigger className="w-full sm:w-60">
-                <SelectValue placeholder="Semua Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="proses">Proses</SelectItem>
-                <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
-                <SelectItem value="selesai">Selesai</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+        <Select
+          value={selectedStatus}
+          onValueChange={(value) => setSelectedStatus(value as 'all' | ServiceStatus)}
+        >
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Semua Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Status</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="proses">Proses</SelectItem>
+            <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
+            <SelectItem value="selesai">Selesai</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {loading ? (

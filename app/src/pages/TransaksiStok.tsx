@@ -125,43 +125,41 @@ export default function TransaksiStok() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Stok Masuk/Keluar</h1>
-        <p className="text-gray-500">Kelola transaksi stok barang</p>
+      <div className="pb-4 border-b border-gray-200">
+        <h1 className="text-xl font-semibold text-gray-800">Stok Masuk / Keluar</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Catat penerimaan dan pengeluaran stok barang</p>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          {transaksiError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{transaksiError}</AlertDescription>
-            </Alert>
-          )}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Cari barang..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedKategori} onValueChange={setSelectedKategori}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Semua Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Kategori</SelectItem>
-                {kategoriList.map((k) => (
-                  <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="space-y-3">
+        {transaksiError && (
+          <Alert variant="destructive">
+            <AlertDescription>{transaksiError}</AlertDescription>
+          </Alert>
+        )}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Cari barang..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Select value={selectedKategori} onValueChange={setSelectedKategori}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Semua Kategori" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Kategori</SelectItem>
+              {kategoriList.map((k) => (
+                <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Barang Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -172,56 +170,56 @@ export default function TransaksiStok() {
           </div>
         ) : (
           filteredBarang.map((barang) => (
-            <Card key={barang.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs text-gray-500">{barang.kodeBarang}</p>
-                    <h3 className="font-semibold text-gray-900">{barang.nama}</h3>
-                  </div>
-                  <Badge variant="secondary">{barang.kategoriNama}</Badge>
+            <div key={barang.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-xs text-gray-400 font-mono">{barang.kodeBarang}</p>
+                  <h3 className="font-semibold text-gray-800 mt-0.5">{barang.nama}</h3>
                 </div>
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-medium">{barang.kategoriNama}</span>
+              </div>
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Stok Tersedia:</span>
-                    <span className={`font-medium ${
-                      barang.stok <= barang.stokMinimum ? 'text-orange-600' : 'text-gray-900'
-                    }`}>
-                      {barang.stok} {barang.satuan}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Harga Beli:</span>
-                    <span className="font-medium">{formatRupiah(barang.hargaBeli)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Harga Jual:</span>
-                    <span className="font-medium">{formatRupiah(barang.hargaJual)}</span>
-                  </div>
+              <div className="space-y-1.5 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Stok</span>
+                  <span className={`font-medium ${
+                    barang.stok <= barang.stokMinimum ? 'text-orange-600' : 'text-gray-700'
+                  }`}>
+                    {barang.stok} {barang.satuan}
+                  </span>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Harga Beli</span>
+                  <span className="text-gray-600">{formatRupiah(barang.hargaBeli)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Harga Jual</span>
+                  <span className="font-medium text-gray-700">{formatRupiah(barang.hargaJual)}</span>
+                </div>
+              </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-green-200 hover:bg-green-50 hover:text-green-700"
-                    onClick={() => openDialog(barang, 'masuk')}
-                  >
-                    <ArrowDownLeft className="w-4 h-4 mr-1 text-green-600" />
-                    Masuk
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-red-200 hover:bg-red-50 hover:text-red-700"
-                    onClick={() => openDialog(barang, 'keluar')}
-                    disabled={barang.stok === 0}
-                  >
-                    <ArrowUpRight className="w-4 h-4 mr-1 text-red-600" />
-                    Keluar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => openDialog(barang, 'masuk')}
+                >
+                  <ArrowDownLeft className="w-3.5 h-3.5 mr-1" />
+                  Masuk
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => openDialog(barang, 'keluar')}
+                  disabled={barang.stok === 0}
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
+                  Keluar
+                </Button>
+              </div>
+            </div>
           ))
         )}
       </div>
@@ -291,14 +289,14 @@ export default function TransaksiStok() {
               />
             </div>
 
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
+              <p className="text-sm text-gray-600">
                 <span className="font-medium">Total:</span> {formatRupiah(formData.jumlah * formData.hargaSatuan)}
               </p>
               {selectedBarang && (
-                <p className="text-sm text-blue-600 mt-1">
-                  Stok setelah transaksi: {' '}
-                  <span className="font-medium">
+                <p className="text-sm text-gray-500 mt-1">
+                  Stok setelah transaksi:{' '}
+                  <span className="font-medium text-gray-700">
                     {formData.tipe === 'masuk' 
                       ? selectedBarang.stok + formData.jumlah 
                       : selectedBarang.stok - formData.jumlah} {selectedBarang.satuan}

@@ -13,6 +13,7 @@ import Riwayat from '@/pages/Riwayat';
 import Laporan from '@/pages/Laporan';
 import Users from '@/pages/Users';
 import ServiceStatus from '@/pages/ServiceStatus';
+import SeedData from '@/pages/SeedData';
 import { Toaster } from '@/components/ui/sonner';
 
 // Main App Component
@@ -37,6 +38,8 @@ function AppContent() {
         return <Users />;
       case 'servis':
         return <ServiceStatus />;
+      case 'seed':
+        return <SeedData />;
       default:
         return <Dashboard />;
     }

@@ -147,10 +147,10 @@ export default function Users() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Manajemen Pengguna</h1>
-          <p className="text-gray-500">Kelola user dan hak akses</p>
+          <h1 className="text-xl font-semibold text-gray-800">Manajemen Pengguna</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Kelola user dan hak akses</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -253,19 +253,15 @@ export default function Users() {
       </div>
 
       {/* Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Cari pengguna..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          placeholder="Cari pengguna..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
       {/* Users Table */}
       <Card>
@@ -457,40 +453,36 @@ export default function Users() {
       </Card>
 
       {/* Role Info */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <Card className="bg-purple-50 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-purple-600 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-purple-900">Administrator</h4>
-                <ul className="text-sm text-purple-700 mt-1 space-y-1">
-                  <li>• Akses semua fitur</li>
-                  <li>• Kelola data barang</li>
-                  <li>• Kelola pengguna</li>
-                  <li>• Lihat laporan</li>
-                </ul>
-              </div>
+      <div className="grid md:grid-cols-2 gap-3">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="w-4 h-4 text-gray-500 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-gray-800 text-sm">Administrator</h4>
+              <ul className="text-sm text-gray-500 mt-1.5 space-y-1">
+                <li>• Akses semua fitur</li>
+                <li>• Kelola data barang</li>
+                <li>• Kelola pengguna</li>
+                <li>• Lihat laporan</li>
+              </ul>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <UserCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-blue-900">Staff</h4>
-                <ul className="text-sm text-blue-700 mt-1 space-y-1">
-                  <li>• Input stok masuk/keluar</li>
-                  <li>• Lihat data barang</li>
-                  <li>• Lihat riwayat transaksi</li>
-                  <li>• Tidak bisa edit/hapus data</li>
-                </ul>
-              </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <UserCircle className="w-4 h-4 text-gray-500 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-gray-800 text-sm">Staff</h4>
+              <ul className="text-sm text-gray-500 mt-1.5 space-y-1">
+                <li>• Input stok masuk/keluar</li>
+                <li>• Lihat data barang</li>
+                <li>• Lihat riwayat transaksi</li>
+                <li>• Tidak bisa edit/hapus data</li>
+              </ul>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

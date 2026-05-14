@@ -334,10 +334,10 @@ export default function DataBarang() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Data Barang</h1>
-          <p className="text-gray-500">Kelola data barang inventaris</p>
+          <h1 className="text-xl font-semibold text-gray-800">Data Barang</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Kelola data barang inventaris</p>
         </div>
         
         {isAdmin && (
@@ -471,32 +471,28 @@ export default function DataBarang() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Cari barang..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedKategori} onValueChange={setSelectedKategori}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Semua Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Kategori</SelectItem>
-                {kategoriList.map((k) => (
-                  <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Cari barang..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={selectedKategori} onValueChange={setSelectedKategori}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Semua Kategori" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Kategori</SelectItem>
+            {kategoriList.map((k) => (
+              <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Table */}
       <Card>

@@ -617,14 +617,13 @@ export default function Laporan() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Laporan</h1>
-          <p className="text-gray-500">Generate dan export laporan transaksi</p>
+          <h1 className="text-xl font-semibold text-gray-800">Laporan</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Generate dan export laporan transaksi</p>
         </div>
-        
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button onClick={exportPDF} className="w-full sm:w-auto">
+          <Button onClick={exportPDF} size="sm" variant="outline" className="w-full sm:w-auto">
             <FileDown className="w-4 h-4 mr-2" />
             Export PDF
           </Button>
@@ -632,132 +631,116 @@ export default function Laporan() {
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filter Laporan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <Label>Dari Tanggal</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Sampai Tanggal</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipe Transaksi</Label>
-              <Select value={filterTipe} onValueChange={setFilterTipe}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Semua Tipe" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Tipe</SelectItem>
-                  <SelectItem value="masuk">Stok Masuk</SelectItem>
-                  <SelectItem value="keluar">Stok Keluar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Kategori</Label>
-              <Select value={filterKategori} onValueChange={setFilterKategori}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Semua Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Kategori</SelectItem>
-                  {kategoriList.map((k) => (
-                    <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Mode Rekomendasi</Label>
-              <Select
-                value={recommendationCadence}
-                onValueChange={(value) => setRecommendationCadence(value as RecommendationCadence)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih Mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weekly">Mingguan</SelectItem>
-                  <SelectItem value="monthly">Bulanan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-green-50 border-green-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-green-700">Total Stok Masuk</p>
-            <p className="text-2xl font-bold text-green-800">{summary.totalMasuk}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-red-50 border-red-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-red-700">Total Stok Keluar</p>
-            <p className="text-2xl font-bold text-red-800">{summary.totalKeluar}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-blue-700">Nilai Masuk</p>
-            <p className="text-lg font-bold text-blue-800">{formatRupiah(summary.nilaiMasuk)}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-purple-50 border-purple-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-purple-700">Nilai Keluar</p>
-            <p className="text-lg font-bold text-purple-800">{formatRupiah(summary.nilaiKeluar)}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dari Tanggal</Label>
+          <Input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide">Sampai Tanggal</Label>
+          <Input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide">Tipe Transaksi</Label>
+          <Select value={filterTipe} onValueChange={setFilterTipe}>
+            <SelectTrigger>
+              <SelectValue placeholder="Semua Tipe" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Tipe</SelectItem>
+              <SelectItem value="masuk">Stok Masuk</SelectItem>
+              <SelectItem value="keluar">Stok Keluar</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide">Kategori</Label>
+          <Select value={filterKategori} onValueChange={setFilterKategori}>
+            <SelectTrigger>
+              <SelectValue placeholder="Semua Kategori" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Kategori</SelectItem>
+              {kategoriList.map((k) => (
+                <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide">Mode Rekomendasi</Label>
+          <Select
+            value={recommendationCadence}
+            onValueChange={(value) => setRecommendationCadence(value as RecommendationCadence)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih Mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weekly">Mingguan</SelectItem>
+              <SelectItem value="monthly">Bulanan</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-sky-50 border-sky-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-sky-700">Total Servis</p>
-            <p className="text-2xl font-bold text-sky-800">{serviceSummary.totalServis}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-amber-700">Belum Selesai</p>
-            <p className="text-2xl font-bold text-amber-800">
+      {/* Summary Cards - Inventaris */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ringkasan Inventaris</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Stok Masuk</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{summary.totalMasuk}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Stok Keluar</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{summary.totalKeluar}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Nilai Masuk</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(summary.nilaiMasuk)}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Nilai Keluar</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(summary.nilaiKeluar)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Cards - Servis */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ringkasan Servis</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Total Servis</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.totalServis}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Belum Selesai</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">
               {serviceSummary.pending + serviceSummary.proses + serviceSummary.menungguSparepart}
             </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-emerald-50 border-emerald-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-emerald-700">Servis Selesai</p>
-            <p className="text-2xl font-bold text-emerald-800">{serviceSummary.selesai}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-violet-50 border-violet-200">
-          <CardContent className="p-4">
-            <p className="text-sm text-violet-700">Sparepart Terpakai</p>
-            <p className="text-2xl font-bold text-violet-800">{serviceSummary.totalSparepart}</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Servis Selesai</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.selesai}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Sparepart Terpakai</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.totalSparepart}</p>
+          </div>
+        </div>
       </div>
 
-      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50">
+      <Card className="border-gray-200">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <div>

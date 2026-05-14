@@ -107,9 +107,8 @@ function StatCard({
 }) {
   return (
     <div
-      className={`bg-white rounded-xl border p-5 shadow-sm flex items-start justify-between gap-4 transition-shadow hover:shadow-md ${
-        accent ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100'
-      }`}
+      className={`bg-white rounded-xl border p-5 shadow-sm flex items-start justify-between gap-4 transition-shadow hover:shadow-md ${accent ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100'
+        }`}
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-500 truncate">{title}</p>
@@ -228,7 +227,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-[#1F2937] tracking-tight">
-            Dashboard Admin
+            Dashboard
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">
             Selamat datang, <span className="font-semibold text-[#0077CC]">{userData?.name}</span> — {today}
@@ -363,7 +362,7 @@ export default function Dashboard() {
           <div className="bg-white rounded-xl border border-orange-100 shadow-sm overflow-hidden ring-1 ring-orange-50">
             <div className="px-6 py-5 border-b border-orange-50 bg-orange-50/50">
               <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4.5 h-4.5 text-orange-500" style={{width:'18px',height:'18px'}} />
+                <AlertTriangle className="w-4.5 h-4.5 text-orange-500" style={{ width: '18px', height: '18px' }} />
                 <h2 className="text-lg font-semibold text-[#1F2937]">Peringatan Stok Spare Part</h2>
                 <span className="text-xs font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full ml-1">
                   Stok &lt; 5
@@ -406,11 +405,10 @@ export default function Dashboard() {
                           <p className="text-sm text-gray-500">{barang.satuan}</p>
                         </td>
                         <td className="px-4 py-3.5 text-center">
-                          <span className={`inline-flex items-center justify-center w-10 h-7 rounded-lg text-sm font-bold ring-1 ${
-                            barang.stok === 0
+                          <span className={`inline-flex items-center justify-center w-10 h-7 rounded-lg text-sm font-bold ring-1 ${barang.stok === 0
                               ? 'bg-red-100 text-red-700 ring-red-200'
                               : 'bg-orange-100 text-orange-700 ring-orange-200'
-                          }`}>
+                            }`}>
                             {barang.stok}
                           </span>
                         </td>
@@ -525,7 +523,7 @@ export default function Dashboard() {
                 return (
                   <div key={row.label} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Ic className="w-3.5 h-3.5 text-blue-200" style={{width:'14px',height:'14px'}} />
+                      <Ic className="w-3.5 h-3.5 text-blue-200" style={{ width: '14px', height: '14px' }} />
                       <span className="text-sm text-blue-100">{row.label}</span>
                     </div>
                     <span className="text-sm font-bold text-white">{row.value}</span>

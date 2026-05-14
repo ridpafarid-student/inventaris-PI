@@ -64,37 +64,33 @@ export default function Riwayat() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Riwayat Transaksi</h1>
-        <p className="text-gray-500">Lihat semua riwayat perubahan stok</p>
+      <div className="pb-4 border-b border-gray-200">
+        <h1 className="text-xl font-semibold text-gray-800">Riwayat Transaksi</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Semua riwayat perubahan stok barang</p>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Cari barang atau user..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={filterTipe} onValueChange={setFilterTipe}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Semua Tipe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Tipe</SelectItem>
-                <SelectItem value="masuk">Stok Masuk</SelectItem>
-                <SelectItem value="keluar">Stok Keluar</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Cari barang atau user..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={filterTipe} onValueChange={setFilterTipe}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Semua Tipe" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Tipe</SelectItem>
+            <SelectItem value="masuk">Stok Masuk</SelectItem>
+            <SelectItem value="keluar">Stok Keluar</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Table */}
       <Card>
@@ -243,42 +239,34 @@ export default function Riwayat() {
       </Card>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="bg-green-50 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <ArrowDownLeft className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-green-700">Total Stok Masuk</p>
-                <p className="text-xl font-bold text-green-800">
-                  {filteredTransaksi
-                    .filter(t => t.tipe === 'masuk')
-                    .reduce((sum, t) => sum + t.jumlah, 0)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="p-2 bg-gray-100 rounded-md">
+            <ArrowDownLeft className="w-4 h-4 text-gray-600" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Masuk</p>
+            <p className="text-xl font-bold text-gray-800">
+              {filteredTransaksi
+                .filter(t => t.tipe === 'masuk')
+                .reduce((sum, t) => sum + t.jumlah, 0)}
+            </p>
+          </div>
+        </div>
 
-        <Card className="bg-red-50 border-red-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <ArrowUpRight className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm text-red-700">Total Stok Keluar</p>
-                <p className="text-xl font-bold text-red-800">
-                  {filteredTransaksi
-                    .filter(t => t.tipe === 'keluar')
-                    .reduce((sum, t) => sum + t.jumlah, 0)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="p-2 bg-gray-100 rounded-md">
+            <ArrowUpRight className="w-4 h-4 text-gray-600" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Keluar</p>
+            <p className="text-xl font-bold text-gray-800">
+              {filteredTransaksi
+                .filter(t => t.tipe === 'keluar')
+                .reduce((sum, t) => sum + t.jumlah, 0)}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
