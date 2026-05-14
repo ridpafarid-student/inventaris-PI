@@ -311,7 +311,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
           <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 shadow-xs sticky top-0 z-10">
             <div>
               <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-                M-THREE COMPUTER — Admin Panel
+                M-THREE COMPUTER — {isAdmin ? 'Admin Panel' : 'Staff Panel'}
               </p>
             </div>
             <div className="flex items-center gap-3">
