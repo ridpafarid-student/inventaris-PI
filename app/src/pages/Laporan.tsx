@@ -33,6 +33,7 @@ import html2canvas from 'html2canvas';
 import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
 
 type RecommendationPriority = 'Tinggi' | 'Sedang' | 'Rendah';
+type RecommendationCadence = 'weekly' | 'monthly';
 
 interface RecommendationItem {
   title: string;
@@ -45,6 +46,11 @@ const PRIORITY_STYLES: Record<RecommendationPriority, string> = {
   Tinggi: 'bg-red-100 text-red-700',
   Sedang: 'bg-amber-100 text-amber-700',
   Rendah: 'bg-emerald-100 text-emerald-700',
+};
+
+const CADENCE_LABELS: Record<RecommendationCadence, string> = {
+  weekly: 'Mingguan',
+  monthly: 'Bulanan',
 };
 
 const startOfDay = (date: Date) => {
@@ -64,6 +70,51 @@ const daysBetweenInclusive = (start: Date, end: Date) => {
   return Math.max(1, Math.floor(milliseconds / (1000 * 60 * 60 * 24)) + 1);
 };
 
+const toDate = (value: Date | Timestamp | string | null | undefined) => {
+  if (!value) return null;
+  return value instanceof Timestamp ? value.toDate() : new Date(value);
+};
+
+const isSameMonth = (start: Date, end: Date) =>
+  start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
+
+const isFullMonth = (start: Date, end: Date) => {
+  const monthStart = startOfDay(new Date(start.getFullYear(), start.getMonth(), 1));
+  const monthEnd = endOfDay(new Date(start.getFullYear(), start.getMonth() + 1, 0));
+
+  return start.getTime() === monthStart.getTime() && end.getTime() === monthEnd.getTime();
+};
+
+const formatRecommendationPeriodLabel = (start: Date, end: Date) => {
+  if (isSameMonth(start, end) && isFullMonth(start, end)) {
+    return start.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  }
+
+  return `${start.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })} - ${end.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })}`;
+};
+
+const getRecommendationPeriodFromAnchor = (anchorDate: Date, cadence: RecommendationCadence) => {
+  if (cadence === 'weekly') {
+    const start = startOfDay(anchorDate);
+    const end = endOfDay(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6));
+
+    return { start, end };
+  }
+
+  return {
+    start: startOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1)),
+    end: endOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 0)),
+  };
+};
+
 const getRecommendationPriority = (score: number): RecommendationPriority => {
   if (score >= 8) return 'Tinggi';
   if (score >= 5) return 'Sedang';
@@ -81,15 +132,35 @@ export default function Laporan() {
   const [endDate, setEndDate] = useState('');
   const [filterTipe, setFilterTipe] = useState<string>('all');
   const [filterKategori, setFilterKategori] = useState<string>('all');
+  const [recommendationCadence, setRecommendationCadence] = useState<RecommendationCadence>('weekly');
+
+  const selectedDateRange = useMemo(() => {
+    if (!startDate && !endDate) {
+      return { start: null, end: null };
+    }
+
+    const rawStart = startDate ? startOfDay(new Date(startDate)) : null;
+    const rawEnd = endDate ? endOfDay(new Date(endDate)) : null;
+
+    if (rawStart && rawEnd && rawStart > rawEnd) {
+      return {
+        start: startOfDay(rawEnd),
+        end: endOfDay(rawStart),
+      };
+    }
+
+    return {
+      start: rawStart,
+      end: rawEnd,
+    };
+  }, [endDate, startDate]);
 
   const filteredTransaksi = transaksiList.filter(transaksi => {
-    const tDate = transaksi.createdAt instanceof Timestamp
-      ? transaksi.createdAt.toDate()
-      : new Date(transaksi.createdAt);
+    const tDate = toDate(transaksi.createdAt);
     const barang = barangList.find((item) => item.id === transaksi.barangId);
 
-    const matchesStart = !startDate || tDate >= new Date(startDate);
-    const matchesEnd = !endDate || tDate <= new Date(endDate + 'T23:59:59');
+    const matchesStart = !selectedDateRange.start || (tDate && tDate >= selectedDateRange.start);
+    const matchesEnd = !selectedDateRange.end || (tDate && tDate <= selectedDateRange.end);
     const matchesTipe = filterTipe === 'all' || transaksi.tipe === filterTipe;
     const matchesKategori =
       filterKategori === 'all' || barang?.kategoriId === filterKategori;
@@ -98,45 +169,29 @@ export default function Laporan() {
   });
 
   const filteredServices = services.filter((service) => {
-    const serviceDate = service.createdAt instanceof Timestamp
-      ? service.createdAt.toDate()
-      : new Date(service.createdAt);
+    const serviceDate = toDate(service.createdAt);
 
-    const matchesStart = !startDate || serviceDate >= new Date(startDate);
-    const matchesEnd = !endDate || serviceDate <= new Date(endDate + 'T23:59:59');
+    const matchesStart = !selectedDateRange.start || (serviceDate && serviceDate >= selectedDateRange.start);
+    const matchesEnd = !selectedDateRange.end || (serviceDate && serviceDate <= selectedDateRange.end);
 
     return matchesStart && matchesEnd;
   });
 
   const recommendationPeriod = useMemo(() => {
-    const today = new Date();
+    const anchorValue = startDate || endDate;
 
-    if (startDate && endDate) {
-      return {
-        start: startOfDay(new Date(startDate)),
-        end: endOfDay(new Date(endDate)),
-      };
+    if (!anchorValue) {
+      return null;
     }
 
-    if (startDate) {
-      const start = startOfDay(new Date(startDate));
-      const end = endOfDay(new Date(start.getFullYear(), start.getMonth() + 1, 0));
-      return { start, end };
-    }
-
-    if (endDate) {
-      const end = endOfDay(new Date(endDate));
-      const start = startOfDay(new Date(end.getFullYear(), end.getMonth(), 1));
-      return { start, end };
-    }
-
-    return {
-      start: startOfDay(new Date(today.getFullYear(), today.getMonth(), 1)),
-      end: endOfDay(new Date(today.getFullYear(), today.getMonth() + 1, 0)),
-    };
-  }, [endDate, startDate]);
+    return getRecommendationPeriodFromAnchor(new Date(anchorValue), recommendationCadence);
+  }, [endDate, recommendationCadence, startDate]);
 
   const previousRecommendationPeriod = useMemo(() => {
+    if (!recommendationPeriod) {
+      return null;
+    }
+
     const totalDays = daysBetweenInclusive(recommendationPeriod.start, recommendationPeriod.end);
     const previousEnd = endOfDay(new Date(recommendationPeriod.start.getTime() - 24 * 60 * 60 * 1000));
     const previousStart = startOfDay(new Date(previousEnd.getTime() - (totalDays - 1) * 24 * 60 * 60 * 1000));
@@ -210,9 +265,13 @@ export default function Laporan() {
     });
 
   const monthlyRecommendations = useMemo(() => {
+    if (!recommendationPeriod || !previousRecommendationPeriod) {
+      return null;
+    }
+
     const isInRange = (value: Date | Timestamp | string, start: Date, end: Date) => {
-      const date = value instanceof Timestamp ? value.toDate() : new Date(value);
-      return date >= start && date <= end;
+      const date = toDate(value);
+      return Boolean(date && date >= start && date <= end);
     };
 
     const matchesKategoriFilter = (barangId: string) => {
@@ -221,14 +280,15 @@ export default function Laporan() {
       return barang?.kategoriId === filterKategori;
     };
 
-    const currentMovements = [...transaksiList, ...allServiceStockTransaksi].filter(
+    const allStockMovements = [...transaksiList, ...allServiceStockTransaksi];
+    const currentMovements = allStockMovements.filter(
       (item) =>
         item.tipe === 'keluar' &&
         matchesKategoriFilter(item.barangId) &&
         isInRange(item.createdAt, recommendationPeriod.start, recommendationPeriod.end)
     );
 
-    const previousMovements = [...transaksiList, ...allServiceStockTransaksi].filter(
+    const previousMovements = allStockMovements.filter(
       (item) =>
         item.tipe === 'keluar' &&
         matchesKategoriFilter(item.barangId) &&
@@ -245,14 +305,30 @@ export default function Laporan() {
       return acc;
     }, {});
 
+    const getStockAtPeriodEnd = (barangId: string, currentStock: number) => {
+      const latestTransaction = transaksiList
+        .filter((item) => {
+          const date = toDate(item.createdAt);
+          return item.barangId === barangId && Boolean(date && date <= recommendationPeriod.end);
+        })
+        .sort((a, b) => {
+          const dateA = toDate(a.createdAt)?.getTime() ?? 0;
+          const dateB = toDate(b.createdAt)?.getTime() ?? 0;
+          return dateB - dateA;
+        })[0];
+
+      return latestTransaction?.stokSesudah ?? currentStock;
+    };
+
     const restock = barangList
       .filter((barang) => matchesKategoriFilter(barang.id))
       .map((barang) => {
         const current = currentUsage[barang.id] ?? 0;
         const previous = previousUsage[barang.id] ?? 0;
-        const coverage = current > 0 ? barang.stok / current : barang.stok;
+        const stockAtPeriodEnd = getStockAtPeriodEnd(barang.id, barang.stok);
+        const coverage = current > 0 ? stockAtPeriodEnd / current : stockAtPeriodEnd;
         const score =
-          (barang.stok <= barang.stokMinimum ? 5 : 0) +
+          (stockAtPeriodEnd <= barang.stokMinimum ? 5 : 0) +
           (coverage <= 1 ? 3 : coverage <= 2 ? 2 : 0) +
           (current > previous ? 2 : current > 0 ? 1 : 0);
 
@@ -262,15 +338,16 @@ export default function Laporan() {
           previous,
           score,
           coverage,
+          stockAtPeriodEnd,
         };
       })
       .filter(({ current, score }) => current > 0 && score >= 4)
       .sort((a, b) => b.score - a.score || b.current - a.current)
       .slice(0, 3)
-      .map<RecommendationItem>(({ barang, current, previous, score, coverage }) => ({
+      .map<RecommendationItem>(({ barang, current, previous, score, coverage, stockAtPeriodEnd }) => ({
         title: `Restock ${barang.nama}`,
         priority: getRecommendationPriority(score),
-        reason: `${barang.nama} keluar ${current} unit pada periode ini, stok tersisa ${barang.stok} ${barang.satuan}${previous > 0 ? `, sebelumnya ${previous} unit` : ''}.`,
+        reason: `${barang.nama} keluar ${current} unit pada periode ini, stok akhir periode ${stockAtPeriodEnd} ${barang.satuan}${previous > 0 ? `, sebelumnya ${previous} unit` : ''}.`,
         action: coverage <= 1
           ? 'Siapkan pembelian di awal bulan depan agar servis tidak tertahan.'
           : 'Tambahkan stok buffer untuk antisipasi kebutuhan bulan depan.',
@@ -281,8 +358,9 @@ export default function Laporan() {
       .map((barang) => {
         const current = currentUsage[barang.id] ?? 0;
         const previous = previousUsage[barang.id] ?? 0;
+        const stockAtPeriodEnd = getStockAtPeriodEnd(barang.id, barang.stok);
         const score =
-          (barang.stok > barang.stokMinimum * 2 ? 4 : 0) +
+          (stockAtPeriodEnd > barang.stokMinimum * 2 ? 4 : 0) +
           (current === 0 ? 3 : current <= 1 ? 2 : 0) +
           (previous > current ? 1 : 0);
 
@@ -291,15 +369,16 @@ export default function Laporan() {
           current,
           previous,
           score,
+          stockAtPeriodEnd,
         };
       })
-      .filter(({ barang, current, score }) => barang.stok > 0 && score >= 5 && current <= 1)
-      .sort((a, b) => b.score - a.score || b.barang.stok - a.barang.stok)
+      .filter(({ current, score, stockAtPeriodEnd }) => stockAtPeriodEnd > 0 && score >= 5 && current <= 1)
+      .sort((a, b) => b.score - a.score || b.stockAtPeriodEnd - a.stockAtPeriodEnd)
       .slice(0, 3)
-      .map<RecommendationItem>(({ barang, current, previous, score }) => ({
+      .map<RecommendationItem>(({ barang, current, previous, score, stockAtPeriodEnd }) => ({
         title: `Evaluasi stok ${barang.nama}`,
         priority: getRecommendationPriority(score),
-        reason: `Stok saat ini ${barang.stok} ${barang.satuan}, pergerakan periode ini ${current} unit${previous > 0 ? `, turun dari ${previous} unit` : ''}.`,
+        reason: `Stok akhir periode ${stockAtPeriodEnd} ${barang.satuan}, pergerakan periode ini ${current} unit${previous > 0 ? `, turun dari ${previous} unit` : ''}.`,
         action: current === 0
           ? 'Tahan pembelian ulang dan pertimbangkan bundling atau promo agar stok bergerak.'
           : 'Batasi pembelian berikutnya sampai pergerakan stok kembali stabil.',
@@ -311,9 +390,29 @@ export default function Laporan() {
     const previousServicesInPeriod = services.filter((service) =>
       isInRange(service.createdAt, previousRecommendationPeriod.start, previousRecommendationPeriod.end)
     );
+    const waitingServicesInScope = services.filter((service) => {
+      const createdAt = toDate(service.createdAt);
+      const updatedAt = toDate(service.updatedAt);
 
-    const currentWaiting = currentServicesInPeriod.filter((service) => service.status === 'menunggu-sparepart').length;
-    const previousWaiting = previousServicesInPeriod.filter((service) => service.status === 'menunggu-sparepart').length;
+      return service.status === 'menunggu-sparepart' && Boolean(
+        createdAt &&
+        createdAt <= recommendationPeriod.end &&
+        (!updatedAt || updatedAt >= recommendationPeriod.start)
+      );
+    });
+    const previousWaitingServicesInScope = services.filter((service) => {
+      const createdAt = toDate(service.createdAt);
+      const updatedAt = toDate(service.updatedAt);
+
+      return service.status === 'menunggu-sparepart' && Boolean(
+        createdAt &&
+        createdAt <= previousRecommendationPeriod.end &&
+        (!updatedAt || updatedAt >= previousRecommendationPeriod.start)
+      );
+    });
+
+    const currentWaiting = waitingServicesInScope.length;
+    const previousWaiting = previousWaitingServicesInScope.length;
     const currentCompleted = currentServicesInPeriod.filter((service) => service.status === 'selesai').length;
     const completionRate = currentServicesInPeriod.length > 0
       ? Math.round((currentCompleted / currentServicesInPeriod.length) * 100)
@@ -375,14 +474,15 @@ export default function Laporan() {
     ]);
 
     return {
-      periodLabel: recommendationPeriod.start.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+      periodLabel: formatRecommendationPeriodLabel(recommendationPeriod.start, recommendationPeriod.end),
       comparisonLabel: `${previousRecommendationPeriod.totalDays} hari sebelumnya`,
+      cadenceLabel: CADENCE_LABELS[recommendationCadence],
       restock: restock.length > 0
         ? restock
-        : fallback('Stok restock relatif aman', 'Lanjutkan pemantauan pemakaian sparepart untuk bulan berikutnya.'),
+        : fallback('Stok restock relatif aman', 'Lanjutkan pemantauan pemakaian sparepart untuk periode berikutnya.'),
       slowMoving: slowMoving.length > 0
         ? slowMoving
-        : fallback('Belum ada stok lambat bergerak yang kritis', 'Pertahankan pola pembelian saat ini dan evaluasi lagi bulan depan.'),
+        : fallback('Belum ada stok lambat bergerak yang kritis', 'Pertahankan pola pembelian saat ini dan evaluasi lagi periode berikutnya.'),
       service: serviceTrendItems.slice(0, 3).length > 0
         ? serviceTrendItems.slice(0, 3)
         : fallback('Tren layanan masih stabil', 'Pantau kembali permintaan servis dan status pengerjaan pada periode berikutnya.'),
@@ -392,6 +492,7 @@ export default function Laporan() {
     barangList,
     filterKategori,
     previousRecommendationPeriod,
+    recommendationCadence,
     recommendationPeriod,
     services,
     transaksiList,
@@ -536,7 +637,7 @@ export default function Laporan() {
           <CardTitle className="text-lg">Filter Laporan</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-2">
               <Label>Dari Tanggal</Label>
               <Input
@@ -577,6 +678,21 @@ export default function Laporan() {
                   {kategoriList.map((k) => (
                     <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Mode Rekomendasi</Label>
+              <Select
+                value={recommendationCadence}
+                onValueChange={(value) => setRecommendationCadence(value as RecommendationCadence)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Mingguan</SelectItem>
+                  <SelectItem value="monthly">Bulanan</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -647,50 +763,69 @@ export default function Laporan() {
             <div>
               <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
                 <Sparkles className="h-5 w-5 text-blue-600" />
-                Rekomendasi Bulanan
+                Rekomendasi {CADENCE_LABELS[recommendationCadence]}
               </CardTitle>
               <p className="mt-1 text-sm text-gray-500">
-                Insight otomatis untuk {monthlyRecommendations.periodLabel} dengan pembanding {monthlyRecommendations.comparisonLabel}.
+                {monthlyRecommendations
+                  ? `Insight otomatis untuk ${monthlyRecommendations.periodLabel} dengan pembanding ${monthlyRecommendations.comparisonLabel}.`
+                  : 'Pilih tanggal laporan dulu untuk menampilkan rekomendasi.'}
               </p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {[
-              {
-                title: 'Restock Bulan Depan',
-                items: monthlyRecommendations.restock,
-                accent: 'border-red-200 bg-red-50/80',
-              },
-              {
-                title: 'Evaluasi Stok Lambat Bergerak',
-                items: monthlyRecommendations.slowMoving,
-                accent: 'border-amber-200 bg-amber-50/80',
-              },
-              {
-                title: 'Evaluasi Layanan / Service',
-                items: monthlyRecommendations.service,
-                accent: 'border-blue-200 bg-blue-50/80',
-              },
-            ].map((section) => (
-              <div key={section.title} className={`rounded-xl border p-4 ${section.accent}`}>
-                <h3 className="text-base font-semibold text-gray-900">{section.title}</h3>
-                <div className="mt-4 space-y-3">
-                  {section.items.map((item) => (
-                    <div key={item.title} className="rounded-lg border border-white/70 bg-white/90 p-3 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="font-medium text-gray-900">{item.title}</p>
-                        <Badge className={PRIORITY_STYLES[item.priority]}>{item.priority}</Badge>
-                      </div>
-                      <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
-                      <p className="mt-2 text-sm font-medium text-gray-800">Saran: {item.action}</p>
-                    </div>
-                  ))}
-                </div>
+          {!monthlyRecommendations ? (
+            <div className="rounded-lg border border-dashed border-blue-200 bg-white/80 p-6 text-center">
+              <Sparkles className="mx-auto h-8 w-8 text-blue-500" />
+              <p className="mt-3 font-medium text-gray-900">Rekomendasi belum ditampilkan</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Isi tanggal laporan, lalu pilih mode mingguan atau bulanan.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-blue-100 text-blue-700">{monthlyRecommendations.cadenceLabel}</Badge>
+                <Badge className="bg-slate-100 text-slate-700">{monthlyRecommendations.periodLabel}</Badge>
+                <Badge className="bg-slate-100 text-slate-700">Banding: {monthlyRecommendations.comparisonLabel}</Badge>
               </div>
-            ))}
-          </div>
+              <div className="grid gap-4 lg:grid-cols-3">
+                {[
+                  {
+                    title: 'Restock Periode Berikutnya',
+                    items: monthlyRecommendations.restock,
+                    accent: 'border-red-200 bg-red-50/80',
+                  },
+                  {
+                    title: 'Stok Lambat Bergerak',
+                    items: monthlyRecommendations.slowMoving,
+                    accent: 'border-amber-200 bg-amber-50/80',
+                  },
+                  {
+                    title: 'Layanan / Service',
+                    items: monthlyRecommendations.service,
+                    accent: 'border-blue-200 bg-blue-50/80',
+                  },
+                ].map((section) => (
+                  <div key={section.title} className={`rounded-xl border p-4 ${section.accent}`}>
+                    <h3 className="text-base font-semibold text-gray-900">{section.title}</h3>
+                    <div className="mt-4 space-y-3">
+                      {section.items.map((item) => (
+                        <div key={item.title} className="rounded-lg border border-white/70 bg-white/90 p-3 shadow-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="font-medium text-gray-900">{item.title}</p>
+                            <Badge className={`${PRIORITY_STYLES[item.priority]} shrink-0`}>{item.priority}</Badge>
+                          </div>
+                          <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
+                          <p className="mt-2 text-sm font-medium text-gray-800">Saran: {item.action}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -737,41 +872,48 @@ export default function Laporan() {
           </div>
         </div>
 
-        <div className="mb-8">
-          <h3 className="mb-3 text-lg font-semibold text-gray-900">Rekomendasi Bulanan</h3>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            {[
-              {
-                title: 'Restock Bulan Depan',
-                items: monthlyRecommendations.restock,
-              },
-              {
-                title: 'Evaluasi Stok Lambat Bergerak',
-                items: monthlyRecommendations.slowMoving,
-              },
-              {
-                title: 'Evaluasi Layanan / Service',
-                items: monthlyRecommendations.service,
-              },
-            ].map((section) => (
-              <div key={section.title} className="rounded-lg border p-4">
-                <p className="font-semibold text-gray-900">{section.title}</p>
-                <div className="mt-3 space-y-3">
-                  {section.items.map((item) => (
-                    <div key={item.title} className="rounded-md border p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="font-medium text-gray-900">{item.title}</p>
-                        <span className="text-xs font-semibold text-gray-500">{item.priority}</span>
+        {monthlyRecommendations && (
+          <div className="mb-8">
+            <h3 className="mb-1 text-lg font-semibold text-gray-900">
+              Rekomendasi {monthlyRecommendations.cadenceLabel}
+            </h3>
+            <p className="mb-3 text-sm text-gray-500">
+              Periode {monthlyRecommendations.periodLabel}, dibanding {monthlyRecommendations.comparisonLabel}.
+            </p>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              {[
+                {
+                  title: 'Restock Periode Berikutnya',
+                  items: monthlyRecommendations.restock,
+                },
+                {
+                  title: 'Stok Lambat Bergerak',
+                  items: monthlyRecommendations.slowMoving,
+                },
+                {
+                  title: 'Layanan / Service',
+                  items: monthlyRecommendations.service,
+                },
+              ].map((section) => (
+                <div key={section.title} className="rounded-lg border p-4">
+                  <p className="font-semibold text-gray-900">{section.title}</p>
+                  <div className="mt-3 space-y-3">
+                    {section.items.map((item) => (
+                      <div key={item.title} className="rounded-md border p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="font-medium text-gray-900">{item.title}</p>
+                          <span className="text-xs font-semibold text-gray-500">{item.priority}</span>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
+                        <p className="mt-2 text-sm text-gray-800">Saran: {item.action}</p>
                       </div>
-                      <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
-                      <p className="mt-2 text-sm text-gray-800">Saran: {item.action}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Table */}
         <div className="mb-8">
