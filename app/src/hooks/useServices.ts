@@ -21,6 +21,9 @@ interface SaveServiceInput {
   deskripsiMasalah: string;
   status: ServiceStatus;
   sparepartDigunakan?: ServiceSparepartItem[];
+  userId?: string;
+  userName?: string;
+  createdByName?: string;
 }
 
 const getErrorMessage = (error: unknown, fallback: string) => {

@@ -15,9 +15,11 @@ import {
 import { useBarang } from '@/hooks/useBarang';
 import { useServices } from '@/hooks/useServices';
 import { Plus, Search, Wrench } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import type { ServiceItem, ServiceStatus } from '@/types';
 
 export default function ServiceStatus() {
+  const { userData } = useAuth();
   const { barangList } = useBarang();
   const {
     services,
@@ -53,7 +55,12 @@ export default function ServiceStatus() {
   const handleSubmit = async (payload: ServiceFormState) => {
     const result = selectedService
       ? await updateService(selectedService.id, payload)
-      : await addService(payload);
+      : await addService({
+        ...payload,
+        userId: userData?.uid || '',
+        userName: userData?.name || '',
+        createdByName: userData?.name || '',
+      });
 
     if (result.success) {
       setIsModalOpen(false);

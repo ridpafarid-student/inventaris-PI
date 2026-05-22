@@ -161,13 +161,13 @@ function formatDate(ts: any) {
 // MAIN DASHBOARD
 // ═══════════════════════════════════════════════════════════════
 
-export default function Dashboard() {
+export default function Dashboard({ onPageChange }: { onPageChange?: (page: string) => void }) {
   const { stats, alertStok, servisByStatus, loading } = useDashboard();
   const { userData } = useAuth();
 
   // Ambil 5 servis terbaru langsung
   const [recentServices, setRecentServices] = useState<ServiceItem[]>([]);
-  // Ambil barang stok rendah (stok < 5)
+  // Ambil barang stok rendah berdasarkan batas minimum tiap barang.
   const [lowStockBarang, setLowStockBarang] = useState<Barang[]>([]);
 
   useEffect(() => {
@@ -184,7 +184,7 @@ export default function Dashboard() {
     const unsubBarang = onSnapshot(collection(db, 'barang'), (snap) => {
       const list: Barang[] = [];
       snap.forEach((d) => list.push({ id: d.id, ...d.data() } as Barang));
-      setLowStockBarang(list.filter((b) => b.stok < 5).sort((a, b) => a.stok - b.stok).slice(0, 8));
+      setLowStockBarang(list.filter((b) => b.stok <= b.stokMinimum).sort((a, b) => a.stok - b.stok).slice(0, 8));
     });
 
     return () => {
@@ -193,8 +193,8 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Teknisi dummy (ambil dari status, tidak ada field teknisi di data)
-  const getTechnician = (_service: ServiceItem) => '—';
+  // Teknisi/Oleh mengikuti pola transaksi stok: userName, lalu fallback data lama.
+  const getTechnician = (service: ServiceItem) => service.userName || service.createdByName || '-';
 
   if (loading) {
     return (
@@ -365,10 +365,10 @@ export default function Dashboard() {
                 <AlertTriangle className="w-4.5 h-4.5 text-orange-500" style={{ width: '18px', height: '18px' }} />
                 <h2 className="text-lg font-semibold text-[#1F2937]">Peringatan Stok Spare Part</h2>
                 <span className="text-xs font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full ml-1">
-                  Stok &lt; 5
+                  Batas Minimum
                 </span>
               </div>
-              <p className="text-sm text-gray-400">Segera lakukan pemesanan ulang untuk item berikut</p>
+              <p className="text-sm text-gray-400">Item berikut sudah mencapai atau melewati stok minimum</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -406,8 +406,8 @@ export default function Dashboard() {
                         </td>
                         <td className="px-4 py-3.5 text-center">
                           <span className={`inline-flex items-center justify-center w-10 h-7 rounded-lg text-sm font-bold ring-1 ${barang.stok === 0
-                              ? 'bg-red-100 text-red-700 ring-red-200'
-                              : 'bg-orange-100 text-orange-700 ring-orange-200'
+                            ? 'bg-red-100 text-red-700 ring-red-200'
+                            : 'bg-orange-100 text-orange-700 ring-orange-200'
                             }`}>
                             {barang.stok}
                           </span>
@@ -480,31 +480,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Recent activity strip */}
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <h3 className="text-base font-semibold text-[#1F2937] mb-3">Servis Masuk Terakhir</h3>
-            {recentServices.slice(0, 4).length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">Tidak ada data</p>
-            ) : (
-              <div className="space-y-3">
-                {recentServices.slice(0, 4).map((svc) => {
-                  const cfg = STATUS_CONFIG[svc.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.pending;
-                  return (
-                    <div key={svc.id} className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#1F2937] truncate">{svc.namaPelanggan}</p>
-                        <p className="text-xs text-gray-400 truncate">{svc.modelPerangkat} · {formatDate(svc.createdAt)}</p>
-                      </div>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${cfg.bg} ${cfg.text}`}>
-                        {cfg.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+
 
           {/* Inventory overview */}
           <div className="bg-gradient-to-br from-[#1E3A8A] to-[#0077CC] rounded-xl shadow-md p-5 text-white">
@@ -532,10 +508,13 @@ export default function Dashboard() {
               })}
             </div>
             <div className="mt-4 pt-3 border-t border-blue-600/50">
-              <div className="flex items-center justify-between">
+              <button
+                onClick={() => onPageChange?.('barang')}
+                className="w-full flex items-center justify-between hover:opacity-80 transition-opacity"
+              >
                 <span className="text-xs text-blue-200 font-medium">Lihat Inventaris Lengkap</span>
                 <ChevronRight className="w-4 h-4 text-blue-200" />
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -553,7 +532,7 @@ export default function Dashboard() {
           ))}
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-400">
             <Badge variant="outline" className="text-xs font-medium border-orange-200 text-orange-600">
-              ⚠ Stok &lt; 5 = Kritikal
+              Stok mencapai minimum = Kritikal
             </Badge>
           </div>
         </div>

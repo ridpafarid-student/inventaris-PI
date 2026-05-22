@@ -121,6 +121,9 @@ export interface ServiceItem {
   sparepartDigunakan?: ServiceSparepartItem[];
   stokDikurangi?: boolean;
   completedAt?: Date | null;
+  userId?: string;
+  userName?: string;
+  createdByName?: string;
   createdAt: Date;
   updatedAt: Date;
 }

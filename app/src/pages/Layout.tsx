@@ -258,17 +258,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
       {/* Mobile Header */}
       <header className="lg:hidden border-b sticky top-0 z-50" style={{ backgroundColor: '#1a1a2e', borderColor: 'rgba(255,255,255,0.1)' }}>
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: '#6366f1' }}>
-              <Monitor className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-white text-sm">M-THREE</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-1 rounded font-medium" style={{ backgroundColor: 'rgba(99,102,241,0.2)', color: 'rgba(255,255,255,0.6)' }}>
-              {userData?.role === 'admin' ? 'Admin' : 'Staff'}
-            </span>
+          <div className="flex items-center gap-3">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 text-white hover:bg-white/10">
@@ -287,6 +277,19 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
                 />
               </SheetContent>
             </Sheet>
+
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: '#6366f1' }}>
+                <Monitor className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-bold text-white text-sm">M-THREE</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2 py-1 rounded font-medium" style={{ backgroundColor: 'rgba(99,102,241,0.2)', color: 'rgba(255,255,255,0.6)' }}>
+              {userData?.role === 'admin' ? 'Admin' : 'Staff'}
+            </span>
           </div>
         </div>
       </header>
