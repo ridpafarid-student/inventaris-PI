@@ -82,11 +82,19 @@ export default function ServiceStatus() {
   };
 
   const handleComplete = async (service: ServiceItem) => {
-    if (service.status === 'selesai') {
+    if (service.status === 'selesai' || service.status === 'diambil') {
       return;
     }
 
     await updateServiceStatus(service.id, 'selesai');
+  };
+
+  const handlePickup = async (service: ServiceItem) => {
+    if (service.status !== 'selesai') {
+      return;
+    }
+
+    await updateServiceStatus(service.id, 'diambil');
   };
 
   return (
@@ -133,6 +141,7 @@ export default function ServiceStatus() {
             <SelectItem value="proses">Proses</SelectItem>
             <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
             <SelectItem value="selesai">Selesai</SelectItem>
+            <SelectItem value="diambil">Diambil</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -161,6 +170,7 @@ export default function ServiceStatus() {
               service={service}
               onEdit={handleEdit}
               onComplete={handleComplete}
+              onPickup={handlePickup}
               onStatusChange={handleStatusChange}
             />
           ))

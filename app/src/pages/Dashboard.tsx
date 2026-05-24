@@ -33,7 +33,6 @@ import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestor
 import { db } from '@/lib/firebase';
 import { useEffect } from 'react';
 import type { ServiceItem, Barang } from '@/types';
-import { Timestamp } from 'firebase/firestore';
 
 // ─── Status badge helper ───────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -57,6 +56,13 @@ const STATUS_CONFIG = {
     text: 'text-green-700',
     dot: 'bg-green-500',
     ring: 'ring-green-200',
+  },
+  diambil: {
+    label: 'Diambil',
+    bg: 'bg-slate-100',
+    text: 'text-slate-700',
+    dot: 'bg-slate-500',
+    ring: 'ring-slate-200',
   },
   'menunggu-sparepart': {
     label: 'Menunggu',
@@ -153,18 +159,12 @@ function formatRp(n: number) {
   }).format(n);
 }
 
-function formatDate(ts: any) {
-  if (!ts) return '-';
-  const d = ts instanceof Timestamp ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
 // ═══════════════════════════════════════════════════════════════
 // MAIN DASHBOARD
 // ═══════════════════════════════════════════════════════════════
 
 export default function Dashboard({ onPageChange }: { onPageChange?: (page: string) => void }) {
-  const { stats, alertStok, servisByStatus, loading } = useDashboard();
+  const { stats, servisByStatus, loading } = useDashboard();
   const { userData } = useAuth();
 
   // Ambil 5 servis terbaru langsung
@@ -220,7 +220,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
     ? servisByStatus.map((i) => ({ ...i, chartValue: 1 }))
     : servisByStatus.map((i) => ({ ...i, chartValue: i.value }));
 
-  const siapDiambil = recentServices.filter((s) => s.status === 'selesai').length;
+  const siapDiambil = stats.servisSelesai;
 
   return (
     <div className="space-y-7 max-w-[1400px]">

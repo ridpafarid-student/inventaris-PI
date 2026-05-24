@@ -524,10 +524,24 @@ export default function Laporan() {
       (total, service) => total + (service.sparepartDigunakan?.reduce((sum, item) => sum + item.jumlah, 0) ?? 0),
       0
     ),
+    totalBiayaJasa: filteredServices.reduce((total, service) => total + (service.biayaJasa ?? 0), 0),
+    nilaiSparepart: serviceStockTransaksi.reduce((total, transaksi) => total + transaksi.totalHarga, 0),
+    omzetServis: filteredServices.reduce((total, service) => total + (service.biayaJasa ?? 0), 0) +
+      serviceStockTransaksi.reduce((total, transaksi) => total + transaksi.totalHarga, 0),
   };
 
   const getServiceSparepartTotal = (service: ServiceItem) =>
     service.sparepartDigunakan?.reduce((sum, item) => sum + item.jumlah, 0) ?? 0;
+
+  const getServiceSparepartValue = (service: ServiceItem) =>
+    (service.sparepartDigunakan ?? []).reduce((sum, item) => {
+      const barang = barangList.find((product) => product.id === item.productId);
+      const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
+      return sum + (hargaSatuan * item.jumlah);
+    }, 0);
+
+  const getServiceTotalValue = (service: ServiceItem) =>
+    (service.biayaJasa ?? 0) + getServiceSparepartValue(service);
 
   // Format currency
   const formatRupiah = (value: number) => {
@@ -718,7 +732,7 @@ export default function Laporan() {
       {/* Summary Cards - Servis */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ringkasan Servis</p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs text-gray-400 font-medium">Total Servis</p>
             <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.totalServis}</p>
@@ -736,6 +750,14 @@ export default function Laporan() {
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs text-gray-400 font-medium">Sparepart Terpakai</p>
             <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.totalSparepart}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Nilai Jasa</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Omzet Servis</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.omzetServis)}</p>
           </div>
         </div>
       </div>
@@ -852,6 +874,14 @@ export default function Laporan() {
           <div className="border p-3 rounded">
             <p className="text-sm text-gray-500">Servis Selesai</p>
             <p className="text-xl font-bold">{serviceSummary.selesai}</p>
+          </div>
+          <div className="border p-3 rounded">
+            <p className="text-sm text-gray-500">Nilai Jasa</p>
+            <p className="text-xl font-bold">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
+          </div>
+          <div className="border p-3 rounded">
+            <p className="text-sm text-gray-500">Omzet Servis</p>
+            <p className="text-xl font-bold">{formatRupiah(serviceSummary.omzetServis)}</p>
           </div>
         </div>
 
@@ -1032,6 +1062,16 @@ export default function Laporan() {
                     <p className="text-gray-500 text-sm">Total</p>
                     <p className="mt-1 font-semibold text-gray-900">{getServiceSparepartTotal(service)}</p>
                   </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500 text-sm">Biaya Jasa</p>
+                      <p className="mt-1 font-semibold text-gray-900">{formatRupiah(service.biayaJasa ?? 0)}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500 text-sm">Total Tagihan</p>
+                      <p className="mt-1 font-semibold text-gray-900">{formatRupiah(getServiceTotalValue(service))}</p>
+                    </div>
+                  </div>
                 </div>
               ))
             )}
@@ -1047,13 +1087,14 @@ export default function Laporan() {
               <TableHead>Perangkat</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Sparepart</TableHead>
-              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Biaya Jasa</TableHead>
+              <TableHead className="text-right">Total Tagihan</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredServices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     Tidak ada data servis
                   </TableCell>
                 </TableRow>
@@ -1081,7 +1122,10 @@ export default function Laporan() {
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {getServiceSparepartTotal(service)}
+                      {formatRupiah(service.biayaJasa ?? 0)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatRupiah(getServiceTotalValue(service))}
                     </TableCell>
                   </TableRow>
                 ))

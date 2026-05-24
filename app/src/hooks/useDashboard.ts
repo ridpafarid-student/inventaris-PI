@@ -98,7 +98,7 @@ export function useDashboard() {
     const nilaiInventori = barangList.reduce((sum, barang) => sum + (barang.stok * barang.hargaBeli), 0);
     const totalServis = services.length;
     const servisHariIni = services.filter((service) => isSameDayOrAfterStart(service.createdAt)).length;
-    const servisAktif = services.filter((service) => service.status !== 'selesai').length;
+    const servisAktif = services.filter((service) => service.status !== 'selesai' && service.status !== 'diambil').length;
     const servisMenungguSparepart = services.filter((service) => service.status === 'menunggu-sparepart').length;
     const servisSelesai = services.filter((service) => service.status === 'selesai').length;
     const servisSelesaiHariIni = services.filter((service) =>
@@ -204,6 +204,7 @@ export function useDashboard() {
       Proses: services.filter((service) => service.status === 'proses').length,
       'Menunggu Sparepart': services.filter((service) => service.status === 'menunggu-sparepart').length,
       Selesai: services.filter((service) => service.status === 'selesai').length,
+      Diambil: services.filter((service) => service.status === 'diambil').length,
     };
 
     return Object.entries(data).map(([name, value]) => ({ name, value }));

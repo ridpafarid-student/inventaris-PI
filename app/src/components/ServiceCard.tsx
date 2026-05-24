@@ -8,13 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle2, Clock3, Cpu, Laptop, Pencil, Printer, Smartphone, UserRound, Wrench } from 'lucide-react';
+import { Banknote, CheckCircle2, Clock3, Cpu, Laptop, PackageCheck, Pencil, Printer, Smartphone, UserRound, Wrench } from 'lucide-react';
 import type { ServiceItem, ServiceStatus } from '@/types';
 
 interface ServiceCardProps {
   service: ServiceItem;
   onEdit: (service: ServiceItem) => void;
   onComplete: (service: ServiceItem) => void;
+  onPickup: (service: ServiceItem) => void;
   onStatusChange: (service: ServiceItem, status: ServiceStatus) => void;
 }
 
@@ -35,9 +36,13 @@ const statusConfig: Record<ServiceStatus, { label: string; className: string }> 
     label: 'Selesai',
     className: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100',
   },
+  diambil: {
+    label: 'Diambil',
+    className: 'bg-slate-200 text-slate-700 hover:bg-slate-200',
+  },
 };
 
-const selectableStatuses: ServiceStatus[] = ['pending', 'proses', 'menunggu-sparepart'];
+const selectableStatuses: ServiceStatus[] = ['pending', 'proses', 'menunggu-sparepart', 'selesai', 'diambil'];
 
 function DeviceIcon({ type }: { type: ServiceItem['jenisPerangkat'] }) {
   if (type === 'Smartphone' || type === 'Tablet') return <Smartphone className="h-3.5 w-3.5" />;
@@ -46,13 +51,23 @@ function DeviceIcon({ type }: { type: ServiceItem['jenisPerangkat'] }) {
   return <Laptop className="h-3.5 w-3.5" />;
 }
 
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(value);
+}
+
 export default function ServiceCard({
   service,
   onEdit,
   onComplete,
+  onPickup,
   onStatusChange,
 }: ServiceCardProps) {
   const sparepartCount = service.sparepartDigunakan?.reduce((total, item) => total + item.jumlah, 0) ?? 0;
+  const biayaJasa = service.biayaJasa ?? 0;
 
   return (
     <Card className="border-slate-200 shadow-sm">
@@ -82,6 +97,10 @@ export default function ServiceCard({
           <div className="flex items-start gap-2">
             <Wrench className="mt-0.5 h-4 w-4 text-slate-400" />
             <p className="line-clamp-2">{service.deskripsiMasalah}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Banknote className="h-4 w-4 text-slate-400" />
+            <span>Jasa: {formatRupiah(biayaJasa)}</span>
           </div>
         </div>
 
@@ -117,10 +136,19 @@ export default function ServiceCard({
               variant="outline"
               className="flex-1 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
               onClick={() => onComplete(service)}
-              disabled={service.status === 'selesai'}
+              disabled={service.status === 'selesai' || service.status === 'diambil'}
             >
               <CheckCircle2 className="mr-2 h-4 w-4" />
               Selesai
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              onClick={() => onPickup(service)}
+              disabled={service.status !== 'selesai'}
+            >
+              <PackageCheck className="mr-2 h-4 w-4" />
+              Diambil
             </Button>
           </div>
         </div>

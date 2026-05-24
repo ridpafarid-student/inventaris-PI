@@ -34,6 +34,7 @@ export interface ServiceFormState {
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
   modelPerangkat: string;
   deskripsiMasalah: string;
+  biayaJasa: number;
   status: ServiceStatus;
   sparepartDigunakan: ServiceSparepartItem[];
 }
@@ -44,6 +45,7 @@ const initialForm: ServiceFormState = {
   jenisPerangkat: 'Smartphone',
   modelPerangkat: '',
   deskripsiMasalah: '',
+  biayaJasa: 0,
   status: 'pending',
   sparepartDigunakan: [],
 };
@@ -59,6 +61,7 @@ const createInitialForm = (service?: ServiceItem | null): ServiceFormState => {
     jenisPerangkat: service.jenisPerangkat,
     modelPerangkat: service.modelPerangkat,
     deskripsiMasalah: service.deskripsiMasalah,
+    biayaJasa: service.biayaJasa ?? 0,
     status: service.status,
     sparepartDigunakan: service.sparepartDigunakan ?? [],
   };
@@ -96,6 +99,11 @@ export default function AddServiceModal({
       ...current,
       [key]: value,
     }));
+  };
+
+  const parseNumberInput = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, '');
+    return digitsOnly ? parseInt(digitsOnly, 10) : 0;
   };
 
   const handleSparepartChange = (index: number, key: keyof ServiceSparepartItem, value: string | number) => {
@@ -247,8 +255,19 @@ export default function AddServiceModal({
                   <SelectItem value="proses">Proses</SelectItem>
                   <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
                   <SelectItem value="selesai">Selesai</SelectItem>
+                  <SelectItem value="diambil">Diambil</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Biaya Jasa (Rp)</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={formData.biayaJasa === 0 ? '' : String(formData.biayaJasa)}
+                onChange={(event) => handleFieldChange('biayaJasa', parseNumberInput(event.target.value))}
+                placeholder="Contoh: 150000"
+              />
             </div>
           </div>
 

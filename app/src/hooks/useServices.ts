@@ -19,6 +19,7 @@ interface SaveServiceInput {
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
   modelPerangkat: string;
   deskripsiMasalah: string;
+  biayaJasa?: number;
   status: ServiceStatus;
   sparepartDigunakan?: ServiceSparepartItem[];
   userId?: string;
@@ -39,7 +40,7 @@ const shouldDeductStock = (
   spareparts: ServiceSparepartItem[],
   alreadyDeducted: boolean
 ) => !alreadyDeducted && spareparts.length > 0 && (
-  nextStatus === 'selesai' || nextStatus === 'menunggu-sparepart' || nextStatus === 'proses'
+  nextStatus === 'selesai' || nextStatus === 'diambil' || nextStatus === 'menunggu-sparepart' || nextStatus === 'proses'
 );
 
 export function useServices() {
@@ -153,9 +154,10 @@ export function useServices() {
         const spareparts = payload.sparepartDigunakan ?? currentService.sparepartDigunakan ?? [];
         const alreadyDeducted = currentService.stokDikurangi ?? false;
         const deductStock = shouldDeductStock(nextStatus, spareparts, alreadyDeducted);
-        const wasCompleted = currentService.status === 'selesai';
-        const isCompletingNow = nextStatus === 'selesai' && !wasCompleted;
-        const isReopened = nextStatus !== 'selesai' && wasCompleted;
+        const wasCompleted = currentService.status === 'selesai' || currentService.status === 'diambil';
+        const isCompletingNow = (nextStatus === 'selesai' || nextStatus === 'diambil') && !wasCompleted;
+        const isPickedUpNow = nextStatus === 'diambil' && currentService.status !== 'diambil';
+        const isReopened = nextStatus !== 'selesai' && nextStatus !== 'diambil' && wasCompleted;
 
         if (deductStock) {
           await applySparepartUsage(spareparts, transaction);
@@ -166,7 +168,9 @@ export function useServices() {
           sparepartDigunakan: spareparts,
           stokDikurangi: alreadyDeducted || deductStock,
           ...(isCompletingNow ? { completedAt: serverTimestamp() } : {}),
+          ...(isPickedUpNow ? { pickedUpAt: serverTimestamp() } : {}),
           ...(isReopened ? { completedAt: null } : {}),
+          ...(isReopened ? { pickedUpAt: null } : {}),
           updatedAt: serverTimestamp(),
         });
       });

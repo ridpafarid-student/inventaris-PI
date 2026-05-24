@@ -100,7 +100,7 @@ export interface LaporanFilter {
 }
 
 // Status Servis
-export type ServiceStatus = 'pending' | 'proses' | 'menunggu-sparepart' | 'selesai';
+export type ServiceStatus = 'pending' | 'proses' | 'menunggu-sparepart' | 'selesai' | 'diambil';
 
 // Sparepart pada Servis
 export interface ServiceSparepartItem {
@@ -117,10 +117,12 @@ export interface ServiceItem {
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
   modelPerangkat: string;
   deskripsiMasalah: string;
+  biayaJasa?: number;
   status: ServiceStatus;
   sparepartDigunakan?: ServiceSparepartItem[];
   stokDikurangi?: boolean;
   completedAt?: Date | null;
+  pickedUpAt?: Date | null;
   userId?: string;
   userName?: string;
   createdByName?: string;
