@@ -47,7 +47,8 @@ export default function DataBarang() {
     addKategori,
     deleteKategori
   } = useBarang();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isStaff } = useAuth();
+  const shouldHideHargaBeli = isStaff;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKategori, setSelectedKategori] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -495,7 +496,7 @@ export default function DataBarang() {
       </div>
 
       {/* Table */}
-      <Card>
+      <Card className={shouldHideHargaBeli ? 'max-w-6xl' : undefined}>
         <CardContent className="p-0">
           <div className="md:hidden divide-y">
             {filteredBarang.length === 0 ? (
@@ -529,12 +530,14 @@ export default function DataBarang() {
                         </span>
                       </div>
                     </div>
-                    <div className="rounded-lg bg-gray-50 p-3">
-                      <p className="text-gray-500">Harga Beli</p>
-                      <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(barang.hargaBeli)}</p>
-                    </div>
-                    <div className="col-span-2 rounded-lg bg-gray-50 p-3">
-                      <p className="text-gray-500">Harga Jual</p>
+                    {!shouldHideHargaBeli && (
+                      <div className="rounded-lg bg-gray-50 p-3">
+                        <p className="text-gray-500">Harga Beli</p>
+                        <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(barang.hargaBeli)}</p>
+                      </div>
+                    )}
+                    <div className={`${shouldHideHargaBeli ? '' : 'col-span-2'} rounded-lg bg-gray-50 p-3`}>
+                      <p className="text-gray-500">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</p>
                       <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(barang.hargaJual)}</p>
                     </div>
                   </div>
@@ -591,22 +594,41 @@ export default function DataBarang() {
           </div>
 
           <div className="hidden md:block overflow-x-auto">
-            <Table>
+            <Table className={shouldHideHargaBeli ? 'table-fixed text-sm' : 'table-fixed'}>
+              {shouldHideHargaBeli ? (
+                <colgroup>
+                  <col className="w-[13%]" />
+                  <col className="w-[34%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[20%]" />
+                </colgroup>
+              ) : (
+                <colgroup>
+                  <col className="w-[11%]" />
+                  <col className="w-[26%]" />
+                  <col className="w-[16%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[14%]" />
+                  {isAdmin && <col className="w-[10%]" />}
+                </colgroup>
+              )}
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kode</TableHead>
-                  <TableHead>Nama Barang</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead className="text-right">Stok</TableHead>
-                  <TableHead className="text-right">Harga Beli</TableHead>
-                  <TableHead className="text-right">Harga Jual</TableHead>
+                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-xs' : undefined}>Kode</TableHead>
+                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-xs' : undefined}>Nama Barang</TableHead>
+                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-xs' : undefined}>Kategori</TableHead>
+                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-right text-xs' : 'text-right'}>Stok</TableHead>
+                  {!shouldHideHargaBeli && <TableHead className="text-right">Harga Beli</TableHead>}
+                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-right text-xs' : 'text-right'}>{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</TableHead>
                   {isAdmin && <TableHead className="text-center">Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredBarang.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 7 : 6} className="text-center py-8">
+                    <TableCell colSpan={(isAdmin ? 6 : 5) + (shouldHideHargaBeli ? 0 : 1)} className="text-center py-8">
                       <Package className="w-12 h-12 mx-auto text-gray-300 mb-2" />
                       <p className="text-gray-500">Tidak ada data barang</p>
                     </TableCell>
@@ -614,17 +636,19 @@ export default function DataBarang() {
                 ) : (
                   filteredBarang.map((barang) => (
                     <TableRow key={barang.id}>
-                      <TableCell className="font-medium">{barang.kodeBarang}</TableCell>
-                      <TableCell>
+                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2 font-semibold text-xs' : 'font-medium'}>{barang.kodeBarang}</TableCell>
+                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2' : undefined}>
                         <div>
-                          <p className="font-medium">{barang.nama}</p>
+                          <p className="font-medium truncate">{barang.nama}</p>
                           <p className="text-xs text-gray-500">{barang.satuan}</p>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{barang.kategoriNama}</Badge>
+                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2' : undefined}>
+                        <Badge variant="secondary" className={shouldHideHargaBeli ? 'max-w-32 truncate px-2 py-0.5 text-xs' : undefined}>
+                          {barang.kategoriNama}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2 text-right' : 'text-right'}>
                         <div className="flex items-center justify-end gap-2">
                           {barang.stok <= barang.stokMinimum && (
                             <AlertTriangle className="w-4 h-4 text-orange-500" />
@@ -634,8 +658,10 @@ export default function DataBarang() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">{formatRupiah(barang.hargaBeli)}</TableCell>
-                      <TableCell className="text-right">{formatRupiah(barang.hargaJual)}</TableCell>
+                      {!shouldHideHargaBeli && (
+                        <TableCell className="text-right">{formatRupiah(barang.hargaBeli)}</TableCell>
+                      )}
+                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2 text-right font-medium' : 'text-right'}>{formatRupiah(barang.hargaJual)}</TableCell>
                       {isAdmin && (
                         <TableCell className="text-center">
                           {confirmDeleteBarangId === barang.id ? (

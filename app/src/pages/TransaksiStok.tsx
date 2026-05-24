@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -23,15 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Search, Plus, ArrowDownLeft, ArrowUpRight, Package } from 'lucide-react';
+import { Search, ArrowDownLeft, ArrowUpRight, Package } from 'lucide-react';
 import type { Barang, TipeTransaksi } from '@/types';
 
 export default function TransaksiStok() {
   const { barangList, kategoriList } = useBarang();
   const { addTransaksi, error: transaksiError } = useTransaksi();
-  const { userData } = useAuth();
+  const { userData, isStaff } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKategori, setSelectedKategori] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -45,6 +43,8 @@ export default function TransaksiStok() {
     hargaSatuan: 0,
     keterangan: ''
   });
+  const shouldHideHargaBeli = isStaff;
+  const shouldHideHargaSatuan = shouldHideHargaBeli && formData.tipe === 'masuk';
 
   // Filter barang
   const filteredBarang = barangList.filter(barang => {
@@ -188,10 +188,12 @@ export default function TransaksiStok() {
                     {barang.stok} {barang.satuan}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Harga Beli</span>
-                  <span className="text-gray-600">{formatRupiah(barang.hargaBeli)}</span>
-                </div>
+                {!shouldHideHargaBeli && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Harga Beli</span>
+                    <span className="text-gray-600">{formatRupiah(barang.hargaBeli)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Harga Jual</span>
                   <span className="font-medium text-gray-700">{formatRupiah(barang.hargaJual)}</span>
@@ -271,14 +273,16 @@ export default function TransaksiStok() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Harga Satuan (Rp)</Label>
-              <Input
-                type="number"
-                value={formData.hargaSatuan}
-                onChange={(e) => setFormData({ ...formData, hargaSatuan: parseInt(e.target.value) || 0 })}
-              />
-            </div>
+            {!shouldHideHargaSatuan && (
+              <div className="space-y-2">
+                <Label>Harga Satuan (Rp)</Label>
+                <Input
+                  type="number"
+                  value={formData.hargaSatuan}
+                  onChange={(e) => setFormData({ ...formData, hargaSatuan: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Keterangan</Label>
@@ -290,11 +294,13 @@ export default function TransaksiStok() {
             </div>
 
             <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Total:</span> {formatRupiah(formData.jumlah * formData.hargaSatuan)}
-              </p>
+              {!shouldHideHargaSatuan && (
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Total:</span> {formatRupiah(formData.jumlah * formData.hargaSatuan)}
+                </p>
+              )}
               {selectedBarang && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className={`text-sm text-gray-500 ${shouldHideHargaSatuan ? '' : 'mt-1'}`}>
                   Stok setelah transaksi:{' '}
                   <span className="font-medium text-gray-700">
                     {formData.tipe === 'masuk' 

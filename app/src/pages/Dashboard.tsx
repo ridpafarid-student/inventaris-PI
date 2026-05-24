@@ -380,7 +380,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Nama Barang</th>
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Spesifikasi</th>
                     <th className="text-center text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Stok Sisa</th>
-                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3 hidden sm:table-cell">Harga Jual</th>
+                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3 hidden sm:table-cell">Harga</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
