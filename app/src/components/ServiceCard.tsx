@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckCircle2, Clock3, Pencil, Smartphone, UserRound, Wrench } from 'lucide-react';
+import { CheckCircle2, Clock3, Cpu, Laptop, Pencil, Printer, Smartphone, UserRound, Wrench } from 'lucide-react';
 import type { ServiceItem, ServiceStatus } from '@/types';
 
 interface ServiceCardProps {
@@ -39,6 +39,13 @@ const statusConfig: Record<ServiceStatus, { label: string; className: string }> 
 
 const selectableStatuses: ServiceStatus[] = ['pending', 'proses', 'menunggu-sparepart'];
 
+function DeviceIcon({ type }: { type: ServiceItem['jenisPerangkat'] }) {
+  if (type === 'Smartphone' || type === 'Tablet') return <Smartphone className="h-3.5 w-3.5" />;
+  if (type === 'CPU') return <Cpu className="h-3.5 w-3.5" />;
+  if (type === 'Printer') return <Printer className="h-3.5 w-3.5" />;
+  return <Laptop className="h-3.5 w-3.5" />;
+}
+
 export default function ServiceCard({
   service,
   onEdit,
@@ -54,7 +61,7 @@ export default function ServiceCard({
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-900 truncate">{service.modelPerangkat}</p>
             <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-              <Smartphone className="h-3.5 w-3.5" />
+              <DeviceIcon type={service.jenisPerangkat} />
               <span>{service.jenisPerangkat}</span>
             </div>
           </div>

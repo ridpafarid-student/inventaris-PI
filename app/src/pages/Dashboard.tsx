@@ -19,6 +19,7 @@ import {
   Laptop,
   Cpu,
   Smartphone,
+  Printer,
 } from 'lucide-react';
 import {
   PieChart,
@@ -80,8 +81,9 @@ function StatusBadge({ status }: { status: keyof typeof STATUS_CONFIG }) {
 
 // ─── Device icon ──────────────────────────────────────────────────────────
 function DeviceIcon({ type }: { type: string }) {
-  if (type === 'Smartphone') return <Smartphone className="w-3.5 h-3.5 text-gray-400" />;
+  if (type === 'Smartphone' || type === 'Tablet') return <Smartphone className="w-3.5 h-3.5 text-gray-400" />;
   if (type === 'CPU') return <Cpu className="w-3.5 h-3.5 text-gray-400" />;
+  if (type === 'Printer') return <Printer className="w-3.5 h-3.5 text-gray-400" />;
   return <Laptop className="w-3.5 h-3.5 text-gray-400" />;
 }
 

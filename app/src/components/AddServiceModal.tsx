@@ -31,7 +31,7 @@ interface AddServiceModalProps {
 export interface ServiceFormState {
   namaPelanggan: string;
   nomorHp: string;
-  jenisPerangkat: 'Laptop' | 'Smartphone' | 'CPU';
+  jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
   modelPerangkat: string;
   deskripsiMasalah: string;
   status: ServiceStatus;
@@ -216,7 +216,9 @@ export default function AddServiceModal({
                 <SelectContent>
                   <SelectItem value="Laptop">Laptop</SelectItem>
                   <SelectItem value="Smartphone">Smartphone</SelectItem>
+                  <SelectItem value="Tablet">Tablet</SelectItem>
                   <SelectItem value="CPU">CPU</SelectItem>
+                  <SelectItem value="Printer">Printer</SelectItem>
                 </SelectContent>
               </Select>
             </div>

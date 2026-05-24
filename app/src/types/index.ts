@@ -114,7 +114,7 @@ export interface ServiceItem {
   id: string;
   namaPelanggan: string;
   nomorHp: string;
-  jenisPerangkat: 'Laptop' | 'Smartphone' | 'CPU';
+  jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
   modelPerangkat: string;
   deskripsiMasalah: string;
   status: ServiceStatus;
