@@ -1051,13 +1051,8 @@ export default function Laporan() {
                       <p className="text-xs text-blue-600">{transaksi.keterangan}</p>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
-                      className={transaksi.tipe === 'masuk' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}
-                    >
-                      {transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar'}
-                    </Badge>
+                  <TableCell className="text-center text-sm font-semibold">
+                    {transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar'}
                   </TableCell>
                   <TableCell className="text-right">{transaksi.jumlah}</TableCell>
                   <TableCell className="text-right">{formatRupiah(transaksi.hargaSatuan)}</TableCell>
@@ -1156,10 +1151,8 @@ export default function Laporan() {
                       <p className="font-medium">{service.modelPerangkat}</p>
                       <p className="text-xs text-gray-500">{service.jenisPerangkat}</p>
                     </TableCell>
-                    <TableCell>
-                      <Badge className={getServiceStatusBadgeClass(service.status)}>
-                        {getServiceStatusLabel(service.status)}
-                      </Badge>
+                    <TableCell className="text-center text-sm font-semibold">
+                      {getServiceStatusLabel(service.status)}
                     </TableCell>
                     <TableCell>
                       {service.sparepartDigunakan?.length
