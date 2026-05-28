@@ -2,7 +2,7 @@
 // PAGE - Laporan dengan Export PDF
 // ============================================
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTransaksi } from '@/hooks/useTransaksi';
 import { useBarang } from '@/hooks/useBarang';
 import { useServices } from '@/hooks/useServices';
@@ -33,7 +33,6 @@ import html2canvas from 'html2canvas';
 import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
 
 type RecommendationPriority = 'Tinggi' | 'Sedang' | 'Rendah';
-type RecommendationCadence = 'weekly' | 'monthly';
 type LabaCadence = 'daily' | 'weekly' | 'monthly';
 
 interface RecommendationItem {
@@ -47,17 +46,6 @@ const PRIORITY_STYLES: Record<RecommendationPriority, string> = {
   Tinggi: 'bg-red-100 text-red-700',
   Sedang: 'bg-amber-100 text-amber-700',
   Rendah: 'bg-emerald-100 text-emerald-700',
-};
-
-const CADENCE_LABELS: Record<RecommendationCadence, string> = {
-  weekly: 'Mingguan',
-  monthly: 'Bulanan',
-};
-
-const LABA_CADENCE_LABELS: Record<LabaCadence, string> = {
-  daily: 'Harian',
-  weekly: 'Mingguan',
-  monthly: 'Bulanan',
 };
 
 const startOfDay = (date: Date) => {
@@ -108,20 +96,6 @@ const formatRecommendationPeriodLabel = (start: Date, end: Date) => {
   })}`;
 };
 
-const getRecommendationPeriodFromAnchor = (anchorDate: Date, cadence: RecommendationCadence) => {
-  if (cadence === 'weekly') {
-    const start = startOfDay(anchorDate);
-    const end = endOfDay(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6));
-
-    return { start, end };
-  }
-
-  return {
-    start: startOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1)),
-    end: endOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 0)),
-  };
-};
-
 const startOfWeek = (date: Date) => {
   const nextDate = new Date(date);
   const day = nextDate.getDay();
@@ -169,14 +143,7 @@ export default function Laporan() {
   const [endDate, setEndDate] = useState('');
   const [filterTipe, setFilterTipe] = useState<string>('all');
   const [filterKategori, setFilterKategori] = useState<string>('all');
-  const [recommendationCadence, setRecommendationCadence] = useState<RecommendationCadence>('weekly');
-  const [labaCadence, setLabaCadence] = useState<LabaCadence>('daily');
-
-  useEffect(() => {
-    if (recommendationCadence === 'weekly' || recommendationCadence === 'monthly') {
-      setLabaCadence(recommendationCadence);
-    }
-  }, [recommendationCadence]);
+  const labaCadence: LabaCadence = 'daily';
 
   const selectedDateRange = useMemo(() => {
     if (!startDate && !endDate) {
@@ -222,14 +189,15 @@ export default function Laporan() {
   });
 
   const recommendationPeriod = useMemo(() => {
-    const anchorValue = startDate || endDate;
-
-    if (!anchorValue) {
+    if (!selectedDateRange.start || !selectedDateRange.end) {
       return null;
     }
 
-    return getRecommendationPeriodFromAnchor(new Date(anchorValue), recommendationCadence);
-  }, [endDate, recommendationCadence, startDate]);
+    return {
+      start: selectedDateRange.start,
+      end: selectedDateRange.end,
+    };
+  }, [selectedDateRange]);
 
   const previousRecommendationPeriod = useMemo(() => {
     if (!recommendationPeriod) {
@@ -561,7 +529,6 @@ export default function Laporan() {
     return {
       periodLabel: formatRecommendationPeriodLabel(recommendationPeriod.start, recommendationPeriod.end),
       comparisonLabel: `${previousRecommendationPeriod.totalDays} hari sebelumnya`,
-      cadenceLabel: CADENCE_LABELS[recommendationCadence],
       restock: restock.length > 0
         ? restock
         : fallback('Stok restock relatif aman', 'Lanjutkan pemantauan pemakaian sparepart untuk periode berikutnya.'),
@@ -577,7 +544,6 @@ export default function Laporan() {
     barangList,
     filterKategori,
     previousRecommendationPeriod,
-    recommendationCadence,
     recommendationPeriod,
     services,
     transaksiList,
@@ -729,7 +695,7 @@ export default function Laporan() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-white border border-gray-200 rounded-lg">
         <div className="space-y-1.5">
           <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dari Tanggal</Label>
           <Input
@@ -770,21 +736,6 @@ export default function Laporan() {
               {kategoriList.map((k) => (
                 <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide">Mode Rekomendasi</Label>
-          <Select
-            value={recommendationCadence}
-            onValueChange={(value) => setRecommendationCadence(value as RecommendationCadence)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="weekly">Mingguan</SelectItem>
-              <SelectItem value="monthly">Bulanan</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -863,12 +814,12 @@ export default function Laporan() {
             <div>
               <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
                 <Sparkles className="h-5 w-5 text-blue-600" />
-                Rekomendasi {CADENCE_LABELS[recommendationCadence]}
+                Rekomendasi Periode
               </CardTitle>
               <p className="mt-1 text-sm text-gray-500">
                 {monthlyRecommendations
                   ? `Insight otomatis untuk ${monthlyRecommendations.periodLabel} dengan pembanding ${monthlyRecommendations.comparisonLabel}.`
-                  : 'Pilih tanggal laporan dulu untuk menampilkan rekomendasi.'}
+                  : 'Pilih periode laporan untuk menampilkan rekomendasi.'}
               </p>
             </div>
           </div>
@@ -885,7 +836,6 @@ export default function Laporan() {
           ) : (
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2">
-                <Badge className="bg-blue-100 text-blue-700">{monthlyRecommendations.cadenceLabel}</Badge>
                 <Badge className="bg-slate-100 text-slate-700">{monthlyRecommendations.periodLabel}</Badge>
                 <Badge className="bg-slate-100 text-slate-700">Banding: {monthlyRecommendations.comparisonLabel}</Badge>
               </div>
@@ -975,7 +925,7 @@ export default function Laporan() {
             <p className="text-xl font-bold">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
           </div>
           <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Laba {LABA_CADENCE_LABELS[labaCadence]}</p>
+            <p className="text-sm text-gray-500">Laba Periode</p>
             <p className="text-xl font-bold">{formatRupiah(serviceSummary.labaPeriodik)}</p>
           </div>
         </div>
@@ -983,7 +933,7 @@ export default function Laporan() {
         {monthlyRecommendations && (
           <div className="mb-8">
             <h3 className="mb-1 text-lg font-semibold text-gray-900">
-              Rekomendasi {monthlyRecommendations.cadenceLabel}
+              Rekomendasi Periode
             </h3>
             <p className="mb-3 text-sm text-gray-500">
               Periode {monthlyRecommendations.periodLabel}, dibanding {monthlyRecommendations.comparisonLabel}.
