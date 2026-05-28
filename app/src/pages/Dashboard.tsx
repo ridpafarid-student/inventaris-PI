@@ -306,10 +306,10 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                   <tr className="bg-gray-50 border-b border-gray-100">
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3">No Nota</th>
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Pelanggan</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Laptop / Seri</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Model/Seri</th>
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden lg:table-cell">Keluhan</th>
                     <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Status</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Teknisi</th>
+                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Oleh</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
