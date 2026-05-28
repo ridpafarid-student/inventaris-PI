@@ -110,6 +110,31 @@ export function useDashboard() {
       0
     );
 
+    // === Laba Hari Ini ===
+    // 1. Laba dari transaksi barang keluar hari ini (margin = hargaJual - hargaBeli)
+    const labaBarangKeluarHariIni = transaksiList
+      .filter((t) => t.tipe === 'keluar' && isSameDayOrAfterStart(t.createdAt))
+      .reduce((sum, t) => {
+        const barang = barangList.find((b) => b.id === t.barangId);
+        if (!barang) return sum;
+        const margin = barang.hargaJual - barang.hargaBeli;
+        return sum + (margin * t.jumlah);
+      }, 0);
+
+    // 2. Pendapatan dari servis yang diambil hari ini (biayaJasa + nilai sparepart)
+    const labaServisDiambilHariIni = services
+      .filter((s) => s.status === 'diambil' && isSameDayOrAfterStart(s.pickedUpAt ?? s.updatedAt))
+      .reduce((sum, s) => {
+        const biayaJasa = s.biayaJasa ?? 0;
+        const nilaiSparepart = (s.sparepartDigunakan ?? []).reduce((subtotal, item) => {
+          const barang = barangList.find((b) => b.id === item.productId);
+          return subtotal + ((barang?.hargaJual ?? 0) * item.jumlah);
+        }, 0);
+        return sum + biayaJasa + nilaiSparepart;
+      }, 0);
+
+    const labaHariIni = labaBarangKeluarHariIni + labaServisDiambilHariIni;
+
     return {
       totalBarang,
       totalKategori,
@@ -121,7 +146,8 @@ export function useDashboard() {
       servisAktif,
       servisMenungguSparepart,
       servisSelesai,
-      totalSparepartTerpakai
+      totalSparepartTerpakai,
+      labaHariIni
     };
   }, [barangList, transaksiList, services]);
 
@@ -201,8 +227,8 @@ export function useDashboard() {
   const servisByStatus: ChartData[] = useMemo(() => {
     const data = {
       Pending: services.filter((service) => service.status === 'pending').length,
-      Proses: services.filter((service) => service.status === 'proses').length,
       'Menunggu Sparepart': services.filter((service) => service.status === 'menunggu-sparepart').length,
+      Proses: services.filter((service) => service.status === 'proses').length,
       Selesai: services.filter((service) => service.status === 'selesai').length,
       Diambil: services.filter((service) => service.status === 'diambil').length,
     };

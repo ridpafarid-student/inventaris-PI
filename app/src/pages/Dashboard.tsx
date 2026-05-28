@@ -37,11 +37,18 @@ import type { ServiceItem, Barang } from '@/types';
 // ─── Status badge helper ───────────────────────────────────────────────────
 const STATUS_CONFIG = {
   pending: {
-    label: 'Baru',
+    label: 'Pending',
     bg: 'bg-blue-100',
     text: 'text-blue-700',
     dot: 'bg-blue-500',
     ring: 'ring-blue-200',
+  },
+  'menunggu-sparepart': {
+    label: 'Menunggu Sparepart',
+    bg: 'bg-orange-100',
+    text: 'text-orange-700',
+    dot: 'bg-orange-500',
+    ring: 'ring-orange-200',
   },
   proses: {
     label: 'Proses',
@@ -63,13 +70,6 @@ const STATUS_CONFIG = {
     text: 'text-slate-700',
     dot: 'bg-slate-500',
     ring: 'ring-slate-200',
-  },
-  'menunggu-sparepart': {
-    label: 'Menunggu',
-    bg: 'bg-orange-100',
-    text: 'text-orange-700',
-    dot: 'bg-orange-500',
-    ring: 'ring-orange-200',
   },
 } as const;
 
@@ -148,7 +148,7 @@ function SectionHeader({ title, sub, count }: { title: string; sub?: string; cou
 }
 
 // ─── Pie chart colors ─────────────────────────────────────────────────────
-const PIE_COLORS = ['#3B82F6', '#F59E0B', '#10B981', '#F97316'];
+const PIE_COLORS = ['#3B82F6', '#F97316', '#F59E0B', '#10B981', '#64748B'];
 
 // ─── Format currency ──────────────────────────────────────────────────────
 function formatRp(n: number) {
@@ -276,7 +276,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
         />
         <StatCard
           title="Laba Hari Ini"
-          value="Rp 750.000"
+          value={formatRp(stats.labaHariIni)}
           sub={`${stats.totalTransaksiHariIni} transaksi hari ini`}
           icon={TrendingUp}
           iconBg="bg-purple-50"

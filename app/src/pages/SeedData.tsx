@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ServiceStatus } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -27,7 +28,7 @@ export default function SeedData() {
         { id: doc(collection(db, 'kategori')).id, nama: 'Laptop', deskripsi: 'Perangkat Laptop' },
         { id: doc(collection(db, 'kategori')).id, nama: 'Smartphone', deskripsi: 'Perangkat Smartphone' },
         { id: doc(collection(db, 'kategori')).id, nama: 'Aksesoris', deskripsi: 'Aksesoris Komputer' },
-        { id: doc(collection(db, 'kategori')).id, nama: 'Spare Part', deskripsi: 'Suku Cadang & Komponen' },
+        { id: doc(collection(db, 'kategori')).id, nama: 'Sparepart', deskripsi: 'Suku Cadang & Komponen' },
       ];
 
       kategori.forEach(k => {
@@ -48,6 +49,7 @@ export default function SeedData() {
           const b = {
             id,
             kategoriId: k.id,
+            kategoriNama: k.nama,
             kodeBarang: `BRG-${k.nama.substring(0, 3).toUpperCase()}-${100 + i}`,
             nama: `Dummy ${k.nama} ${i}`,
             stok: 50 + (i * 10),
@@ -62,6 +64,7 @@ export default function SeedData() {
           barang.push(b);
           batch.set(doc(db, 'barang', id), {
             kategoriId: b.kategoriId,
+            kategoriNama: b.kategoriNama,
             kodeBarang: b.kodeBarang,
             nama: b.nama,
             stok: b.stok,
@@ -105,16 +108,19 @@ export default function SeedData() {
       });
 
       // 4. Generate Servis
+      const sparepartBarang = barang.filter(b => b.kategoriNama === 'Sparepart');
       for (let i = 1; i <= 20; i++) {
         const sRef = doc(collection(db, 'services'));
         const sDate = new Date(now.getTime() - (Math.random() * 60 * 24 * 60 * 60 * 1000));
-        const statuses = ['pending', 'proses', 'menunggu-sparepart', 'selesai'];
+        const statuses: ServiceStatus[] = ['pending', 'proses', 'menunggu-sparepart', 'selesai', 'diambil'];
         const status = statuses[Math.floor(Math.random() * statuses.length)];
+        const isCompleted = status === 'selesai' || status === 'diambil';
+        const isPickedUp = status === 'diambil';
 
         const usedSpareparts = [];
-        if (status === 'selesai' || status === 'menunggu-sparepart') {
+        if (status !== 'pending' && sparepartBarang.length > 0) {
           // Add 1-2 random products as spareparts
-          const p1 = barang[Math.floor(Math.random() * barang.length)];
+          const p1 = sparepartBarang[Math.floor(Math.random() * sparepartBarang.length)];
           usedSpareparts.push({
             productId: p1.id,
             namaProduk: p1.nama,
@@ -125,13 +131,18 @@ export default function SeedData() {
         batch.set(sRef, {
           namaPelanggan: `Pelanggan Dummy ${i}`,
           nomorHp: `0812345678${i.toString().padStart(2, '0')}`,
-          jenisPerangkat: i % 2 === 0 ? 'Laptop' : 'Smartphone',
+          jenisPerangkat: ['Laptop', 'Smartphone', 'Tablet', 'CPU', 'Printer'][i % 5],
           modelPerangkat: `Model Perangkat ${i}`,
           deskripsiMasalah: `Masalah dummy untuk testing data laporan`,
           status: status,
+          biayaJasa: status !== 'pending' ? 50000 * (Math.floor(Math.random() * 6) + 1) : 0,
           sparepartDigunakan: usedSpareparts,
-          stokDikurangi: status === 'selesai',
-          completedAt: status === 'selesai' ? sDate : null,
+          stokDikurangi: usedSpareparts.length > 0,
+          completedAt: isCompleted ? sDate : null,
+          pickedUpAt: isPickedUp ? sDate : null,
+          userId: userData.uid,
+          userName: userData.name,
+          createdByName: userData.name,
           createdAt: sDate,
           updatedAt: sDate
         });

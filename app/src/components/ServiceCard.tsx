@@ -42,7 +42,7 @@ const statusConfig: Record<ServiceStatus, { label: string; className: string }> 
   },
 };
 
-const selectableStatuses: ServiceStatus[] = ['pending', 'proses', 'menunggu-sparepart', 'selesai', 'diambil'];
+const selectableStatuses: ServiceStatus[] = ['pending', 'menunggu-sparepart', 'proses', 'selesai', 'diambil'];
 
 function DeviceIcon({ type }: { type: ServiceItem['jenisPerangkat'] }) {
   if (type === 'Smartphone' || type === 'Tablet') return <Smartphone className="h-3.5 w-3.5" />;

@@ -252,8 +252,8 @@ export default function AddServiceModal({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="proses">Proses</SelectItem>
                   <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
+                  <SelectItem value="proses">Proses</SelectItem>
                   <SelectItem value="selesai">Selesai</SelectItem>
                   <SelectItem value="diambil">Diambil</SelectItem>
                 </SelectContent>

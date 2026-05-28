@@ -83,6 +83,7 @@ export interface DashboardStats {
   servisMenungguSparepart: number;
   servisSelesai: number;
   totalSparepartTerpakai: number;
+  labaHariIni: number;
 }
 
 // Chart Data
