@@ -70,20 +70,20 @@ export function useBarang() {
   }, []);
 
   // Add barang
-  const addBarang = useCallback(async (barang: Omit<Barang, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addBarang = useCallback(async (barang: Omit<Barang, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: true; id: string } | { success: false; error: string }> => {
     try {
       const kategori = kategoriList.find(k => k.id === barang.kategoriId);
-      
-      await addDoc(collection(db, 'barang'), {
+      const barangRef = await addDoc(collection(db, 'barang'), {
         ...barang,
         kategoriNama: kategori?.nama || '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-      return true;
+      return { success: true, id: barangRef.id };
     } catch (err: any) {
-      setError(err.message);
-      return false;
+      const errorMessage = typeof err?.message === 'string' ? err.message : 'Gagal menambahkan barang';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     }
   }, [kategoriList]);
 

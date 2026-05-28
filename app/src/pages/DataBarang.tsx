@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { useBarang } from '@/hooks/useBarang';
+import { useTransaksi } from '@/hooks/useTransaksi';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +48,8 @@ export default function DataBarang() {
     addKategori,
     deleteKategori
   } = useBarang();
-  const { isAdmin, isStaff } = useAuth();
+  const { isAdmin, isStaff, currentUser, userData } = useAuth();
+  const { addTransaksi } = useTransaksi();
   const shouldHideHargaBeli = isStaff;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKategori, setSelectedKategori] = useState<string>('all');
@@ -120,13 +122,37 @@ export default function DataBarang() {
       return;
     }
 
-    const success = await addBarang(formData);
-    if (success) {
-      setIsAddDialogOpen(false);
-      resetForm();
-    } else {
-      setError('Gagal menambahkan barang');
+    const initialStok = formData.stok;
+    const barangInput = { ...formData, stok: 0 };
+    const addResult = await addBarang(barangInput);
+
+    if (!addResult.success) {
+      setError(addResult.error || 'Gagal menambahkan barang');
+      return;
     }
+
+    if (initialStok > 0) {
+      const barangWithId = { id: addResult.id, ...barangInput } as Barang;
+      const userId = currentUser?.uid ?? '';
+      const userName = userData?.name ?? currentUser?.displayName ?? 'System';
+      const transaksiResult = await addTransaksi(
+        barangWithId,
+        'masuk',
+        initialStok,
+        formData.hargaBeli,
+        'Stok awal barang',
+        userId,
+        userName
+      );
+
+      if (!transaksiResult.success) {
+        setError(transaksiResult.error || 'Gagal mencatat riwayat transaksi');
+        return;
+      }
+    }
+
+    setIsAddDialogOpen(false);
+    resetForm();
   };
 
   // Handle edit

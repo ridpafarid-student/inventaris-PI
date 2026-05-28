@@ -365,7 +365,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
             <div className="px-6 py-5 border-b border-orange-50 bg-orange-50/50">
               <div className="flex items-center gap-2 mb-1">
                 <AlertTriangle className="w-4.5 h-4.5 text-orange-500" style={{ width: '18px', height: '18px' }} />
-                <h2 className="text-lg font-semibold text-[#1F2937]">Peringatan Stok Spare Part</h2>
+                <h2 className="text-lg font-semibold text-[#1F2937]">Peringatan Stok</h2>
                 <span className="text-xs font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full ml-1">
                   Batas Minimum
                 </span>

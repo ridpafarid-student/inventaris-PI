@@ -2,7 +2,9 @@
 // PAGE - Riwayat Transaksi
 // ============================================
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useBarang } from '@/hooks/useBarang';
+import { useServices } from '@/hooks/useServices';
 import { useTransaksi } from '@/hooks/useTransaksi';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -27,11 +29,51 @@ import { Timestamp } from 'firebase/firestore';
 import type { TransaksiStok } from '@/types';
 
 export default function Riwayat() {
-  const { transaksiList, loading } = useTransaksi();
+  const { transaksiList, loading: loadingTransaksi } = useTransaksi();
+  const { services, loading: loadingServices } = useServices();
+  const { barangList } = useBarang();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTipe, setFilterTipe] = useState<string>('all');
 
-  const filteredTransaksi = transaksiList.filter(transaksi => {
+  const serviceStockTransaksi = useMemo(() => (
+    services.flatMap((service) =>
+      (service.sparepartDigunakan ?? [])
+        .filter(() => service.stokDikurangi)
+        .map((item) => {
+          const barang = barangList.find((product) => product.id === item.productId);
+          const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
+
+          return {
+            id: `service-${service.id}-${item.productId}`,
+            barangId: item.productId,
+            barangNama: item.namaProduk,
+            barangKode: barang?.kodeBarang ?? '-',
+            tipe: 'keluar' as const,
+            jumlah: item.jumlah,
+            stokSebelum: 0,
+            stokSesudah: 0,
+            hargaSatuan,
+            totalHarga: hargaSatuan * item.jumlah,
+            keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
+            userId: '',
+            userName: `Servis (${service.modelPerangkat})`,
+            createdAt: service.updatedAt ?? service.createdAt,
+          };
+        })
+    )
+  ), [barangList, services]);
+
+  const allTransaksi = useMemo(() => (
+    [...transaksiList, ...serviceStockTransaksi].sort((a, b) => {
+      const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    })
+  ), [serviceStockTransaksi, transaksiList]);
+
+  const loading = loadingTransaksi || loadingServices;
+
+  const filteredTransaksi = allTransaksi.filter(transaksi => {
     const matchesSearch =
       transaksi.barangNama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaksi.barangKode.toLowerCase().includes(searchQuery.toLowerCase()) ||

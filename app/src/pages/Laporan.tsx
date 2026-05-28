@@ -34,6 +34,7 @@ import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
 
 type RecommendationPriority = 'Tinggi' | 'Sedang' | 'Rendah';
 type RecommendationCadence = 'weekly' | 'monthly';
+type LabaCadence = 'daily' | 'weekly' | 'monthly';
 
 interface RecommendationItem {
   title: string;
@@ -49,6 +50,12 @@ const PRIORITY_STYLES: Record<RecommendationPriority, string> = {
 };
 
 const CADENCE_LABELS: Record<RecommendationCadence, string> = {
+  weekly: 'Mingguan',
+  monthly: 'Bulanan',
+};
+
+const LABA_CADENCE_LABELS: Record<LabaCadence, string> = {
+  daily: 'Harian',
   weekly: 'Mingguan',
   monthly: 'Bulanan',
 };
@@ -115,6 +122,36 @@ const getRecommendationPeriodFromAnchor = (anchorDate: Date, cadence: Recommenda
   };
 };
 
+const startOfWeek = (date: Date) => {
+  const nextDate = new Date(date);
+  const day = nextDate.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Monday as start of week
+  nextDate.setDate(nextDate.getDate() + diff);
+  return startOfDay(nextDate);
+};
+
+const getLabaPeriodFromAnchor = (anchorDate: Date, cadence: LabaCadence) => {
+  if (cadence === 'daily') {
+    return {
+      start: startOfDay(anchorDate),
+      end: endOfDay(anchorDate),
+    };
+  }
+
+  if (cadence === 'weekly') {
+    const start = startOfWeek(anchorDate);
+    return {
+      start,
+      end: endOfDay(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6)),
+    };
+  }
+
+  return {
+    start: startOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1)),
+    end: endOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 0)),
+  };
+};
+
 const getRecommendationPriority = (score: number): RecommendationPriority => {
   if (score >= 8) return 'Tinggi';
   if (score >= 5) return 'Sedang';
@@ -133,6 +170,7 @@ export default function Laporan() {
   const [filterTipe, setFilterTipe] = useState<string>('all');
   const [filterKategori, setFilterKategori] = useState<string>('all');
   const [recommendationCadence, setRecommendationCadence] = useState<RecommendationCadence>('weekly');
+  const [labaCadence, setLabaCadence] = useState<LabaCadence>('daily');
 
   const selectedDateRange = useMemo(() => {
     if (!startDate && !endDate) {
@@ -202,6 +240,47 @@ export default function Laporan() {
       totalDays,
     };
   }, [recommendationPeriod]);
+
+  const labaPeriodRange = useMemo<{ start: Date; end: Date }>(() => {
+    const hasBothBounds = selectedDateRange.start !== null && selectedDateRange.end !== null;
+    if (hasBothBounds) {
+      return {
+        start: selectedDateRange.start!,
+        end: selectedDateRange.end!,
+      };
+    }
+
+    const anchor = selectedDateRange.end ?? selectedDateRange.start ?? new Date();
+    return getLabaPeriodFromAnchor(anchor, labaCadence);
+  }, [labaCadence, selectedDateRange]);
+
+  const isDateInRange = (value: Date | Timestamp | string | null | undefined, start: Date, end: Date) => {
+    const date = toDate(value);
+    return Boolean(date && date >= start && date <= end);
+  };
+
+  const labaBarangKeluar = transaksiList
+    .filter((transaksi) => transaksi.tipe === 'keluar')
+    .filter((transaksi) => isDateInRange(transaksi.createdAt, labaPeriodRange.start, labaPeriodRange.end))
+    .reduce((sum, transaksi) => {
+      const barang = barangList.find((item) => item.id === transaksi.barangId);
+      const margin = barang ? barang.hargaJual - barang.hargaBeli : 0;
+      return sum + (margin * transaksi.jumlah);
+    }, 0);
+
+  const labaServisDiambil = services
+    .filter((service) => service.status === 'diambil')
+    .filter((service) => isDateInRange(service.pickedUpAt ?? service.updatedAt, labaPeriodRange.start, labaPeriodRange.end))
+    .reduce((sum, service) => {
+      const nilaiSparepart = (service.sparepartDigunakan ?? []).reduce((subtotal, item) => {
+        const barang = barangList.find((product) => product.id === item.productId);
+        const hargaSatuan = barang?.hargaJual ?? 0;
+        return subtotal + (hargaSatuan * item.jumlah);
+      }, 0);
+      return sum + (service.biayaJasa ?? 0) + nilaiSparepart;
+    }, 0);
+
+  const labaPeriodik = labaBarangKeluar + labaServisDiambil;
 
   const serviceStockTransaksi = filteredServices.flatMap((service) =>
     (service.sparepartDigunakan ?? [])
@@ -526,8 +605,7 @@ export default function Laporan() {
     ),
     totalBiayaJasa: filteredServices.reduce((total, service) => total + (service.biayaJasa ?? 0), 0),
     nilaiSparepart: serviceStockTransaksi.reduce((total, transaksi) => total + transaksi.totalHarga, 0),
-    omzetServis: filteredServices.reduce((total, service) => total + (service.biayaJasa ?? 0), 0) +
-      serviceStockTransaksi.reduce((total, transaksi) => total + transaksi.totalHarga, 0),
+    labaPeriodik,
   };
 
   const getServiceSparepartTotal = (service: ServiceItem) =>
@@ -732,7 +810,7 @@ export default function Laporan() {
       {/* Summary Cards - Servis */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ringkasan Servis</p>
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs text-gray-400 font-medium">Total Servis</p>
             <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.totalServis}</p>
@@ -755,9 +833,36 @@ export default function Laporan() {
             <p className="text-xs text-gray-400 font-medium">Nilai Jasa</p>
             <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
           </div>
+        </div>
+      </div>
+
+      {/* Summary Cards - Laba Periode */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Laba Periode</p>
+        <div className="grid grid-cols-1 gap-3">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <p className="text-xs text-gray-400 font-medium">Omzet Servis</p>
-            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.omzetServis)}</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs text-gray-400 font-medium">Total Laba</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
+              </div>
+              <div className="min-w-[160px]">
+                <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-2 block">Periode</Label>
+                <Select
+                  value={labaCadence}
+                  onValueChange={(value) => setLabaCadence(value as LabaCadence)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Harian</SelectItem>
+                    <SelectItem value="weekly">Mingguan</SelectItem>
+                    <SelectItem value="monthly">Bulanan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -880,8 +985,8 @@ export default function Laporan() {
             <p className="text-xl font-bold">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
           </div>
           <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Omzet Servis</p>
-            <p className="text-xl font-bold">{formatRupiah(serviceSummary.omzetServis)}</p>
+            <p className="text-sm text-gray-500">Laba {LABA_CADENCE_LABELS[labaCadence]}</p>
+            <p className="text-xl font-bold">{formatRupiah(serviceSummary.labaPeriodik)}</p>
           </div>
         </div>
 
