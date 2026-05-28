@@ -2,7 +2,7 @@
 // PAGE - Laporan dengan Export PDF
 // ============================================
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTransaksi } from '@/hooks/useTransaksi';
 import { useBarang } from '@/hooks/useBarang';
 import { useServices } from '@/hooks/useServices';
@@ -171,6 +171,12 @@ export default function Laporan() {
   const [filterKategori, setFilterKategori] = useState<string>('all');
   const [recommendationCadence, setRecommendationCadence] = useState<RecommendationCadence>('weekly');
   const [labaCadence, setLabaCadence] = useState<LabaCadence>('daily');
+
+  useEffect(() => {
+    if (recommendationCadence === 'weekly' || recommendationCadence === 'monthly') {
+      setLabaCadence(recommendationCadence);
+    }
+  }, [recommendationCadence]);
 
   const selectedDateRange = useMemo(() => {
     if (!startDate && !endDate) {
@@ -784,6 +790,21 @@ export default function Laporan() {
         </div>
       </div>
 
+      {/* Summary Cards - Laba Periode */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Laba Periode</p>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs text-gray-400 font-medium">Total Laba</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Summary Cards - Inventaris */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ringkasan Inventaris</p>
@@ -832,37 +853,6 @@ export default function Laporan() {
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-xs text-gray-400 font-medium">Nilai Jasa</p>
             <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Summary Cards - Laba Periode */}
-      <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Laba Periode</p>
-        <div className="grid grid-cols-1 gap-3">
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Total Laba</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
-              </div>
-              <div className="min-w-[160px]">
-                <Label className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-2 block">Periode</Label>
-                <Select
-                  value={labaCadence}
-                  onValueChange={(value) => setLabaCadence(value as LabaCadence)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Pilih" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Harian</SelectItem>
-                    <SelectItem value="weekly">Mingguan</SelectItem>
-                    <SelectItem value="monthly">Bulanan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
           </div>
         </div>
       </div>
