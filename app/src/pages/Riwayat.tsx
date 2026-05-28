@@ -197,16 +197,25 @@ export default function Riwayat() {
           </div>
 
           <div className="hidden md:block overflow-x-auto">
-            <Table>
+            <Table className="min-w-full table-fixed">
+              <colgroup>
+                <col className="w-[16%]" />
+                <col className="w-[24%]" />
+                <col className="w-[12%]" />
+                <col className="w-[9%]" />
+                <col className="w-[11%]" />
+                <col className="w-[14%]" />
+                <col className="w-[14%]" />
+              </colgroup>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Waktu</TableHead>
-                  <TableHead>Barang</TableHead>
-                  <TableHead>Tipe</TableHead>
-                  <TableHead className="text-right">Jumlah</TableHead>
-                  <TableHead className="text-right">Stok</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Oleh</TableHead>
+                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Waktu</TableHead>
+                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Barang</TableHead>
+                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipe</TableHead>
+                  <TableHead className="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Jumlah</TableHead>
+                  <TableHead className="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Stok</TableHead>
+                  <TableHead className="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</TableHead>
+                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Oleh</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -262,13 +271,13 @@ export default function Riwayat() {
                           {transaksi.stokSesudah}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-medium px-2 py-2">
                         {formatRupiah(transaksi.totalHarga)}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
+                      <TableCell className="px-2 py-2">
+                        <div className="flex items-center gap-2 whitespace-normal">
                           <User className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm">{transaksi.userName}</span>
+                          <span className="text-sm break-words">{transaksi.userName}</span>
                         </div>
                       </TableCell>
                     </TableRow>

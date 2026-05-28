@@ -620,35 +620,35 @@ export default function DataBarang() {
           </div>
 
           <div className="hidden md:block overflow-x-auto">
-            <Table className={shouldHideHargaBeli ? 'table-fixed text-sm' : 'table-fixed'}>
+            <Table className={shouldHideHargaBeli ? 'table-fixed text-sm min-w-full' : 'table-fixed min-w-full'}>
               {shouldHideHargaBeli ? (
                 <colgroup>
-                  <col className="w-[13%]" />
-                  <col className="w-[34%]" />
-                  <col className="w-[20%]" />
-                  <col className="w-[13%]" />
-                  <col className="w-[20%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[32%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[24%]" />
                 </colgroup>
               ) : (
                 <colgroup>
                   <col className="w-[11%]" />
-                  <col className="w-[26%]" />
-                  <col className="w-[16%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[13%]" />
+                  <col className="w-[28%]" />
                   <col className="w-[14%]" />
-                  {isAdmin && <col className="w-[10%]" />}
+                  <col className="w-[10%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[14%]" />
+                  {isAdmin && <col className="w-[11%]" />}
                 </colgroup>
               )}
               <TableHeader>
                 <TableRow>
-                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-xs' : undefined}>Kode</TableHead>
-                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-xs' : undefined}>Nama Barang</TableHead>
-                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-xs' : undefined}>Kategori</TableHead>
-                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-right text-xs' : 'text-right'}>Stok</TableHead>
-                  {!shouldHideHargaBeli && <TableHead className="text-right">Harga Beli</TableHead>}
-                  <TableHead className={shouldHideHargaBeli ? 'h-9 px-3 text-right text-xs' : 'text-right'}>{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</TableHead>
-                  {isAdmin && <TableHead className="text-center">Aksi</TableHead>}
+                  <TableHead className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Kode</TableHead>
+                  <TableHead className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Barang</TableHead>
+                  <TableHead className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Kategori</TableHead>
+                  <TableHead className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Stok</TableHead>
+                  {!shouldHideHargaBeli && <TableHead className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Harga Beli</TableHead>}
+                  <TableHead className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</TableHead>
+                  {isAdmin && <TableHead className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -662,19 +662,19 @@ export default function DataBarang() {
                 ) : (
                   filteredBarang.map((barang) => (
                     <TableRow key={barang.id}>
-                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2 font-semibold text-xs' : 'font-medium'}>{barang.kodeBarang}</TableCell>
-                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2' : undefined}>
+                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-3 font-semibold text-xs' : 'px-3 py-3 font-medium'}>{barang.kodeBarang}</TableCell>
+                      <TableCell className="px-3 py-3">
                         <div>
                           <p className="font-medium truncate">{barang.nama}</p>
                           <p className="text-xs text-gray-500">{barang.satuan}</p>
                         </div>
                       </TableCell>
-                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2' : undefined}>
+                      <TableCell className="px-3 py-3">
                         <Badge variant="secondary" className={shouldHideHargaBeli ? 'max-w-32 truncate px-2 py-0.5 text-xs' : undefined}>
                           {barang.kategoriNama}
                         </Badge>
                       </TableCell>
-                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2 text-right' : 'text-right'}>
+                      <TableCell className="px-3 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {barang.stok <= barang.stokMinimum && (
                             <AlertTriangle className="w-4 h-4 text-orange-500" />
@@ -685,11 +685,11 @@ export default function DataBarang() {
                         </div>
                       </TableCell>
                       {!shouldHideHargaBeli && (
-                        <TableCell className="text-right">{formatRupiah(barang.hargaBeli)}</TableCell>
+                        <TableCell className="px-3 py-3 text-right">{formatRupiah(barang.hargaBeli)}</TableCell>
                       )}
-                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-2 text-right font-medium' : 'text-right'}>{formatRupiah(barang.hargaJual)}</TableCell>
+                      <TableCell className="px-3 py-3 text-right font-medium">{formatRupiah(barang.hargaJual)}</TableCell>
                       {isAdmin && (
-                        <TableCell className="text-center">
+                        <TableCell className="px-3 py-3 text-center">
                           {confirmDeleteBarangId === barang.id ? (
                             <div className="flex items-center justify-center gap-1">
                               <Button

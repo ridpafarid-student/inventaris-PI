@@ -37,7 +37,7 @@ const statusConfig: Record<ServiceStatus, { label: string; className: string }> 
     className: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100',
   },
   diambil: {
-    label: 'Diambil',
+    label: 'Diserahkan',
     className: 'bg-slate-200 text-slate-700 hover:bg-slate-200',
   },
 };
@@ -148,7 +148,7 @@ export default function ServiceCard({
               disabled={service.status !== 'selesai'}
             >
               <PackageCheck className="mr-2 h-4 w-4" />
-              Diambil
+              Diserahkan
             </Button>
           </div>
         </div>

@@ -65,7 +65,7 @@ const STATUS_CONFIG = {
     ring: 'ring-green-200',
   },
   diambil: {
-    label: 'Diambil',
+    label: 'Diserahkan',
     bg: 'bg-slate-100',
     text: 'text-slate-700',
     dot: 'bg-slate-500',
@@ -256,7 +256,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           valueColor="text-[#0077CC]"
         />
         <StatCard
-          title="Siap Diambil"
+          title="Siap Diserahkan"
           value={siapDiambil}
           sub="Unit selesai diperbaiki"
           icon={CheckCircle2}

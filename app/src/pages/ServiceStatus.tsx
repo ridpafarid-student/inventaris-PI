@@ -141,7 +141,7 @@ export default function ServiceStatus() {
             <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
             <SelectItem value="proses">Proses</SelectItem>
             <SelectItem value="selesai">Selesai</SelectItem>
-            <SelectItem value="diambil">Diambil</SelectItem>
+            <SelectItem value="diambil">Diserahkan</SelectItem>
           </SelectContent>
         </Select>
       </div>
