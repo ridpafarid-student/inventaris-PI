@@ -520,15 +520,6 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                 );
               })}
             </div>
-            <div className="mt-4 pt-3 border-t border-blue-600/50">
-              <button
-                onClick={() => onPageChange?.('barang')}
-                className="w-full flex items-center justify-between hover:opacity-80 transition-opacity"
-              >
-                <span className="text-xs text-blue-200 font-medium">Lihat Inventaris Lengkap</span>
-                <ChevronRight className="w-4 h-4 text-blue-200" />
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -545,7 +536,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           ))}
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-400">
             <Badge variant="outline" className="text-xs font-medium border-orange-200 text-orange-600">
-              Stok mencapai minimum = Kritikal
+              Stok mencapai ambang batas minimum = Kritikal
             </Badge>
           </div>
         </div>

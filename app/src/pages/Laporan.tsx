@@ -743,7 +743,7 @@ export default function Laporan() {
 
       {/* Summary Cards - Laba Periode */}
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Laba Periode</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Laba Keseluruhan</p>
         <div className="grid grid-cols-1 gap-3">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

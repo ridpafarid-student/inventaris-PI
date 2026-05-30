@@ -3,7 +3,7 @@
 // ============================================
 
 // Role User
-export type UserRole = 'admin' | 'staff';
+export type UserRole = 'admin' | 'Teknisi';
 
 // User Data
 export interface UserData {

@@ -75,4 +75,4 @@ app/
 
 ## Catatan
 
-- bagian staff masih error belum bisa update barang, error di rules firestore 
+- bagian Teknisi masih error belum bisa update barang, error di rules firestore 

@@ -122,7 +122,7 @@ function LayoutNavContent({
                 ? 'bg-orange-500/20 text-orange-300'
                 : 'bg-indigo-400/20 text-indigo-300'
             }`}>
-              {userRole === 'admin' ? '⚙ Administrator' : '👤 Staff'}
+              {userRole === 'admin' ? '⚙ Administrator' : '👤 Teknisi'}
             </span>
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
 
           <div className="flex items-center gap-2">
             <span className="text-xs px-2 py-1 rounded font-medium" style={{ backgroundColor: 'rgba(99,102,241,0.2)', color: 'rgba(255,255,255,0.6)' }}>
-              {userData?.role === 'admin' ? 'Admin' : 'Staff'}
+              {userData?.role === 'admin' ? 'Admin' : 'Teknisi'}
             </span>
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
           <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 shadow-xs sticky top-0 z-10">
             <div>
               <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
-                M-THREE COMPUTER — {isAdmin ? 'Admin Panel' : 'Staff Panel'}
+                M-THREE COMPUTER — {isAdmin ? 'Admin Panel' : 'Teknisi Panel'}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -326,7 +326,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                   isAdmin ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
                 }`}>
-                  {userData?.role === 'admin' ? 'Administrator' : 'Staff'}
+                  {userData?.role === 'admin' ? 'Administrator' : 'Teknisi'}
                 </span>
               </div>
               <div className="w-px h-5 bg-gray-200" />

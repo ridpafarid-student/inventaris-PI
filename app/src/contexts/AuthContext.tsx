@@ -24,7 +24,7 @@ interface AuthContextType {
   register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: boolean;
-  isStaff: boolean;
+  isTeknisi: boolean;
 }
 
 // Create Context
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check roles
   const isAdmin = userData?.role === 'admin';
-  const isStaff = userData?.role === 'staff';
+  const isTeknisi = userData?.role === 'Teknisi';
 
   const value: AuthContextType = {
     currentUser,
@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     isAdmin,
-    isStaff
+    isTeknisi
   };
 
   return (

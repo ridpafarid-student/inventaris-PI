@@ -115,7 +115,7 @@ export function useTransaksi() {
       const errorCode = typeof err?.code === 'string' ? err.code : '';
       const errorMessage = typeof err?.message === 'string' ? err.message : 'Gagal melakukan transaksi';
       if (errorCode === 'permission-denied') {
-        const message = 'Akun ini tidak punya izin untuk menyimpan transaksi atau mengubah stok barang. Periksa Firestore Rules untuk staff.';
+        const message = 'Akun ini tidak punya izin untuk menyimpan transaksi atau mengubah stok barang. Periksa Firestore Rules untuk Teknisi.';
         setError(message);
         return { success: false, error: message };
       } else {

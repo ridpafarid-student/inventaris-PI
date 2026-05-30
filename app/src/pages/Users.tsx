@@ -48,7 +48,7 @@ export default function Users() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'staff' as UserRole
+    role: 'Teknisi' as UserRole
   });
 
   // Subscribe to users
@@ -90,7 +90,7 @@ export default function Users() {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'staff'
+      role: 'Teknisi'
     });
     setError('');
   };
@@ -209,12 +209,12 @@ export default function Users() {
                     <input
                       type="radio"
                       name="role"
-                      value="staff"
-                      checked={formData.role === 'staff'}
+                      value="Teknisi"
+                      checked={formData.role === 'Teknisi'}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                     />
                     <UserCircle className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm">Staff</span>
+                    <span className="text-sm">Teknisi</span>
                   </label>
                 </div>
               </div>
@@ -300,7 +300,7 @@ export default function Users() {
                       ) : (
                         <UserCircle className="w-3 h-3 mr-1" />
                       )}
-                      {user.role === 'admin' ? 'Administrator' : 'Staff'}
+                      {user.role === 'admin' ? 'Administrator' : 'Teknisi'}
                     </Badge>
                   </div>
 
@@ -404,7 +404,7 @@ export default function Users() {
                           ) : (
                             <UserCircle className="w-3 h-3 mr-1" />
                           )}
-                          {user.role === 'admin' ? 'Administrator' : 'Staff'}
+                          {user.role === 'admin' ? 'Administrator' : 'Teknisi'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -473,7 +473,7 @@ export default function Users() {
           <div className="flex items-start gap-3">
             <UserCircle className="w-4 h-4 text-gray-500 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-800 text-sm">Staff</h4>
+              <h4 className="font-semibold text-gray-800 text-sm">Teknisi</h4>
               <ul className="text-sm text-gray-500 mt-1.5 space-y-1">
                 <li>• Input stok masuk/keluar</li>
                 <li>• Lihat data barang</li>

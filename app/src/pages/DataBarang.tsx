@@ -48,9 +48,9 @@ export default function DataBarang() {
     addKategori,
     deleteKategori
   } = useBarang();
-  const { isAdmin, isStaff, currentUser, userData } = useAuth();
+  const { isAdmin, isTeknisi, currentUser, userData } = useAuth();
   const { addTransaksi } = useTransaksi();
-  const shouldHideHargaBeli = isStaff;
+  const shouldHideHargaBeli = isTeknisi;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKategori, setSelectedKategori] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

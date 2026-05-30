@@ -30,7 +30,7 @@ import type { Barang, TipeTransaksi } from '@/types';
 export default function TransaksiStok() {
   const { barangList, kategoriList } = useBarang();
   const { addTransaksi, error: transaksiError } = useTransaksi();
-  const { userData, isStaff } = useAuth();
+  const { userData, isTeknisi } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKategori, setSelectedKategori] = useState<string>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function TransaksiStok() {
     hargaSatuan: 0,
     keterangan: ''
   });
-  const shouldHideHargaBeli = isStaff;
+  const shouldHideHargaBeli = isTeknisi;
   const shouldHideHargaSatuan = shouldHideHargaBeli && formData.tipe === 'masuk';
 
   // Filter barang
