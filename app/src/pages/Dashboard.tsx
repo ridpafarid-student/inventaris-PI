@@ -12,9 +12,6 @@ import {
   AlertTriangle,
   TrendingUp,
   Package,
-  ArrowDownLeft,
-  ArrowUpRight,
-  Clock,
   ChevronRight,
   Laptop,
   Cpu,
@@ -485,7 +482,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
               { label: 'Total Servis', value: stats.totalServis, color: 'text-[#1F2937]' },
               { label: 'Aktif / On-progress', value: stats.servisAktif, color: 'text-[#0077CC]' },
               { label: 'Menunggu Sparepart', value: stats.servisMenungguSparepart, color: 'text-orange-600' },
-              { label: 'Selesai (all time)', value: stats.servisSelesai, color: 'text-green-600' },
+              { label: 'Selesai Hari Ini', value: stats.servisSelesaiHariIni, color: 'text-green-600' },
               { label: 'Masuk Hari Ini', value: stats.servisHariIni, color: 'text-purple-600' },
             ].map((row) => (
               <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
@@ -495,34 +492,6 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
             ))}
           </div>
 
-
-
-          {/* Inventory overview */}
-          <div className="bg-gradient-to-br from-[#1E3A8A] to-[#0077CC] rounded-xl shadow-md p-5 text-white">
-            <div className="flex items-center gap-2 mb-3">
-              <Package className="w-4 h-4 text-blue-200" />
-              <h3 className="text-base font-semibold">Inventaris</h3>
-            </div>
-            <div className="space-y-3">
-              {[
-                { label: 'Total Barang', value: stats.totalBarang, icon: ArrowDownLeft },
-                { label: 'Stok Menipis', value: stats.stokMenipis, icon: AlertTriangle },
-                { label: 'Sparepart Terpakai', value: stats.totalSparepartTerpakai, icon: ArrowUpRight },
-                { label: 'Transaksi Hari Ini', value: stats.totalTransaksiHariIni, icon: Clock },
-              ].map((row) => {
-                const Ic = row.icon;
-                return (
-                  <div key={row.label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Ic className="w-3.5 h-3.5 text-blue-200" style={{ width: '14px', height: '14px' }} />
-                      <span className="text-sm text-blue-100">{row.label}</span>
-                    </div>
-                    <span className="text-sm font-bold text-white">{row.value}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
 

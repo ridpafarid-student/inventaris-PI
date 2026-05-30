@@ -163,6 +163,7 @@ export function useDashboard() {
       servisAktif,
       servisMenungguSparepart,
       servisSelesai,
+      servisSelesaiHariIni,
       totalSparepartTerpakai,
       labaHariIni
     };
