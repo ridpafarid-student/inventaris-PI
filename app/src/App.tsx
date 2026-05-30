@@ -16,16 +16,23 @@ import ServiceStatus from '@/pages/ServiceStatus';
 import SeedData from '@/pages/SeedData';
 import { Toaster } from '@/components/ui/sonner';
 
+const ADMIN_ONLY_PAGES = ['laporan', 'users', 'seed'];
+
 // Main App Component
 function AppContent() {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const effectivePage = !isAdmin && ADMIN_ONLY_PAGES.includes(currentPage) ? 'dashboard' : currentPage;
+
+  const handlePageChange = (page: string) => {
+    setCurrentPage(!isAdmin && ADMIN_ONLY_PAGES.includes(page) ? 'dashboard' : page);
+  };
 
   // Render page content
   const renderPage = () => {
-    switch (currentPage) {
+    switch (effectivePage) {
       case 'dashboard':
-        return <Dashboard onPageChange={setCurrentPage} />;
+        return <Dashboard onPageChange={handlePageChange} />;
       case 'barang':
         return <DataBarang />;
       case 'transaksi':
@@ -33,13 +40,13 @@ function AppContent() {
       case 'riwayat':
         return <Riwayat />;
       case 'laporan':
-        return <Laporan />;
+        return isAdmin ? <Laporan /> : <Dashboard onPageChange={handlePageChange} />;
       case 'users':
-        return <Users />;
+        return isAdmin ? <Users /> : <Dashboard onPageChange={handlePageChange} />;
       case 'servis':
         return <ServiceStatus />;
       case 'seed':
-        return <SeedData />;
+        return isAdmin ? <SeedData /> : <Dashboard onPageChange={handlePageChange} />;
       default:
         return <Dashboard />;
     }
@@ -52,7 +59,7 @@ function AppContent() {
 
   // Logged in - show main app
   return (
-    <Layout currentPage={currentPage} onPageChange={setCurrentPage}>
+    <Layout currentPage={effectivePage} onPageChange={handlePageChange}>
       {renderPage()}
     </Layout>
   );

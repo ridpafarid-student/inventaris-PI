@@ -129,6 +129,7 @@ export default function SeedData() {
         }
 
         batch.set(sRef, {
+          noNota: `NT-${i.toString().padStart(4, '0')}`,
           namaPelanggan: `Pelanggan Dummy ${i}`,
           nomorHp: `0812345678${i.toString().padStart(2, '0')}`,
           jenisPerangkat: ['Laptop', 'Smartphone', 'Tablet', 'CPU', 'Printer'][i % 5],

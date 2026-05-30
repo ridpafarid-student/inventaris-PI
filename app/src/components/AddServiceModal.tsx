@@ -29,6 +29,7 @@ interface AddServiceModalProps {
 }
 
 export interface ServiceFormState {
+  noNota: string;
   namaPelanggan: string;
   nomorHp: string;
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
@@ -40,6 +41,7 @@ export interface ServiceFormState {
 }
 
 const initialForm: ServiceFormState = {
+  noNota: '',
   namaPelanggan: '',
   nomorHp: '',
   jenisPerangkat: 'Smartphone',
@@ -56,6 +58,7 @@ const createInitialForm = (service?: ServiceItem | null): ServiceFormState => {
   }
 
   return {
+    noNota: service.noNota ?? '',
     namaPelanggan: service.namaPelanggan,
     nomorHp: service.nomorHp,
     jenisPerangkat: service.jenisPerangkat,
@@ -170,6 +173,7 @@ export default function AddServiceModal({
 
     await onSubmit({
       ...formData,
+      noNota: formData.noNota.trim(),
       namaPelanggan: formData.namaPelanggan.trim(),
       nomorHp: formData.nomorHp.trim(),
       modelPerangkat: formData.modelPerangkat.trim(),
@@ -180,7 +184,7 @@ export default function AddServiceModal({
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[760px] max-w-[calc(100vw-2rem)] sm:max-w-[760px] max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>{service ? 'Edit Servis' : 'Tambah Servis Baru'}</DialogTitle>
         </DialogHeader>
@@ -192,6 +196,15 @@ export default function AddServiceModal({
         )}
 
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>No Nota</Label>
+            <Input
+              value={formData.noNota}
+              onChange={(event) => handleFieldChange('noNota', event.target.value)}
+              placeholder="Contoh: NT-0001"
+            />
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Nama Pelanggan *</Label>

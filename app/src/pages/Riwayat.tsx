@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { useBarang } from '@/hooks/useBarang';
 import { useServices } from '@/hooks/useServices';
 import { useTransaksi } from '@/hooks/useTransaksi';
+import { useAuth } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -32,8 +33,10 @@ export default function Riwayat() {
   const { transaksiList, loading: loadingTransaksi } = useTransaksi();
   const { services, loading: loadingServices } = useServices();
   const { barangList } = useBarang();
+  const { isTeknisi } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTipe, setFilterTipe] = useState<string>('all');
+  const shouldHideFinancials = isTeknisi;
 
   const serviceStockTransaksi = useMemo(() => (
     services.flatMap((service) =>
@@ -181,10 +184,12 @@ export default function Riwayat() {
                       <p className="text-gray-500">Stok</p>
                       <p className="mt-1 font-medium text-gray-900">{transaksi.stokSebelum} ke {transaksi.stokSesudah}</p>
                     </div>
-                    <div className="rounded-lg bg-gray-50 p-3">
-                      <p className="text-gray-500">Total</p>
-                      <p className="mt-1 font-medium text-gray-900 break-words">{formatRupiah(transaksi.totalHarga)}</p>
-                    </div>
+                    {!shouldHideFinancials && (
+                      <div className="rounded-lg bg-gray-50 p-3">
+                        <p className="text-gray-500">Total</p>
+                        <p className="mt-1 font-medium text-gray-900 break-words">{formatRupiah(transaksi.totalHarga)}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -198,36 +203,49 @@ export default function Riwayat() {
 
           <div className="hidden md:block overflow-x-auto">
             <Table className="min-w-full table-fixed">
-              <colgroup>
-                <col className="w-[16%]" />
-                <col className="w-[24%]" />
-                <col className="w-[12%]" />
-                <col className="w-[9%]" />
-                <col className="w-[11%]" />
-                <col className="w-[14%]" />
-                <col className="w-[14%]" />
-              </colgroup>
+              {shouldHideFinancials ? (
+                <colgroup>
+                  <col className="w-[18%]" />
+                  <col className="w-[34%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[21%]" />
+                </colgroup>
+              ) : (
+                <colgroup>
+                  <col className="w-[16%]" />
+                  <col className="w-[26%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[6%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[22%]" />
+                </colgroup>
+              )}
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Waktu</TableHead>
-                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Barang</TableHead>
-                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipe</TableHead>
-                  <TableHead className="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Jumlah</TableHead>
-                  <TableHead className="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Stok</TableHead>
-                  <TableHead className="px-2 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</TableHead>
-                  <TableHead className="px-2 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Oleh</TableHead>
+                  <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Waktu</TableHead>
+                  <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Barang</TableHead>
+                  <TableHead className="px-1 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipe</TableHead>
+                  <TableHead className="px-1 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Jumlah</TableHead>
+                  <TableHead className="px-1 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Stok</TableHead>
+                  {!shouldHideFinancials && (
+                    <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</TableHead>
+                  )}
+                  <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Oleh</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={shouldHideFinancials ? 6 : 7} className="text-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                     </TableCell>
                   </TableRow>
                 ) : filteredTransaksi.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={shouldHideFinancials ? 6 : 7} className="text-center py-8">
                       <History className="w-12 h-12 mx-auto text-gray-300 mb-2" />
                       <p className="text-gray-500">Tidak ada riwayat transaksi</p>
                     </TableCell>
@@ -235,19 +253,19 @@ export default function Riwayat() {
                 ) : (
                   filteredTransaksi.map((transaksi) => (
                     <TableRow key={transaksi.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
                           <span className="text-sm">{formatDate(transaksi.createdAt)}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{transaksi.barangNama}</p>
+                      <TableCell className="whitespace-normal text-center">
+                        <div className="mx-auto max-w-full">
+                          <p className="break-words font-medium leading-snug">{transaksi.barangNama}</p>
                           <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-1 text-center">
                         <Badge 
                           variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
                           className={transaksi.tipe === 'masuk' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-red-100 text-red-700 hover:bg-red-100'}
@@ -260,10 +278,10 @@ export default function Riwayat() {
                           {transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="px-1 text-center font-medium tabular-nums">
                         {transaksi.jumlah}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-1 text-center tabular-nums">
                         <span className="text-sm text-gray-500">
                           {transaksi.stokSebelum} →
                         </span>
@@ -271,13 +289,15 @@ export default function Riwayat() {
                           {transaksi.stokSesudah}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right font-medium px-2 py-2">
-                        {formatRupiah(transaksi.totalHarga)}
-                      </TableCell>
-                      <TableCell className="px-2 py-2">
-                        <div className="flex items-center gap-2 whitespace-normal">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm break-words">{transaksi.userName}</span>
+                      {!shouldHideFinancials && (
+                        <TableCell className="px-2 py-2 text-center font-medium tabular-nums">
+                          {formatRupiah(transaksi.totalHarga)}
+                        </TableCell>
+                      )}
+                      <TableCell className="px-2 py-2 text-center">
+                        <div className="flex items-center justify-center gap-2 whitespace-normal">
+                          <User className="w-4 h-4 shrink-0 text-gray-400" />
+                          <span className="text-sm break-words text-center">{transaksi.userName}</span>
                         </div>
                       </TableCell>
                     </TableRow>

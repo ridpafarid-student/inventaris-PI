@@ -38,6 +38,7 @@ export default function ServiceStatus() {
     const query = searchQuery.toLowerCase();
     const matchesSearch = [
       service.namaPelanggan,
+      service.noNota ?? '',
       service.nomorHp,
       service.modelPerangkat,
       service.deskripsiMasalah,

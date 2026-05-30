@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Banknote, CheckCircle2, Clock3, Cpu, Laptop, PackageCheck, Pencil, Printer, Smartphone, UserRound, Wrench } from 'lucide-react';
+import { Banknote, CheckCircle2, Clock3, Cpu, Laptop, PackageCheck, Pencil, Printer, ReceiptText, Smartphone, UserRound, Wrench } from 'lucide-react';
 import type { ServiceItem, ServiceStatus } from '@/types';
 
 interface ServiceCardProps {
@@ -86,6 +86,12 @@ export default function ServiceCard({
         </div>
 
         <div className="grid gap-2 text-sm text-slate-600">
+          {service.noNota && (
+            <div className="flex items-center gap-2">
+              <ReceiptText className="h-4 w-4 text-slate-400" />
+              <span className="truncate">Nota: {service.noNota}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <UserRound className="h-4 w-4 text-slate-400" />
             <span className="truncate">{service.namaPelanggan}</span>

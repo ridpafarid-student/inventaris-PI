@@ -165,7 +165,7 @@ function formatRp(n: number) {
 
 export default function Dashboard({ onPageChange }: { onPageChange?: (page: string) => void }) {
   const { stats, servisByStatus, loading } = useDashboard();
-  const { userData } = useAuth();
+  const { userData, isTeknisi } = useAuth();
 
   // Ambil 5 servis terbaru langsung
   const [recentServices, setRecentServices] = useState<ServiceItem[]>([]);
@@ -241,7 +241,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
       </div>
 
       {/* ── Statistics Cards ────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-2 ${isTeknisi ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4`}>
         <StatCard
           title="Servis Aktif"
           value={stats.servisAktif}
@@ -270,15 +270,17 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           valueColor="text-orange-600"
           accent
         />
-        <StatCard
-          title="Laba Hari Ini"
-          value={formatRp(stats.labaHariIni)}
-          sub={`${stats.totalTransaksiHariIni} transaksi hari ini`}
-          icon={TrendingUp}
-          iconBg="bg-purple-50"
-          iconColor="text-purple-600"
-          valueColor="text-[#1E3A8A]"
-        />
+        {!isTeknisi && (
+          <StatCard
+            title="Laba Hari Ini"
+            value={formatRp(stats.labaHariIni)}
+            sub={`${stats.totalTransaksiHariIni} transaksi hari ini`}
+            icon={TrendingUp}
+            iconBg="bg-purple-50"
+            iconColor="text-purple-600"
+            valueColor="text-[#1E3A8A]"
+          />
+        )}
       </div>
 
       {/* ── Two column layout ────────────────────────────────── */}
@@ -403,7 +405,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                       <tr key={service.id} className="hover:bg-gray-50/70 transition-colors">
                         <td className="px-5 py-3.5">
                           <span className="font-mono text-xs font-semibold text-[#1E3A8A] bg-blue-50 px-2 py-1 rounded">
-                            #{String(idx + 1).padStart(3, '0')}
+                            {service.noNota || `#${String(idx + 1).padStart(3, '0')}`}
                           </span>
                         </td>
                         <td className="px-4 py-3.5">

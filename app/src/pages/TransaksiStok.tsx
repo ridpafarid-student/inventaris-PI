@@ -209,7 +209,7 @@ export default function TransaksiStok() {
                 key={barang.id}
                 className={`rounded-xl p-4 transition-all ${
                   isKritis
-                    ? 'bg-orange-50/60 border border-orange-200 ring-1 ring-orange-100 hover:shadow-md hover:border-orange-300'
+                    ? 'bg-white border border-orange-200 ring-1 ring-orange-100 hover:shadow-md hover:border-orange-300'
                     : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm'
                 }`}
               >
@@ -270,7 +270,7 @@ export default function TransaksiStok() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`flex-1 text-xs ${isKritis ? 'border-orange-300 text-orange-700 hover:bg-orange-100 bg-orange-50' : ''}`}
+                    className={`flex-1 text-xs ${isKritis ? 'border-orange-300 bg-white text-orange-700 hover:bg-orange-50' : ''}`}
                     onClick={() => openDialog(barang, 'masuk')}
                   >
                     <ArrowDownLeft className="w-3.5 h-3.5 mr-1" />

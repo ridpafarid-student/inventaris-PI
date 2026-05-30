@@ -113,6 +113,7 @@ export interface ServiceSparepartItem {
 // Data Servis
 export interface ServiceItem {
   id: string;
+  noNota?: string;
   namaPelanggan: string;
   nomorHp: string;
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';

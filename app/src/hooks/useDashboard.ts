@@ -18,6 +18,23 @@ export function useDashboard() {
   const [barangLoaded, setBarangLoaded] = useState(false);
   const [transaksiLoaded, setTransaksiLoaded] = useState(false);
   const [servicesLoaded, setServicesLoaded] = useState(false);
+  const [todayKey, setTodayKey] = useState(() => new Date().toDateString());
+
+  useEffect(() => {
+    const scheduleNextDayRefresh = () => {
+      const now = new Date();
+      const nextDay = new Date(now);
+      nextDay.setDate(now.getDate() + 1);
+      nextDay.setHours(0, 0, 1, 0);
+
+      return window.setTimeout(() => {
+        setTodayKey(new Date().toDateString());
+      }, nextDay.getTime() - now.getTime());
+    };
+
+    const timeoutId = scheduleNextDayRefresh();
+    return () => window.clearTimeout(timeoutId);
+  }, [todayKey]);
 
   // Subscribe to barang
   useEffect(() => {
@@ -76,7 +93,7 @@ export function useDashboard() {
 
   // Calculate stats
   const stats: DashboardStats = useMemo(() => {
-    const today = new Date();
+    const today = new Date(todayKey);
     today.setHours(0, 0, 0, 0);
 
     const isSameDayOrAfterStart = (value: Date | Timestamp | string | null | undefined) => {
@@ -149,7 +166,7 @@ export function useDashboard() {
       totalSparepartTerpakai,
       labaHariIni
     };
-  }, [barangList, transaksiList, services]);
+  }, [barangList, transaksiList, services, todayKey]);
 
   // Get alert stok (barang dengan stok <= stokMinimum)
   const alertStok: AlertStok[] = useMemo(() => {
@@ -225,16 +242,31 @@ export function useDashboard() {
   }, [transaksiList, services]);
 
   const servisByStatus: ChartData[] = useMemo(() => {
+    const today = new Date(todayKey);
+    today.setHours(0, 0, 0, 0);
+
+    const isSameDayOrAfterStart = (value: Date | Timestamp | string | null | undefined) => {
+      if (!value) {
+        return false;
+      }
+
+      const date = value instanceof Timestamp ? value.toDate() : new Date(value);
+      return !Number.isNaN(date.getTime()) && date >= today;
+    };
+
     const data = {
       Pending: services.filter((service) => service.status === 'pending').length,
       'Menunggu Sparepart': services.filter((service) => service.status === 'menunggu-sparepart').length,
       Proses: services.filter((service) => service.status === 'proses').length,
       Selesai: services.filter((service) => service.status === 'selesai').length,
-      Diambil: services.filter((service) => service.status === 'diambil').length,
+      Diambil: services.filter((service) =>
+        service.status === 'diambil' &&
+        isSameDayOrAfterStart(service.pickedUpAt ?? service.updatedAt ?? service.createdAt)
+      ).length,
     };
 
     return Object.entries(data).map(([name, value]) => ({ name, value }));
-  }, [services]);
+  }, [services, todayKey]);
 
   return {
     stats,

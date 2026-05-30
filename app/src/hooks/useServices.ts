@@ -14,6 +14,7 @@ import { db } from '@/lib/firebase';
 import type { Barang, ServiceItem, ServiceSparepartItem, ServiceStatus } from '@/types';
 
 interface SaveServiceInput {
+  noNota?: string;
   namaPelanggan: string;
   nomorHp: string;
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
