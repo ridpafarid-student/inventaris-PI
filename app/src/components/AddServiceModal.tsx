@@ -207,7 +207,7 @@ export default function AddServiceModal({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Nama Pelanggan *</Label>
+              <Label>Nama Pelanggan</Label>
               <Input
                 value={formData.namaPelanggan}
                 onChange={(event) => handleFieldChange('namaPelanggan', event.target.value)}
@@ -215,7 +215,7 @@ export default function AddServiceModal({
               />
             </div>
             <div className="space-y-2">
-              <Label>Nomor HP *</Label>
+              <Label>Nomor HP</Label>
               <Input
                 value={formData.nomorHp}
                 onChange={(event) => handleFieldChange('nomorHp', event.target.value)}
@@ -226,7 +226,7 @@ export default function AddServiceModal({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Jenis Perangkat *</Label>
+              <Label>Jenis Perangkat</Label>
               <Select
                 value={formData.jenisPerangkat}
                 onValueChange={(value) => handleFieldChange('jenisPerangkat', value as ServiceFormState['jenisPerangkat'])}
@@ -244,7 +244,7 @@ export default function AddServiceModal({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Model Perangkat *</Label>
+              <Label>Model Perangkat</Label>
               <Input
                 value={formData.modelPerangkat}
                 onChange={(event) => handleFieldChange('modelPerangkat', event.target.value)}
@@ -285,7 +285,7 @@ export default function AddServiceModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Deskripsi Masalah *</Label>
+            <Label>Deskripsi Masalah</Label>
             <Textarea
               value={formData.deskripsiMasalah}
               onChange={(event) => handleFieldChange('deskripsiMasalah', event.target.value)}

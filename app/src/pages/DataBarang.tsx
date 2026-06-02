@@ -259,7 +259,7 @@ export default function DataBarang() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Kategori *</Label>
+          <Label>Kategori</Label>
           <Select
             value={formData.kategoriId}
             onValueChange={(value) => setFormData({ ...formData, kategoriId: value })}
@@ -307,7 +307,7 @@ export default function DataBarang() {
           />
         </div>
         <div className="space-y-2">
-          <Label>Stok Minimum *</Label>
+          <Label>Stok Minimum</Label>
           <Input
             type="number"
             value={formData.stokMinimum}
@@ -387,7 +387,7 @@ export default function DataBarang() {
                 )}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Nama Kategori *</Label>
+                    <Label>Nama Kategori</Label>
                     <Input
                       value={kategoriForm.nama}
                       onChange={(e) => setKategoriForm({ ...kategoriForm, nama: e.target.value })}
