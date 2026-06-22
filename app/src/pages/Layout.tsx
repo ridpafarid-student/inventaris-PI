@@ -56,14 +56,14 @@ const navItems: NavItem[] = [
     label: 'Inventaris',
     icon: Boxes,
     children: [
-      { id: 'barang', label: 'Semua Barang', icon: Package },
-      { id: 'transaksi', label: 'Barang Masuk/Keluar', icon: ArrowLeftRight },
+      { id: 'barang', label: 'Daftar Barang', icon: Package },
+      { id: 'transaksi', label: 'Mutasi Stok', icon: ArrowLeftRight },
       { id: 'riwayat', label: 'Riwayat Stok', icon: History },
     ],
   },
-  { id: 'servis', label: 'Jasa Servis', icon: Wrench },
+  { id: 'servis', label: 'Layanan Servis', icon: Wrench },
   { id: 'laporan', label: 'Laporan', icon: FileText, adminOnly: true },
-  { id: 'users', label: 'User', icon: Users, adminOnly: true },
+  { id: 'users', label: 'Pengguna', icon: Users, adminOnly: true },
   { id: 'seed', label: 'Developer Tools', icon: Database, adminOnly: true },
 ];
 

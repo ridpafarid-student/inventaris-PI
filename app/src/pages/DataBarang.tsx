@@ -251,7 +251,7 @@ export default function DataBarang() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Kode Barang *</Label>
+          <Label>Kode Barang</Label>
           <Input
             value={formData.kodeBarang}
             onChange={(e) => setFormData({ ...formData, kodeBarang: e.target.value })}
@@ -288,7 +288,7 @@ export default function DataBarang() {
       </div>
 
       <div className="space-y-2">
-        <Label>Nama Barang *</Label>
+        <Label>Nama Barang</Label>
         <Input
           value={formData.nama}
           onChange={(e) => setFormData({ ...formData, nama: e.target.value })}

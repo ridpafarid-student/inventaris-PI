@@ -269,7 +269,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
         />
         {!isTeknisi && (
           <StatCard
-            title="Laba Hari Ini"
+            title="Total Margin Hari ini"
             value={formatRp(stats.labaHariIni)}
             sub={`${stats.totalTransaksiHariIni} transaksi hari ini`}
             icon={TrendingUp}

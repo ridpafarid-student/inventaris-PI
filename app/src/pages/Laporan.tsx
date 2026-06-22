@@ -25,28 +25,25 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, Sparkles } from 'lucide-react';
+import { FileDown, ShoppingCart } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { ServiceItem, ServiceStatus, TransaksiStok } from '@/types';
 
-type RecommendationPriority = 'Tinggi' | 'Sedang' | 'Rendah';
-type LabaCadence = 'daily' | 'weekly' | 'monthly';
-
-interface RecommendationItem {
-  title: string;
-  priority: RecommendationPriority;
-  reason: string;
-  action: string;
+interface RestockRecommendationItem {
+  barangId: string;
+  kodeBarang: string;
+  nama: string;
+  kategoriNama: string;
+  satuan: string;
+  stok: number;
+  stokMinimum: number;
+  kekurangan: number;
+  buffer: number;
+  rekomendasiBeli: number;
+  estimasiBiaya: number;
 }
-
-const PRIORITY_STYLES: Record<RecommendationPriority, string> = {
-  Tinggi: 'bg-red-100 text-red-700',
-  Sedang: 'bg-amber-100 text-amber-700',
-  Rendah: 'bg-emerald-100 text-emerald-700',
-};
 
 const startOfDay = (date: Date) => {
   const nextDate = new Date(date);
@@ -60,78 +57,10 @@ const endOfDay = (date: Date) => {
   return nextDate;
 };
 
-const daysBetweenInclusive = (start: Date, end: Date) => {
-  const milliseconds = endOfDay(end).getTime() - startOfDay(start).getTime();
-  return Math.max(1, Math.floor(milliseconds / (1000 * 60 * 60 * 24)) + 1);
-};
-
 const toDate = (value: Date | Timestamp | string | null | undefined) => {
   if (!value) return null;
   return value instanceof Timestamp ? value.toDate() : new Date(value);
 };
-
-const isSameMonth = (start: Date, end: Date) =>
-  start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
-
-const isFullMonth = (start: Date, end: Date) => {
-  const monthStart = startOfDay(new Date(start.getFullYear(), start.getMonth(), 1));
-  const monthEnd = endOfDay(new Date(start.getFullYear(), start.getMonth() + 1, 0));
-
-  return start.getTime() === monthStart.getTime() && end.getTime() === monthEnd.getTime();
-};
-
-const formatRecommendationPeriodLabel = (start: Date, end: Date) => {
-  if (isSameMonth(start, end) && isFullMonth(start, end)) {
-    return start.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-  }
-
-  return `${start.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })} - ${end.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })}`;
-};
-
-const startOfWeek = (date: Date) => {
-  const nextDate = new Date(date);
-  const day = nextDate.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Monday as start of week
-  nextDate.setDate(nextDate.getDate() + diff);
-  return startOfDay(nextDate);
-};
-
-const getLabaPeriodFromAnchor = (anchorDate: Date, cadence: LabaCadence) => {
-  if (cadence === 'daily') {
-    return {
-      start: startOfDay(anchorDate),
-      end: endOfDay(anchorDate),
-    };
-  }
-
-  if (cadence === 'weekly') {
-    const start = startOfWeek(anchorDate);
-    return {
-      start,
-      end: endOfDay(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6)),
-    };
-  }
-
-  return {
-    start: startOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1)),
-    end: endOfDay(new Date(anchorDate.getFullYear(), anchorDate.getMonth() + 1, 0)),
-  };
-};
-
-const getRecommendationPriority = (score: number): RecommendationPriority => {
-  if (score >= 8) return 'Tinggi';
-  if (score >= 5) return 'Sedang';
-  return 'Rendah';
-};
-
 
 export default function Laporan() {
   const { transaksiList } = useTransaksi();
@@ -143,7 +72,6 @@ export default function Laporan() {
   const [endDate, setEndDate] = useState('');
   const [filterTipe, setFilterTipe] = useState<string>('all');
   const [filterKategori, setFilterKategori] = useState<string>('all');
-  const labaCadence: LabaCadence = 'daily';
 
   const selectedDateRange = useMemo(() => {
     if (!startDate && !endDate) {
@@ -188,63 +116,16 @@ export default function Laporan() {
     return matchesStart && matchesEnd;
   });
 
-  const recommendationPeriod = useMemo(() => {
-    if (!selectedDateRange.start || !selectedDateRange.end) {
-      return null;
-    }
-
-    return {
-      start: selectedDateRange.start,
-      end: selectedDateRange.end,
-    };
-  }, [selectedDateRange]);
-
-  const previousRecommendationPeriod = useMemo(() => {
-    if (!recommendationPeriod) {
-      return null;
-    }
-
-    const totalDays = daysBetweenInclusive(recommendationPeriod.start, recommendationPeriod.end);
-    const previousEnd = endOfDay(new Date(recommendationPeriod.start.getTime() - 24 * 60 * 60 * 1000));
-    const previousStart = startOfDay(new Date(previousEnd.getTime() - (totalDays - 1) * 24 * 60 * 60 * 1000));
-
-    return {
-      start: previousStart,
-      end: previousEnd,
-      totalDays,
-    };
-  }, [recommendationPeriod]);
-
-  const labaPeriodRange = useMemo<{ start: Date; end: Date }>(() => {
-    const hasBothBounds = selectedDateRange.start !== null && selectedDateRange.end !== null;
-    if (hasBothBounds) {
-      return {
-        start: selectedDateRange.start!,
-        end: selectedDateRange.end!,
-      };
-    }
-
-    const anchor = selectedDateRange.end ?? selectedDateRange.start ?? new Date();
-    return getLabaPeriodFromAnchor(anchor, labaCadence);
-  }, [labaCadence, selectedDateRange]);
-
-  const isDateInRange = (value: Date | Timestamp | string | null | undefined, start: Date, end: Date) => {
-    const date = toDate(value);
-    return Boolean(date && date >= start && date <= end);
-  };
-
-  const labaBarangKeluar = transaksiList
+  const labaBarangKeluar = filteredTransaksi
     .filter((transaksi) => transaksi.tipe === 'keluar')
-    .filter((transaksi) => isDateInRange(transaksi.createdAt, labaPeriodRange.start, labaPeriodRange.end))
     .reduce((sum, transaksi) => {
       const barang = barangList.find((item) => item.id === transaksi.barangId);
       const margin = barang ? barang.hargaJual - barang.hargaBeli : 0;
       return sum + (margin * transaksi.jumlah);
     }, 0);
 
-  const labaServisDiambil = services
+  const labaServisDiambil = filteredServices
     .filter((service) => service.status === 'diambil')
-    .filter((service) => isDateInRange(service.pickedUpAt ?? service.updatedAt, labaPeriodRange.start, labaPeriodRange.end))
     .reduce((sum, service) => {
       const nilaiSparepart = (service.sparepartDigunakan ?? []).reduce((subtotal, item) => {
         const barang = barangList.find((product) => product.id === item.productId);
@@ -255,6 +136,14 @@ export default function Laporan() {
     }, 0);
 
   const labaPeriodik = labaBarangKeluar + labaServisDiambil;
+
+  const totalTransaksiMarginPeriodik =
+    filteredTransaksi
+      .filter((transaksi) => transaksi.tipe === 'keluar')
+      .length +
+    filteredServices
+      .filter((service) => service.status === 'diambil')
+      .length;
 
   const serviceStockTransaksi = filteredServices.flatMap((service) =>
     (service.sparepartDigunakan ?? [])
@@ -282,272 +171,12 @@ export default function Laporan() {
       })
   );
 
-  const allServiceStockTransaksi = useMemo(() => (
-    services.flatMap((service) =>
-      (service.sparepartDigunakan ?? [])
-        .filter(() => service.stokDikurangi)
-        .map((item) => {
-          const barang = barangList.find((product) => product.id === item.productId);
-          const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
-
-          return {
-            id: `service-${service.id}-${item.productId}`,
-            barangId: item.productId,
-            barangNama: item.namaProduk,
-            barangKode: barang?.kodeBarang ?? '-',
-            tipe: 'keluar' as const,
-            jumlah: item.jumlah,
-            stokSebelum: 0,
-            stokSesudah: 0,
-            hargaSatuan,
-            totalHarga: hargaSatuan * item.jumlah,
-            keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
-            userId: '',
-            userName: 'Servis',
-            createdAt: service.updatedAt ?? service.createdAt,
-          };
-        })
-    )
-  ), [barangList, services]);
-
   const filteredTransaksiGabungan = [...filteredTransaksi, ...serviceStockTransaksi]
     .sort((a, b) => {
       const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toDate() : new Date(a.createdAt);
       const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toDate() : new Date(b.createdAt);
       return dateB.getTime() - dateA.getTime();
     });
-
-  const monthlyRecommendations = useMemo(() => {
-    if (!recommendationPeriod || !previousRecommendationPeriod) {
-      return null;
-    }
-
-    const isInRange = (value: Date | Timestamp | string, start: Date, end: Date) => {
-      const date = toDate(value);
-      return Boolean(date && date >= start && date <= end);
-    };
-
-    const matchesKategoriFilter = (barangId: string) => {
-      if (filterKategori === 'all') return true;
-      const barang = barangList.find((item) => item.id === barangId);
-      return barang?.kategoriId === filterKategori;
-    };
-
-    const allStockMovements = [...transaksiList, ...allServiceStockTransaksi];
-    const currentMovements = allStockMovements.filter(
-      (item) =>
-        item.tipe === 'keluar' &&
-        matchesKategoriFilter(item.barangId) &&
-        isInRange(item.createdAt, recommendationPeriod.start, recommendationPeriod.end)
-    );
-
-    const previousMovements = allStockMovements.filter(
-      (item) =>
-        item.tipe === 'keluar' &&
-        matchesKategoriFilter(item.barangId) &&
-        isInRange(item.createdAt, previousRecommendationPeriod.start, previousRecommendationPeriod.end)
-    );
-
-    const currentUsage = currentMovements.reduce<Record<string, number>>((acc, item) => {
-      acc[item.barangId] = (acc[item.barangId] ?? 0) + item.jumlah;
-      return acc;
-    }, {});
-
-    const previousUsage = previousMovements.reduce<Record<string, number>>((acc, item) => {
-      acc[item.barangId] = (acc[item.barangId] ?? 0) + item.jumlah;
-      return acc;
-    }, {});
-
-    const getStockAtPeriodEnd = (barangId: string, currentStock: number) => {
-      const latestTransaction = transaksiList
-        .filter((item) => {
-          const date = toDate(item.createdAt);
-          return item.barangId === barangId && Boolean(date && date <= recommendationPeriod.end);
-        })
-        .sort((a, b) => {
-          const dateA = toDate(a.createdAt)?.getTime() ?? 0;
-          const dateB = toDate(b.createdAt)?.getTime() ?? 0;
-          return dateB - dateA;
-        })[0];
-
-      return latestTransaction?.stokSesudah ?? currentStock;
-    };
-
-    const restock = barangList
-      .filter((barang) => matchesKategoriFilter(barang.id))
-      .map((barang) => {
-        const current = currentUsage[barang.id] ?? 0;
-        const previous = previousUsage[barang.id] ?? 0;
-        const stockAtPeriodEnd = getStockAtPeriodEnd(barang.id, barang.stok);
-        const coverage = current > 0 ? stockAtPeriodEnd / current : stockAtPeriodEnd;
-        const score =
-          (stockAtPeriodEnd <= barang.stokMinimum ? 5 : 0) +
-          (coverage <= 1 ? 3 : coverage <= 2 ? 2 : 0) +
-          (current > previous ? 2 : current > 0 ? 1 : 0);
-
-        return {
-          barang,
-          current,
-          previous,
-          score,
-          coverage,
-          stockAtPeriodEnd,
-        };
-      })
-      .filter(({ current, score }) => current > 0 && score >= 4)
-      .sort((a, b) => b.score - a.score || b.current - a.current)
-      .slice(0, 3)
-      .map<RecommendationItem>(({ barang, current, previous, score, coverage, stockAtPeriodEnd }) => ({
-        title: `Restock ${barang.nama}`,
-        priority: getRecommendationPriority(score),
-        reason: `${barang.nama} keluar ${current} unit pada periode ini, stok akhir periode ${stockAtPeriodEnd} ${barang.satuan}${previous > 0 ? `, sebelumnya ${previous} unit` : ''}.`,
-        action: coverage <= 1
-          ? 'Siapkan pembelian di awal bulan depan agar servis tidak tertahan.'
-          : 'Tambahkan stok buffer untuk antisipasi kebutuhan bulan depan.',
-      }));
-
-    const slowMoving = barangList
-      .filter((barang) => matchesKategoriFilter(barang.id))
-      .map((barang) => {
-        const current = currentUsage[barang.id] ?? 0;
-        const previous = previousUsage[barang.id] ?? 0;
-        const stockAtPeriodEnd = getStockAtPeriodEnd(barang.id, barang.stok);
-        const score =
-          (stockAtPeriodEnd > barang.stokMinimum * 2 ? 4 : 0) +
-          (current === 0 ? 3 : current <= 1 ? 2 : 0) +
-          (previous > current ? 1 : 0);
-
-        return {
-          barang,
-          current,
-          previous,
-          score,
-          stockAtPeriodEnd,
-        };
-      })
-      .filter(({ current, score, stockAtPeriodEnd }) => stockAtPeriodEnd > 0 && score >= 5 && current <= 1)
-      .sort((a, b) => b.score - a.score || b.stockAtPeriodEnd - a.stockAtPeriodEnd)
-      .slice(0, 3)
-      .map<RecommendationItem>(({ barang, current, previous, score, stockAtPeriodEnd }) => ({
-        title: `Evaluasi stok ${barang.nama}`,
-        priority: getRecommendationPriority(score),
-        reason: `Stok akhir periode ${stockAtPeriodEnd} ${barang.satuan}, pergerakan periode ini ${current} unit${previous > 0 ? `, turun dari ${previous} unit` : ''}.`,
-        action: current === 0
-          ? 'Tahan pembelian ulang dan pertimbangkan bundling atau promo agar stok bergerak.'
-          : 'Batasi pembelian berikutnya sampai pergerakan stok kembali stabil.',
-      }));
-
-    const currentServicesInPeriod = services.filter((service) =>
-      isInRange(service.createdAt, recommendationPeriod.start, recommendationPeriod.end)
-    );
-    const previousServicesInPeriod = services.filter((service) =>
-      isInRange(service.createdAt, previousRecommendationPeriod.start, previousRecommendationPeriod.end)
-    );
-    const waitingServicesInScope = services.filter((service) => {
-      const createdAt = toDate(service.createdAt);
-      const updatedAt = toDate(service.updatedAt);
-
-      return service.status === 'menunggu-sparepart' && Boolean(
-        createdAt &&
-        createdAt <= recommendationPeriod.end &&
-        (!updatedAt || updatedAt >= recommendationPeriod.start)
-      );
-    });
-    const previousWaitingServicesInScope = services.filter((service) => {
-      const createdAt = toDate(service.createdAt);
-      const updatedAt = toDate(service.updatedAt);
-
-      return service.status === 'menunggu-sparepart' && Boolean(
-        createdAt &&
-        createdAt <= previousRecommendationPeriod.end &&
-        (!updatedAt || updatedAt >= previousRecommendationPeriod.start)
-      );
-    });
-
-    const currentWaiting = waitingServicesInScope.length;
-    const previousWaiting = previousWaitingServicesInScope.length;
-    const currentCompleted = currentServicesInPeriod.filter((service) => service.status === 'selesai').length;
-    const completionRate = currentServicesInPeriod.length > 0
-      ? Math.round((currentCompleted / currentServicesInPeriod.length) * 100)
-      : 0;
-
-    const currentSparepartTrend = currentServicesInPeriod.reduce<Record<string, number>>((acc, service) => {
-      for (const item of service.sparepartDigunakan ?? []) {
-        acc[item.namaProduk] = (acc[item.namaProduk] ?? 0) + item.jumlah;
-      }
-      return acc;
-    }, {});
-
-    const topSparepart = Object.entries(currentSparepartTrend)
-      .sort((a, b) => b[1] - a[1])[0];
-
-    const serviceTrendItems: RecommendationItem[] = [];
-
-    if (currentWaiting > 0) {
-      const score = 6 + (currentWaiting > previousWaiting ? 2 : 0);
-      serviceTrendItems.push({
-        title: 'Evaluasi antrean menunggu sparepart',
-        priority: getRecommendationPriority(score),
-        reason: `${currentWaiting} servis berada di status menunggu sparepart pada periode ini${previousWaiting > 0 ? `, sebelumnya ${previousWaiting}` : ''}.`,
-        action: 'Review supplier dan siapkan stok buffer untuk komponen yang paling sering menahan pengerjaan.',
-      });
-    }
-
-    if (topSparepart) {
-      const [, usageCount] = topSparepart;
-      serviceTrendItems.push({
-        title: `Siapkan sparepart untuk layanan ${topSparepart[0]}`,
-        priority: getRecommendationPriority(usageCount >= 8 ? 8 : usageCount >= 4 ? 6 : 4),
-        reason: `${topSparepart[0]} dipakai ${usageCount} kali di servis periode ini, menunjukkan permintaan perbaikan yang konsisten.`,
-        action: 'Pastikan stok sparepart ini aman dan pertimbangkan paket layanan yang relevan bulan depan.',
-      });
-    }
-
-    if (currentServicesInPeriod.length > 0) {
-      const trendDelta = currentServicesInPeriod.length - previousServicesInPeriod.length;
-      serviceTrendItems.push({
-        title: trendDelta >= 0 ? 'Permintaan servis sedang naik' : 'Permintaan servis sedang melambat',
-        priority: getRecommendationPriority(
-          trendDelta > 3 || completionRate < 60 ? 7 : Math.abs(trendDelta) > 0 ? 5 : 4
-        ),
-        reason: `Total servis periode ini ${currentServicesInPeriod.length} unit${previousServicesInPeriod.length > 0 ? `, dibanding ${previousServicesInPeriod.length} unit pada periode sebelumnya` : ''}. Tingkat penyelesaian saat ini ${completionRate}%.`,
-        action: trendDelta >= 0
-          ? 'Siapkan kapasitas teknisi dan sparepart untuk menjaga waktu pengerjaan tetap stabil.'
-          : 'Pertimbangkan follow up pelanggan lama atau promo layanan agar permintaan kembali naik.',
-      });
-    }
-
-    const fallback = (title: string, action: string): RecommendationItem[] => ([
-      {
-        title,
-        priority: 'Rendah',
-        reason: 'Belum ada pola yang cukup kuat pada periode ini untuk memunculkan rekomendasi prioritas tinggi.',
-        action,
-      },
-    ]);
-
-    return {
-      periodLabel: formatRecommendationPeriodLabel(recommendationPeriod.start, recommendationPeriod.end),
-      comparisonLabel: `${previousRecommendationPeriod.totalDays} hari sebelumnya`,
-      restock: restock.length > 0
-        ? restock
-        : fallback('Stok restock relatif aman', 'Lanjutkan pemantauan pemakaian sparepart untuk periode berikutnya.'),
-      slowMoving: slowMoving.length > 0
-        ? slowMoving
-        : fallback('Belum ada stok lambat bergerak yang kritis', 'Pertahankan pola pembelian saat ini dan evaluasi lagi periode berikutnya.'),
-      service: serviceTrendItems.slice(0, 3).length > 0
-        ? serviceTrendItems.slice(0, 3)
-        : fallback('Tren layanan masih stabil', 'Pantau kembali permintaan servis dan status pengerjaan pada periode berikutnya.'),
-    };
-  }, [
-    allServiceStockTransaksi,
-    barangList,
-    filterKategori,
-    previousRecommendationPeriod,
-    recommendationPeriod,
-    services,
-    transaksiList,
-  ]);
 
   // Calculate summary
   const summary = {
@@ -578,6 +207,38 @@ export default function Laporan() {
     totalBiayaJasa: filteredServices.reduce((total, service) => total + (service.biayaJasa ?? 0), 0),
     nilaiSparepart: serviceStockTransaksi.reduce((total, transaksi) => total + transaksi.totalHarga, 0),
     labaPeriodik,
+  };
+
+  const restockRecommendations = useMemo<RestockRecommendationItem[]>(() => (
+    barangList
+      .filter((barang) => filterKategori === 'all' || barang.kategoriId === filterKategori)
+      .filter((barang) => barang.stokMinimum > 0 && barang.stok <= barang.stokMinimum)
+      .map((barang) => {
+        const kekurangan = Math.max(barang.stokMinimum - barang.stok, 0);
+        const buffer = Math.max(1, Math.ceil(barang.stokMinimum * 0.5));
+        const rekomendasiBeli = kekurangan + buffer;
+
+        return {
+          barangId: barang.id,
+          kodeBarang: barang.kodeBarang,
+          nama: barang.nama,
+          kategoriNama: barang.kategoriNama ?? '-',
+          satuan: barang.satuan,
+          stok: barang.stok,
+          stokMinimum: barang.stokMinimum,
+          kekurangan,
+          buffer,
+          rekomendasiBeli,
+          estimasiBiaya: rekomendasiBeli * barang.hargaBeli,
+        };
+      })
+      .sort((a, b) => b.kekurangan - a.kekurangan || a.stok - b.stok)
+  ), [barangList, filterKategori]);
+
+  const restockSummary = {
+    totalItem: restockRecommendations.length,
+    totalUnit: restockRecommendations.reduce((sum, item) => sum + item.rekomendasiBeli, 0),
+    estimasiBiaya: restockRecommendations.reduce((sum, item) => sum + item.estimasiBiaya, 0),
   };
 
   const getServiceSparepartTotal = (service: ServiceItem) =>
@@ -741,21 +402,6 @@ export default function Laporan() {
         </div>
       </div>
 
-      {/* Summary Cards - Laba Periode */}
-      <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Laba Keseluruhan</p>
-        <div className="grid grid-cols-1 gap-3">
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Total Laba</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Summary Cards - Inventaris */}
       <div>
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ringkasan Inventaris</p>
@@ -808,76 +454,120 @@ export default function Laporan() {
         </div>
       </div>
 
-      <Card className="border-gray-200">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-                <Sparkles className="h-5 w-5 text-blue-600" />
-                Rekomendasi Periode
-              </CardTitle>
-              <p className="mt-1 text-sm text-gray-500">
-                {monthlyRecommendations
-                  ? `Insight otomatis untuk ${monthlyRecommendations.periodLabel} dengan pembanding ${monthlyRecommendations.comparisonLabel}.`
-                  : 'Pilih periode laporan untuk menampilkan rekomendasi.'}
-              </p>
+      {/* Summary Cards - Laba Periode */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Total Margin Penjualan</p>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-2xl font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
+                <p className="text-xs text-gray-400 mt-1">{totalTransaksiMarginPeriodik} transaksi</p>
+              </div>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {!monthlyRecommendations ? (
-            <div className="rounded-lg border border-dashed border-blue-200 bg-white/80 p-6 text-center">
-              <Sparkles className="mx-auto h-8 w-8 text-blue-500" />
-              <p className="mt-3 font-medium text-gray-900">Rekomendasi belum ditampilkan</p>
-              <p className="mt-1 text-sm text-gray-500">
-                Isi tanggal laporan, lalu pilih mode mingguan atau bulanan.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Badge className="bg-slate-100 text-slate-700">{monthlyRecommendations.periodLabel}</Badge>
-                <Badge className="bg-slate-100 text-slate-700">Banding: {monthlyRecommendations.comparisonLabel}</Badge>
-              </div>
-              <div className="grid gap-4 lg:grid-cols-3">
-                {[
-                  {
-                    title: 'Restock Periode Berikutnya',
-                    items: monthlyRecommendations.restock,
-                    accent: 'border-red-200 bg-red-50/80',
-                  },
-                  {
-                    title: 'Stok Lambat Bergerak',
-                    items: monthlyRecommendations.slowMoving,
-                    accent: 'border-amber-200 bg-amber-50/80',
-                  },
-                  {
-                    title: 'Layanan / Service',
-                    items: monthlyRecommendations.service,
-                    accent: 'border-blue-200 bg-blue-50/80',
-                  },
-                ].map((section) => (
-                  <div key={section.title} className={`rounded-xl border p-4 ${section.accent}`}>
-                    <h3 className="text-base font-semibold text-gray-900">{section.title}</h3>
-                    <div className="mt-4 space-y-3">
-                      {section.items.map((item) => (
-                        <div key={item.title} className="rounded-lg border border-white/70 bg-white/90 p-3 shadow-sm">
-                          <div className="flex items-start justify-between gap-3">
-                            <p className="font-medium text-gray-900">{item.title}</p>
-                            <Badge className={`${PRIORITY_STYLES[item.priority]} shrink-0`}>{item.priority}</Badge>
-                          </div>
-                          <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
-                          <p className="mt-2 text-sm font-medium text-gray-800">Saran: {item.action}</p>
-                        </div>
-                      ))}
+        </div>
+      </div>
+
+      {/* Rekomendasi Restok */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="flex flex-col gap-2 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+              <ShoppingCart className="h-5 w-5 text-red-600" />
+              Rekomendasi Restok
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Berdasarkan barang yang stoknya sudah mencapai atau berada di bawah ambang batas minimum.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 p-4">
+            <p className="text-xs font-medium text-gray-400">Item Perlu Restok</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">{restockSummary.totalItem}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <p className="text-xs font-medium text-gray-400">Rekomendasi Unit</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">{restockSummary.totalUnit}</p>
+          </div>
+          <div className="rounded-lg border border-gray-200 p-4">
+            <p className="text-xs font-medium text-gray-400">Estimasi Budget</p>
+            <p className="mt-1 text-base font-bold text-gray-900">{formatRupiah(restockSummary.estimasiBiaya)}</p>
+          </div>
+        </div>
+
+        {restockRecommendations.length === 0 ? (
+          <div className="mt-4 rounded-lg border border-dashed border-emerald-200 bg-emerald-50/60 p-6 text-center">
+            <p className="font-medium text-emerald-700">Semua stok masih di atas ambang batas minimum.</p>
+            <p className="mt-1 text-sm text-emerald-700/80">Belum ada barang yang perlu direstok dari filter saat ini.</p>
+          </div>
+        ) : (
+          <>
+            <div className="mt-4 space-y-3 md:hidden">
+              {restockRecommendations.map((item) => (
+                <div key={item.barangId} className="rounded-lg border border-gray-200 p-4">
+                  <p className="text-xs text-gray-500">{item.kodeBarang}</p>
+                  <p className="font-semibold text-gray-900">{item.nama}</p>
+                  <p className="text-xs text-gray-500">{item.kategoriNama}</p>
+                  <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Stok</p>
+                      <p className="font-semibold text-gray-900">{item.stok}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Minimum</p>
+                      <p className="font-semibold text-gray-900">{item.stokMinimum}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Beli</p>
+                      <p className="font-semibold text-red-600">{item.rekomendasiBeli}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <p className="mt-3 text-sm text-gray-600">
+                    Kekurangan {item.kekurangan} {item.satuan}, buffer {item.buffer} {item.satuan}. Estimasi {formatRupiah(item.estimasiBiaya)}.
+                  </p>
+                </div>
+              ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="mt-4 hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Barang</TableHead>
+                    <TableHead>Kategori</TableHead>
+                    <TableHead className="text-right">Stok</TableHead>
+                    <TableHead className="text-right">Minimum</TableHead>
+                    <TableHead className="text-right">Kekurangan</TableHead>
+                    <TableHead className="text-right">Rekomendasi Beli</TableHead>
+                    <TableHead className="text-right">Estimasi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {restockRecommendations.map((item) => (
+                    <TableRow key={item.barangId}>
+                      <TableCell>
+                        <p className="font-medium text-gray-900">{item.nama}</p>
+                        <p className="text-xs text-gray-500">{item.kodeBarang}</p>
+                      </TableCell>
+                      <TableCell>{item.kategoriNama}</TableCell>
+                      <TableCell className="text-right">{item.stok} {item.satuan}</TableCell>
+                      <TableCell className="text-right">{item.stokMinimum} {item.satuan}</TableCell>
+                      <TableCell className="text-right">{item.kekurangan} {item.satuan}</TableCell>
+                      <TableCell className="text-right font-semibold text-red-600">
+                        {item.rekomendasiBeli} {item.satuan}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">{formatRupiah(item.estimasiBiaya)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Report Content (for PDF export) */}
       <div
@@ -902,78 +592,98 @@ export default function Laporan() {
           </p>
         </div>
 
-        {/* Summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Total Transaksi</p>
-            <p className="text-xl font-bold">{filteredTransaksiGabungan.length}</p>
-          </div>
-          <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Total Nilai</p>
-            <p className="text-xl font-bold">{formatRupiah(summary.nilaiMasuk + summary.nilaiKeluar)}</p>
-          </div>
-          <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Total Servis</p>
-            <p className="text-xl font-bold">{serviceSummary.totalServis}</p>
-          </div>
-          <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Servis Selesai</p>
-            <p className="text-xl font-bold">{serviceSummary.selesai}</p>
-          </div>
-          <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Nilai Jasa</p>
-            <p className="text-xl font-bold">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
-          </div>
-          <div className="border p-3 rounded">
-            <p className="text-sm text-gray-500">Laba Periode</p>
-            <p className="text-xl font-bold">{formatRupiah(serviceSummary.labaPeriodik)}</p>
-          </div>
-        </div>
-
-        {monthlyRecommendations && (
-          <div className="mb-8">
-            <h3 className="mb-1 text-lg font-semibold text-gray-900">
-              Rekomendasi Periode
-            </h3>
-            <p className="mb-3 text-sm text-gray-500">
-              Periode {monthlyRecommendations.periodLabel}, dibanding {monthlyRecommendations.comparisonLabel}.
-            </p>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              {[
-                {
-                  title: 'Restock Periode Berikutnya',
-                  items: monthlyRecommendations.restock,
-                },
-                {
-                  title: 'Stok Lambat Bergerak',
-                  items: monthlyRecommendations.slowMoving,
-                },
-                {
-                  title: 'Layanan / Service',
-                  items: monthlyRecommendations.service,
-                },
-              ].map((section) => (
-                <div key={section.title} className="rounded-lg border p-4">
-                  <p className="font-semibold text-gray-900">{section.title}</p>
-                  <div className="mt-3 space-y-3">
-                    {section.items.map((item) => (
-                      <div key={item.title} className="rounded-md border p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="font-medium text-gray-900">{item.title}</p>
-                          <span className="text-xs font-semibold text-gray-500">{item.priority}</span>
-                        </div>
-                        <p className="mt-2 text-sm text-gray-600">{item.reason}</p>
-                        <p className="mt-2 text-sm text-gray-800">Saran: {item.action}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+        <div className="mb-8">
+          <h3 className="mb-1 text-lg font-semibold text-gray-900">
+            Rekomendasi Restok Berdasarkan Ambang Batas
+          </h3>
+          <p className="mb-3 text-sm text-gray-500">
+            Barang dengan stok saat ini kurang dari atau sama dengan stok minimum.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div className="border p-3 rounded">
+              <p className="text-sm text-gray-500">Item Restok</p>
+              <p className="text-xl font-bold">{restockSummary.totalItem}</p>
+            </div>
+            <div className="border p-3 rounded">
+              <p className="text-sm text-gray-500">Rekomendasi Unit</p>
+              <p className="text-xl font-bold">{restockSummary.totalUnit}</p>
+            </div>
+            <div className="border p-3 rounded">
+              <p className="text-sm text-gray-500">Estimasi Budget</p>
+              <p className="text-lg font-bold">{formatRupiah(restockSummary.estimasiBiaya)}</p>
             </div>
           </div>
-        )}
 
-        {/* Table */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Barang</TableHead>
+                <TableHead>Kategori</TableHead>
+                <TableHead className="text-right">Stok</TableHead>
+                <TableHead className="text-right">Minimum</TableHead>
+                <TableHead className="text-right">Kekurangan</TableHead>
+                <TableHead className="text-right">Rekomendasi Beli</TableHead>
+                <TableHead className="text-right">Estimasi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {restockRecommendations.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    Tidak ada barang yang perlu restok
+                  </TableCell>
+                </TableRow>
+              ) : (
+                restockRecommendations.map((item) => (
+                  <TableRow key={item.barangId}>
+                    <TableCell>
+                      <p className="font-medium">{item.nama}</p>
+                      <p className="text-xs text-gray-500">{item.kodeBarang}</p>
+                    </TableCell>
+                    <TableCell>{item.kategoriNama}</TableCell>
+                    <TableCell className="text-right">{item.stok} {item.satuan}</TableCell>
+                    <TableCell className="text-right">{item.stokMinimum} {item.satuan}</TableCell>
+                    <TableCell className="text-right">{item.kekurangan} {item.satuan}</TableCell>
+                    <TableCell className="text-right font-semibold">{item.rekomendasiBeli} {item.satuan}</TableCell>
+                    <TableCell className="text-right">{formatRupiah(item.estimasiBiaya)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Total Margin Penjualan */}
+      <div>
+        <h3 className="mb-3 text-lg font-semibold text-gray-900">Ringkasan Inventaris</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Stok Masuk</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{summary.totalMasuk}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Stok Keluar</p>
+            <p className="text-2xl font-bold text-gray-800 mt-1">{summary.totalKeluar}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Nilai Masuk</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(summary.nilaiMasuk)}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Nilai Keluar</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(summary.nilaiKeluar)}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Total Margin Penjualan</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-400 font-medium">Total Transaksi</p>
+            <p className="text-base font-bold text-gray-800 mt-1">{totalTransaksiMarginPeriodik} transaksi</p>
+          </div>
+        </div>
+      </div>
+
         <div className="mb-8">
           <h3 className="mb-3 text-lg font-semibold text-gray-900">Transaksi Stok</h3>
           <div className="md:hidden space-y-3">
@@ -1062,6 +772,24 @@ export default function Laporan() {
             )}
           </TableBody>
         </Table>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">Ringkasan Servis</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <p className="text-xs text-gray-400 font-medium">Total Servis</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.totalServis}</p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <p className="text-xs text-gray-400 font-medium">Servis Selesai</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{serviceSummary.selesai}</p>
+            </div>
+            <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <p className="text-xs text-gray-400 font-medium">Nilai Jasa</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
+            </div>
           </div>
         </div>
 

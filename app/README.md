@@ -75,4 +75,5 @@ app/
 
 ## Catatan
 
-- bagian Teknisi masih error belum bisa update barang, error di rules firestore 
+logika udah bener 
+tinggal typography
