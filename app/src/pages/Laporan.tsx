@@ -511,7 +511,7 @@ export default function Laporan() {
                   <p className="text-xs text-gray-500">{item.kodeBarang}</p>
                   <p className="font-semibold text-gray-900">{item.nama}</p>
                   <p className="text-xs text-gray-500">{item.kategoriNama}</p>
-                  <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-lg bg-gray-50 p-3">
                       <p className="text-gray-500">Stok</p>
                       <p className="font-semibold text-gray-900">{item.stok}</p>
@@ -519,6 +519,10 @@ export default function Laporan() {
                     <div className="rounded-lg bg-gray-50 p-3">
                       <p className="text-gray-500">Minimum</p>
                       <p className="font-semibold text-gray-900">{item.stokMinimum}</p>
+                    </div>
+                    <div className="rounded-lg bg-gray-50 p-3">
+                      <p className="text-gray-500">Buffer</p>
+                      <p className="font-semibold text-gray-900">{item.buffer}</p>
                     </div>
                     <div className="rounded-lg bg-gray-50 p-3">
                       <p className="text-gray-500">Beli</p>
@@ -539,9 +543,10 @@ export default function Laporan() {
                     <TableHead>Barang</TableHead>
                     <TableHead>Kategori</TableHead>
                     <TableHead className="text-right">Stok</TableHead>
-                    <TableHead className="text-right">Minimum</TableHead>
-                    <TableHead className="text-right">Kekurangan</TableHead>
-                    <TableHead className="text-right">Rekomendasi Beli</TableHead>
+                    <TableHead className="text-center">Minimum</TableHead>
+                    <TableHead className="text-center">Kekurangan</TableHead>
+                    <TableHead className="text-center">Buffer Aman</TableHead>
+                    <TableHead className="text-center">Rekomendasi Beli</TableHead>
                     <TableHead className="text-right">Estimasi</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -554,9 +559,10 @@ export default function Laporan() {
                       </TableCell>
                       <TableCell>{item.kategoriNama}</TableCell>
                       <TableCell className="text-right">{item.stok} {item.satuan}</TableCell>
-                      <TableCell className="text-right">{item.stokMinimum} {item.satuan}</TableCell>
-                      <TableCell className="text-right">{item.kekurangan} {item.satuan}</TableCell>
-                      <TableCell className="text-right font-semibold text-red-600">
+                      <TableCell className="text-center">{item.stokMinimum} {item.satuan}</TableCell>
+                      <TableCell className="text-center">{item.kekurangan} {item.satuan}</TableCell>
+                      <TableCell className="text-center">{item.buffer} {item.satuan}</TableCell>
+                      <TableCell className="text-center font-semibold text-red-600">
                         {item.rekomendasiBeli} {item.satuan}
                       </TableCell>
                       <TableCell className="text-right font-medium">{formatRupiah(item.estimasiBiaya)}</TableCell>
@@ -620,16 +626,17 @@ export default function Laporan() {
                 <TableHead>Barang</TableHead>
                 <TableHead>Kategori</TableHead>
                 <TableHead className="text-right">Stok</TableHead>
-                <TableHead className="text-right">Minimum</TableHead>
-                <TableHead className="text-right">Kekurangan</TableHead>
-                <TableHead className="text-right">Rekomendasi Beli</TableHead>
+                <TableHead className="text-center">Minimum</TableHead>
+                <TableHead className="text-center">Kekurangan</TableHead>
+                <TableHead className="text-center">Buffer Aman</TableHead>
+                <TableHead className="text-center">Rekomendasi Beli</TableHead>
                 <TableHead className="text-right">Estimasi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {restockRecommendations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     Tidak ada barang yang perlu restok
                   </TableCell>
                 </TableRow>
@@ -642,9 +649,10 @@ export default function Laporan() {
                     </TableCell>
                     <TableCell>{item.kategoriNama}</TableCell>
                     <TableCell className="text-right">{item.stok} {item.satuan}</TableCell>
-                    <TableCell className="text-right">{item.stokMinimum} {item.satuan}</TableCell>
-                    <TableCell className="text-right">{item.kekurangan} {item.satuan}</TableCell>
-                    <TableCell className="text-right font-semibold">{item.rekomendasiBeli} {item.satuan}</TableCell>
+                    <TableCell className="text-center">{item.stokMinimum} {item.satuan}</TableCell>
+                    <TableCell className="text-center">{item.kekurangan} {item.satuan}</TableCell>
+                    <TableCell className="text-center">{item.buffer} {item.satuan}</TableCell>
+                    <TableCell className="text-center font-semibold">{item.rekomendasiBeli} {item.satuan}</TableCell>
                     <TableCell className="text-right">{formatRupiah(item.estimasiBiaya)}</TableCell>
                   </TableRow>
                 ))

@@ -358,7 +358,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                   Menampilkan 5 dari {totalLowStock} item kritis
                 </span>
                 <button
-                  onClick={() => onPageChange?.('transaksi')}
+                  onClick={() => onPageChange?.('laporan')}
                   className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 bg-orange-100 hover:bg-orange-200 px-3 py-1.5 rounded-lg transition-colors"
                 >
                   Lihat Semua
