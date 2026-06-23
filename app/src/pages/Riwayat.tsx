@@ -37,34 +37,42 @@ export default function Riwayat() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTipe, setFilterTipe] = useState<string>('all');
   const shouldHideFinancials = isTeknisi;
+  const officialServiceTransactionIds = useMemo(
+    () => new Set(transaksiList.map((transaksi) => transaksi.serviceId).filter(Boolean)),
+    [transaksiList]
+  );
 
   const serviceStockTransaksi = useMemo(() => (
     services.flatMap((service) =>
-      (service.sparepartDigunakan ?? [])
-        .filter(() => service.stokDikurangi)
-        .map((item) => {
-          const barang = barangList.find((product) => product.id === item.productId);
-          const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
+      officialServiceTransactionIds.has(service.id)
+        ? []
+        : (service.sparepartDigunakan ?? [])
+          .filter(() => service.stokDikurangi)
+          .map((item) => {
+            const barang = barangList.find((product) => product.id === item.productId);
+            const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
 
-          return {
-            id: `service-${service.id}-${item.productId}`,
-            barangId: item.productId,
-            barangNama: item.namaProduk,
-            barangKode: barang?.kodeBarang ?? '-',
-            tipe: 'keluar' as const,
-            jumlah: item.jumlah,
-            stokSebelum: 0,
-            stokSesudah: 0,
-            hargaSatuan,
-            totalHarga: hargaSatuan * item.jumlah,
-            keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
-            userId: '',
-            userName: `Servis (${service.modelPerangkat})`,
-            createdAt: service.updatedAt ?? service.createdAt,
-          };
-        })
+            return {
+              id: `service-${service.id}-${item.productId}`,
+              barangId: item.productId,
+              barangNama: item.namaProduk,
+              barangKode: barang?.kodeBarang ?? '-',
+              tipe: 'keluar' as const,
+              jumlah: item.jumlah,
+              stokSebelum: 0,
+              stokSesudah: 0,
+              hargaSatuan,
+              totalHarga: hargaSatuan * item.jumlah,
+              keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
+              userId: '',
+              userName: `Servis (${service.modelPerangkat})`,
+              source: 'service' as const,
+              serviceId: service.id,
+              createdAt: service.updatedAt ?? service.createdAt,
+            };
+          })
     )
-  ), [barangList, services]);
+  ), [barangList, officialServiceTransactionIds, services]);
 
   const allTransaksi = useMemo(() => (
     [...transaksiList, ...serviceStockTransaksi].sort((a, b) => {

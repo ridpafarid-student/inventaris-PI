@@ -57,7 +57,10 @@ export interface TransaksiStok {
   keterangan: string;
   userId: string;
   userName: string;
+  source?: 'manual' | 'service';
+  serviceId?: string;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 // Alert Stok

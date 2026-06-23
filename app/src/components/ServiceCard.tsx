@@ -112,7 +112,7 @@ export default function ServiceCard({
 
         <div className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
           {sparepartCount > 0
-            ? `${sparepartCount} item sparepart dipilih${service.stokDikurangi ? ' dan stok sudah dikurangi' : ''}`
+            ? `${sparepartCount} item sparepart ${service.stokDikurangi ? 'terpakai dan stok sudah dikurangi' : 'direncanakan'}`
             : 'Belum ada sparepart yang dipilih'}
         </div>
 

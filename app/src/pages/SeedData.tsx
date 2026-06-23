@@ -7,6 +7,20 @@ import { collection, doc, writeBatch, serverTimestamp, getDocs, deleteDoc } from
 import { db } from '@/lib/firebase';
 import { Loader2, Database, Trash2 } from 'lucide-react';
 
+type SeedBarang = {
+  id: string;
+  kategoriId: string;
+  kategoriNama: string;
+  kodeBarang: string;
+  nama: string;
+  stok: number;
+  stokMinimum: number;
+  hargaBeli: number;
+  hargaJual: number;
+  satuan: string;
+  deskripsi: string;
+};
+
 export default function SeedData() {
   const { userData } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -25,10 +39,10 @@ export default function SeedData() {
 
       // 1. Generate Kategori
       const kategori = [
-        { id: doc(collection(db, 'kategori')).id, nama: 'Laptop', deskripsi: 'Perangkat Laptop' },
-        { id: doc(collection(db, 'kategori')).id, nama: 'Smartphone', deskripsi: 'Perangkat Smartphone' },
-        { id: doc(collection(db, 'kategori')).id, nama: 'Aksesoris', deskripsi: 'Aksesoris Komputer' },
+        { id: doc(collection(db, 'kategori')).id, nama: 'Perangkat', deskripsi: 'Unit laptop, komputer, printer, dan smartphone' },
         { id: doc(collection(db, 'kategori')).id, nama: 'Sparepart', deskripsi: 'Suku Cadang & Komponen' },
+        { id: doc(collection(db, 'kategori')).id, nama: 'Aksesoris', deskripsi: 'Aksesoris Komputer' },
+        { id: doc(collection(db, 'kategori')).id, nama: 'Consumable', deskripsi: 'Barang habis pakai servis' },
       ];
 
       kategori.forEach(k => {
@@ -39,118 +53,261 @@ export default function SeedData() {
         });
       });
 
-      // 2. Generate Barang
-      const barang: any[] = [];
-      kategori.forEach((k, index) => {
-        for (let i = 1; i <= 5; i++) {
-          const id = doc(collection(db, 'barang')).id;
-          const hargaBeli = 100000 * i * (index + 1);
-          const hargaJual = hargaBeli + (hargaBeli * 0.2); // 20% margin
-          const b = {
-            id,
-            kategoriId: k.id,
-            kategoriNama: k.nama,
-            kodeBarang: `BRG-${k.nama.substring(0, 3).toUpperCase()}-${100 + i}`,
-            nama: `Dummy ${k.nama} ${i}`,
-            stok: 50 + (i * 10),
-            stokMinimum: 10,
-            hargaBeli,
-            hargaJual,
-            satuan: 'pcs',
-            deskripsi: `Barang dummy otomatis untuk testing laporan`,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          };
-          barang.push(b);
-          batch.set(doc(db, 'barang', id), {
-            kategoriId: b.kategoriId,
-            kategoriNama: b.kategoriNama,
-            kodeBarang: b.kodeBarang,
-            nama: b.nama,
-            stok: b.stok,
-            stokMinimum: b.stokMinimum,
-            hargaBeli: b.hargaBeli,
-            hargaJual: b.hargaJual,
-            satuan: b.satuan,
-            deskripsi: b.deskripsi,
-            createdAt: b.createdAt,
-            updatedAt: b.updatedAt
-          });
-        }
+      const kategoriByName = Object.fromEntries(kategori.map((item) => [item.nama, item]));
+      const createBarang = (
+        kategoriNama: string,
+        kodeBarang: string,
+        nama: string,
+        stok: number,
+        stokMinimum: number,
+        hargaBeli: number,
+        hargaJual: number,
+        deskripsi: string,
+        satuan = 'pcs'
+      ): SeedBarang => {
+        const selectedKategori = kategoriByName[kategoriNama];
+        return {
+          id: doc(collection(db, 'barang')).id,
+          kategoriId: selectedKategori.id,
+          kategoriNama,
+          kodeBarang,
+          nama,
+          stok,
+          stokMinimum,
+          hargaBeli,
+          hargaJual,
+          satuan,
+          deskripsi,
+        };
+      };
+
+      // 2. Generate Barang dengan skenario stok aman, kritis, dan habis
+      const barang: SeedBarang[] = [
+        createBarang('Sparepart', 'SPR-KBD-001', 'Keyboard Laptop Universal', 3, 5, 85000, 125000, 'Stok kritis untuk uji rekomendasi restock'),
+        createBarang('Sparepart', 'SPR-SSD-256', 'SSD 256GB SATA', 2, 4, 230000, 315000, 'Stok kritis dan sering dipakai servis'),
+        createBarang('Sparepart', 'SPR-CHG-19V', 'Charger Laptop 19V', 0, 3, 145000, 210000, 'Stok habis untuk uji menunggu sparepart'),
+        createBarang('Sparepart', 'SPR-RAM-8GB', 'RAM DDR4 8GB', 8, 5, 260000, 350000, 'Stok aman setelah pemakaian servis'),
+        createBarang('Sparepart', 'SPR-LCD-14', 'LCD Laptop 14 Inch', 1, 2, 520000, 690000, 'Stok kritis bernilai tinggi'),
+        createBarang('Aksesoris', 'AKS-MSE-001', 'Mouse Wireless', 15, 5, 65000, 95000, 'Aksesoris stok aman'),
+        createBarang('Aksesoris', 'AKS-HDM-002', 'Kabel HDMI 2 Meter', 12, 4, 35000, 55000, 'Aksesoris stok aman'),
+        createBarang('Consumable', 'CON-TPS-001', 'Thermal Paste 4g', 6, 10, 25000, 45000, 'Consumable kritis untuk servis rutin'),
+        createBarang('Perangkat', 'DEV-LTP-001', 'Laptop Bekas Siap Jual', 2, 1, 2500000, 3200000, 'Perangkat jual stok aman'),
+      ];
+
+      barang.forEach((item) => {
+        batch.set(doc(db, 'barang', item.id), {
+          kategoriId: item.kategoriId,
+          kategoriNama: item.kategoriNama,
+          kodeBarang: item.kodeBarang,
+          nama: item.nama,
+          stok: item.stok,
+          stokMinimum: item.stokMinimum,
+          hargaBeli: item.hargaBeli,
+          hargaJual: item.hargaJual,
+          satuan: item.satuan,
+          deskripsi: item.deskripsi,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
       });
 
-      // 3. Generate Transaksi (Masuk & Keluar) tersebar dalam 3 bulan terakhir
+      // 3. Generate Transaksi manual untuk uji stok masuk/keluar
       const now = new Date();
-      barang.forEach(b => {
-        // Buat 10 transaksi per barang
-        for (let i = 0; i < 10; i++) {
-          const tDate = new Date(now.getTime() - (Math.random() * 90 * 24 * 60 * 60 * 1000)); // random date in last 90 days
-          const isMasuk = Math.random() > 0.6;
-          const jumlah = Math.floor(Math.random() * 10) + 1;
-
-          const tRef = doc(collection(db, 'transaksi'));
-          batch.set(tRef, {
-            barangId: b.id,
-            barangNama: b.nama,
-            barangKode: b.kodeBarang,
-            tipe: isMasuk ? 'masuk' : 'keluar',
-            jumlah: jumlah,
-            stokSebelum: b.stok,
-            stokSesudah: isMasuk ? b.stok + jumlah : b.stok - jumlah,
-            hargaSatuan: isMasuk ? b.hargaBeli : b.hargaJual,
-            totalHarga: jumlah * (isMasuk ? b.hargaBeli : b.hargaJual),
-            keterangan: `Transaksi dummy otomatis ${isMasuk ? 'pembelian' : 'penjualan'}`,
-            userId: userData.uid,
-            userName: userData.name,
-            createdAt: tDate // Custom past date
-          });
+      const daysAgo = (days: number) => new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+      const findBarang = (kodeBarang: string) => {
+        const item = barang.find((product) => product.kodeBarang === kodeBarang);
+        if (!item) {
+          throw new Error(`Seed barang ${kodeBarang} tidak ditemukan`);
         }
-      });
+        return item;
+      };
+      const addTransaksi = (
+        item: SeedBarang,
+        tipe: 'masuk' | 'keluar',
+        jumlah: number,
+        stokSebelum: number,
+        tanggal: Date,
+        keterangan: string
+      ) => {
+        const stokSesudah = tipe === 'masuk' ? stokSebelum + jumlah : stokSebelum - jumlah;
+        const hargaSatuan = tipe === 'masuk' ? item.hargaBeli : item.hargaJual;
+        batch.set(doc(collection(db, 'transaksi')), {
+          barangId: item.id,
+          barangNama: item.nama,
+          barangKode: item.kodeBarang,
+          tipe,
+          jumlah,
+          stokSebelum,
+          stokSesudah,
+          hargaSatuan,
+          totalHarga: jumlah * hargaSatuan,
+          keterangan,
+          userId: userData.uid,
+          userName: userData.name,
+          source: 'manual',
+          createdAt: tanggal
+        });
+      };
 
-      // 4. Generate Servis
-      const sparepartBarang = barang.filter(b => b.kategoriNama === 'Sparepart');
-      for (let i = 1; i <= 20; i++) {
-        const sRef = doc(collection(db, 'services'));
-        const sDate = new Date(now.getTime() - (Math.random() * 60 * 24 * 60 * 60 * 1000));
-        const statuses: ServiceStatus[] = ['pending', 'proses', 'menunggu-sparepart', 'selesai', 'diambil'];
-        const status = statuses[Math.floor(Math.random() * statuses.length)];
-        const isCompleted = status === 'selesai' || status === 'diambil';
-        const isPickedUp = status === 'diambil';
+      addTransaksi(findBarang('SPR-KBD-001'), 'masuk', 8, 0, daysAgo(45), 'Pembelian awal stok keyboard');
+      addTransaksi(findBarang('SPR-KBD-001'), 'keluar', 3, 6, daysAgo(8), 'Penjualan keyboard manual');
+      addTransaksi(findBarang('SPR-SSD-256'), 'masuk', 6, 0, daysAgo(40), 'Pembelian SSD untuk stok servis');
+      addTransaksi(findBarang('SPR-SSD-256'), 'keluar', 2, 5, daysAgo(12), 'Penjualan SSD manual');
+      addTransaksi(findBarang('SPR-CHG-19V'), 'masuk', 3, 0, daysAgo(35), 'Pembelian charger laptop');
+      addTransaksi(findBarang('SPR-CHG-19V'), 'keluar', 3, 3, daysAgo(4), 'Stok charger habis untuk pelanggan');
+      addTransaksi(findBarang('AKS-MSE-001'), 'masuk', 20, 0, daysAgo(30), 'Pembelian mouse wireless');
+      addTransaksi(findBarang('AKS-MSE-001'), 'keluar', 5, 20, daysAgo(5), 'Penjualan mouse wireless');
+      addTransaksi(findBarang('CON-TPS-001'), 'masuk', 12, 0, daysAgo(20), 'Pembelian thermal paste');
 
-        const usedSpareparts = [];
-        if (status !== 'pending' && sparepartBarang.length > 0) {
-          // Add 1-2 random products as spareparts
-          const p1 = sparepartBarang[Math.floor(Math.random() * sparepartBarang.length)];
-          usedSpareparts.push({
-            productId: p1.id,
-            namaProduk: p1.nama,
-            jumlah: 1
-          });
-        }
+      // 4. Generate Servis sesuai alur baru stok-servis
+      const serviceScenarios: Array<{
+        noNota: string;
+        namaPelanggan: string;
+        nomorHp: string;
+        jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
+        modelPerangkat: string;
+        deskripsiMasalah: string;
+        status: ServiceStatus;
+        biayaJasa: number;
+        spareparts: Array<{ barang: SeedBarang; jumlah: number }>;
+        createdAt: Date;
+      }> = [
+        {
+          noNota: 'NT-0001',
+          namaPelanggan: 'Raka Pratama',
+          nomorHp: '081234560001',
+          jenisPerangkat: 'Laptop',
+          modelPerangkat: 'ASUS A456U',
+          deskripsiMasalah: 'Laptop mati total, menunggu pengecekan awal',
+          status: 'pending',
+          biayaJasa: 0,
+          spareparts: [],
+          createdAt: daysAgo(1),
+        },
+        {
+          noNota: 'NT-0002',
+          namaPelanggan: 'Dina Safitri',
+          nomorHp: '081234560002',
+          jenisPerangkat: 'Laptop',
+          modelPerangkat: 'Lenovo Ideapad 330',
+          deskripsiMasalah: 'Adaptor rusak dan stok charger sedang kosong',
+          status: 'menunggu-sparepart',
+          biayaJasa: 50000,
+          spareparts: [{ barang: findBarang('SPR-CHG-19V'), jumlah: 1 }],
+          createdAt: daysAgo(2),
+        },
+        {
+          noNota: 'NT-0003',
+          namaPelanggan: 'Bima Saputra',
+          nomorHp: '081234560003',
+          jenisPerangkat: 'Laptop',
+          modelPerangkat: 'Acer Aspire 5',
+          deskripsiMasalah: 'Keyboard beberapa tombol tidak berfungsi',
+          status: 'proses',
+          biayaJasa: 120000,
+          spareparts: [{ barang: findBarang('SPR-KBD-001'), jumlah: 1 }],
+          createdAt: daysAgo(3),
+        },
+        {
+          noNota: 'NT-0004',
+          namaPelanggan: 'Sari Wulandari',
+          nomorHp: '081234560004',
+          jenisPerangkat: 'Laptop',
+          modelPerangkat: 'HP Pavilion 14',
+          deskripsiMasalah: 'Upgrade SSD dan instal ulang sistem',
+          status: 'selesai',
+          biayaJasa: 150000,
+          spareparts: [{ barang: findBarang('SPR-SSD-256'), jumlah: 1 }],
+          createdAt: daysAgo(6),
+        },
+        {
+          noNota: 'NT-0005',
+          namaPelanggan: 'Agus Setiawan',
+          nomorHp: '081234560005',
+          jenisPerangkat: 'CPU',
+          modelPerangkat: 'PC Rakitan i5',
+          deskripsiMasalah: 'Upgrade RAM dan pembersihan thermal',
+          status: 'diambil',
+          biayaJasa: 200000,
+          spareparts: [
+            { barang: findBarang('SPR-RAM-8GB'), jumlah: 2 },
+            { barang: findBarang('CON-TPS-001'), jumlah: 1 },
+          ],
+          createdAt: daysAgo(9),
+        },
+        {
+          noNota: 'NT-0006',
+          namaPelanggan: 'Maya Kartika',
+          nomorHp: '081234560006',
+          jenisPerangkat: 'Laptop',
+          modelPerangkat: 'Dell Inspiron 14',
+          deskripsiMasalah: 'LCD pecah, penggantian panel sedang diproses',
+          status: 'proses',
+          biayaJasa: 180000,
+          spareparts: [{ barang: findBarang('SPR-LCD-14'), jumlah: 1 }],
+          createdAt: daysAgo(10),
+        },
+      ];
 
-        batch.set(sRef, {
-          noNota: `NT-${i.toString().padStart(4, '0')}`,
-          namaPelanggan: `Pelanggan Dummy ${i}`,
-          nomorHp: `0812345678${i.toString().padStart(2, '0')}`,
-          jenisPerangkat: ['Laptop', 'Smartphone', 'Tablet', 'CPU', 'Printer'][i % 5],
-          modelPerangkat: `Model Perangkat ${i}`,
-          deskripsiMasalah: `Masalah dummy untuk testing data laporan`,
-          status: status,
-          biayaJasa: status !== 'pending' ? 50000 * (Math.floor(Math.random() * 6) + 1) : 0,
-          sparepartDigunakan: usedSpareparts,
-          stokDikurangi: usedSpareparts.length > 0,
-          completedAt: isCompleted ? sDate : null,
-          pickedUpAt: isPickedUp ? sDate : null,
+      serviceScenarios.forEach((service) => {
+        const serviceRef = doc(collection(db, 'services'));
+        const shouldDeductStock = service.status === 'proses' || service.status === 'selesai' || service.status === 'diambil';
+        const stokDikurangi = shouldDeductStock && service.spareparts.length > 0;
+        const serviceSpareparts = service.spareparts.map((item) => ({
+          productId: item.barang.id,
+          namaProduk: item.barang.nama,
+          jumlah: item.jumlah,
+        }));
+
+        batch.set(serviceRef, {
+          noNota: service.noNota,
+          namaPelanggan: service.namaPelanggan,
+          nomorHp: service.nomorHp,
+          jenisPerangkat: service.jenisPerangkat,
+          modelPerangkat: service.modelPerangkat,
+          deskripsiMasalah: service.deskripsiMasalah,
+          status: service.status,
+          biayaJasa: service.biayaJasa,
+          sparepartDigunakan: serviceSpareparts,
+          stokDikurangi,
+          completedAt: service.status === 'selesai' || service.status === 'diambil' ? service.createdAt : null,
+          pickedUpAt: service.status === 'diambil' ? service.createdAt : null,
           userId: userData.uid,
           userName: userData.name,
           createdByName: userData.name,
-          createdAt: sDate,
-          updatedAt: sDate
+          createdAt: service.createdAt,
+          updatedAt: service.createdAt
         });
-      }
+
+        if (stokDikurangi) {
+          service.spareparts.forEach((sparepart) => {
+            const stokSesudah = sparepart.barang.stok;
+            const stokSebelum = stokSesudah + sparepart.jumlah;
+            const transaksiRef = doc(db, 'transaksi', `service-${serviceRef.id}-${sparepart.barang.id}`);
+            batch.set(transaksiRef, {
+              barangId: sparepart.barang.id,
+              barangNama: sparepart.barang.nama,
+              barangKode: sparepart.barang.kodeBarang,
+              tipe: 'keluar',
+              jumlah: sparepart.jumlah,
+              stokSebelum,
+              stokSesudah,
+              hargaSatuan: sparepart.barang.hargaJual,
+              totalHarga: sparepart.jumlah * sparepart.barang.hargaJual,
+              keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
+              userId: userData.uid,
+              userName: `Servis - ${userData.name}`,
+              source: 'service',
+              serviceId: serviceRef.id,
+              createdAt: service.createdAt,
+              updatedAt: service.createdAt,
+            });
+          });
+        }
+      });
 
       await batch.commit();
-      setStatus('Berhasil! Ratusan data dummy telah di-generate.');
+      setStatus('Berhasil! Data dummy pengujian alur stok-servis telah di-generate.');
     } catch (error: any) {
       console.error(error);
       setStatus(`Gagal: ${error.message}`);
@@ -205,7 +362,7 @@ export default function SeedData() {
             Seed Dummy Data
           </CardTitle>
           <CardDescription>
-            Fitur ini akan memasukkan data Kategori, Barang, Transaksi (stok masuk/keluar dalam 3 bulan terakhir), dan Servis secara otomatis ke database untuk keperluan pengujian Laporan.
+            Fitur ini akan memasukkan data kategori, barang, transaksi manual, servis menunggu sparepart, servis yang sudah memakai stok, dan transaksi servis resmi untuk pengujian laporan.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -222,7 +379,7 @@ export default function SeedData() {
                     Memproses...
                   </>
                 ) : (
-                  'Generate Ratusan Data Dummy Sekarang'
+                  'Generate Data Pengujian'
                 )}
               </Button>
 

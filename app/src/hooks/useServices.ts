@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   collection,
-  deleteDoc,
   doc,
   onSnapshot,
   orderBy,
@@ -38,11 +37,29 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const shouldDeductStock = (
   nextStatus: ServiceStatus,
-  spareparts: ServiceSparepartItem[],
-  alreadyDeducted: boolean
-) => !alreadyDeducted && spareparts.length > 0 && (
-  nextStatus === 'selesai' || nextStatus === 'diambil' || nextStatus === 'menunggu-sparepart' || nextStatus === 'proses'
+  spareparts: ServiceSparepartItem[]
+) => spareparts.length > 0 && (
+  nextStatus === 'proses' || nextStatus === 'selesai' || nextStatus === 'diambil'
 );
+
+const aggregateSpareparts = (spareparts: ServiceSparepartItem[]) => {
+  const usage = new Map<string, ServiceSparepartItem>();
+
+  for (const item of spareparts) {
+    if (!item.productId || item.jumlah <= 0) {
+      continue;
+    }
+
+    const current = usage.get(item.productId);
+    usage.set(item.productId, {
+      productId: item.productId,
+      namaProduk: item.namaProduk,
+      jumlah: (current?.jumlah ?? 0) + item.jumlah,
+    });
+  }
+
+  return usage;
+};
 
 export function useServices() {
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -77,34 +94,103 @@ export function useServices() {
     return unsubscribe;
   }, []);
 
-  const applySparepartUsage = useCallback(async (
-    spareparts: ServiceSparepartItem[],
-    transaction: Transaction
-  ) => {
-    for (const sparepart of spareparts) {
-      const productRef = doc(db, 'barang', sparepart.productId);
-      const productSnapshot = await transaction.get(productRef);
+  const syncSparepartUsage = useCallback(async ({
+    serviceId,
+    service,
+    previousSpareparts,
+    nextSpareparts,
+    wasDeducted,
+    shouldDeduct,
+    transaction,
+  }: {
+    serviceId: string;
+    service: SaveServiceInput;
+    previousSpareparts: ServiceSparepartItem[];
+    nextSpareparts: ServiceSparepartItem[];
+    wasDeducted: boolean;
+    shouldDeduct: boolean;
+    transaction: Transaction;
+  }) => {
+    const previousUsage = wasDeducted ? aggregateSpareparts(previousSpareparts) : new Map<string, ServiceSparepartItem>();
+    const nextUsage = shouldDeduct ? aggregateSpareparts(nextSpareparts) : new Map<string, ServiceSparepartItem>();
+    const productIds = Array.from(new Set([...previousUsage.keys(), ...nextUsage.keys()]));
+    const snapshots = await Promise.all(productIds.map(async (productId) => {
+      const productRef = doc(db, 'barang', productId);
+      const transaksiRef = doc(db, 'transaksi', `service-${serviceId}-${productId}`);
+      const [productSnapshot, transaksiSnapshot] = await Promise.all([
+        transaction.get(productRef),
+        transaction.get(transaksiRef),
+      ]);
 
-      if (!productSnapshot.exists()) {
-        throw new Error(`Produk ${sparepart.namaProduk} tidak ditemukan`);
+      return {
+        productId,
+        productRef,
+        transaksiRef,
+        productSnapshot,
+        transaksiSnapshot,
+      };
+    }));
+
+    for (const item of snapshots) {
+      const previousQty = previousUsage.get(item.productId)?.jumlah ?? 0;
+      const nextItem = nextUsage.get(item.productId);
+      const nextQty = nextItem?.jumlah ?? 0;
+      const delta = nextQty - previousQty;
+
+      if (!item.productSnapshot.exists()) {
+        const productName = nextItem?.namaProduk ?? previousUsage.get(item.productId)?.namaProduk ?? 'Produk';
+        throw new Error(`${productName} tidak ditemukan`);
       }
 
-      const currentProduct = productSnapshot.data() as Barang;
-      const currentStock = currentProduct.stok ?? 0;
+      const product = item.productSnapshot.data() as Barang;
+      const currentStock = product.stok ?? 0;
+      const nextStock = currentStock - delta;
 
-      if (sparepart.jumlah <= 0) {
-        throw new Error(`Jumlah sparepart ${sparepart.namaProduk} tidak valid`);
+      if (delta > 0 && currentStock < delta) {
+        throw new Error(`Stok ${product.nama} tidak mencukupi`);
       }
 
-      if (currentStock < sparepart.jumlah) {
-        throw new Error(`Stok ${sparepart.namaProduk} tidak mencukupi`);
+      if (delta !== 0) {
+        transaction.update(item.productRef, {
+          stok: nextStock,
+          updatedAt: serverTimestamp(),
+        });
       }
 
-      transaction.update(productRef, {
-        stok: currentStock - sparepart.jumlah,
-        updatedAt: serverTimestamp(),
-      });
+      if (nextQty > 0) {
+        const hargaSatuan = product.hargaJual ?? product.hargaBeli ?? 0;
+        const transaksiPayload = {
+          barangId: item.productId,
+          barangNama: product.nama,
+          barangKode: product.kodeBarang,
+          tipe: 'keluar',
+          jumlah: nextQty,
+          stokSebelum: currentStock,
+          stokSesudah: nextStock,
+          hargaSatuan,
+          totalHarga: nextQty * hargaSatuan,
+          keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
+          userId: service.userId ?? '',
+          userName: service.userName ? `Servis - ${service.userName}` : 'Servis',
+          source: 'service',
+          serviceId,
+          updatedAt: serverTimestamp(),
+        };
+
+        if (item.transaksiSnapshot.exists()) {
+          transaction.update(item.transaksiRef, transaksiPayload);
+        } else {
+          transaction.set(item.transaksiRef, {
+            ...transaksiPayload,
+            createdAt: serverTimestamp(),
+          });
+        }
+      } else if (item.transaksiSnapshot.exists()) {
+        transaction.delete(item.transaksiRef);
+      }
     }
+
+    return nextUsage.size > 0;
   }, []);
 
   const addService = useCallback(async (
@@ -112,18 +198,24 @@ export function useServices() {
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const spareparts = payload.sparepartDigunakan ?? [];
-      const deductStock = shouldDeductStock(payload.status, spareparts, false);
+      const deductStock = shouldDeductStock(payload.status, spareparts);
 
       await runTransaction(db, async (transaction) => {
-        if (deductStock) {
-          await applySparepartUsage(spareparts, transaction);
-        }
-
         const serviceRef = doc(collection(db, 'services'));
+        const stockDeducted = await syncSparepartUsage({
+          serviceId: serviceRef.id,
+          service: payload,
+          previousSpareparts: [],
+          nextSpareparts: spareparts,
+          wasDeducted: false,
+          shouldDeduct: deductStock,
+          transaction,
+        });
+
         transaction.set(serviceRef, {
           ...payload,
           sparepartDigunakan: spareparts,
-          stokDikurangi: deductStock,
+          stokDikurangi: stockDeducted,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -135,7 +227,7 @@ export function useServices() {
       setError(message);
       return { success: false, error: message };
     }
-  }, [applySparepartUsage]);
+  }, [syncSparepartUsage]);
 
   const updateService = useCallback(async (
     id: string,
@@ -153,21 +245,31 @@ export function useServices() {
         const currentService = serviceSnapshot.data() as ServiceItem;
         const nextStatus = payload.status ?? currentService.status;
         const spareparts = payload.sparepartDigunakan ?? currentService.sparepartDigunakan ?? [];
-        const alreadyDeducted = currentService.stokDikurangi ?? false;
-        const deductStock = shouldDeductStock(nextStatus, spareparts, alreadyDeducted);
+        const deductStock = shouldDeductStock(nextStatus, spareparts);
         const wasCompleted = currentService.status === 'selesai' || currentService.status === 'diambil';
         const isCompletingNow = (nextStatus === 'selesai' || nextStatus === 'diambil') && !wasCompleted;
         const isPickedUpNow = nextStatus === 'diambil' && currentService.status !== 'diambil';
         const isReopened = nextStatus !== 'selesai' && nextStatus !== 'diambil' && wasCompleted;
-
-        if (deductStock) {
-          await applySparepartUsage(spareparts, transaction);
-        }
+        const nextService = {
+          ...currentService,
+          ...payload,
+          status: nextStatus,
+          sparepartDigunakan: spareparts,
+        };
+        const stockDeducted = await syncSparepartUsage({
+          serviceId: id,
+          service: nextService,
+          previousSpareparts: currentService.sparepartDigunakan ?? [],
+          nextSpareparts: spareparts,
+          wasDeducted: currentService.stokDikurangi ?? false,
+          shouldDeduct: deductStock,
+          transaction,
+        });
 
         transaction.update(serviceRef, {
           ...payload,
           sparepartDigunakan: spareparts,
-          stokDikurangi: alreadyDeducted || deductStock,
+          stokDikurangi: stockDeducted,
           ...(isCompletingNow ? { completedAt: serverTimestamp() } : {}),
           ...(isPickedUpNow ? { pickedUpAt: serverTimestamp() } : {}),
           ...(isReopened ? { completedAt: null } : {}),
@@ -182,7 +284,7 @@ export function useServices() {
       setError(message);
       return { success: false, error: message };
     }
-  }, [applySparepartUsage]);
+  }, [syncSparepartUsage]);
 
   const updateServiceStatus = useCallback(async (
     id: string,
@@ -191,14 +293,34 @@ export function useServices() {
 
   const deleteService = useCallback(async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'services', id));
+      await runTransaction(db, async (transaction) => {
+        const serviceRef = doc(db, 'services', id);
+        const serviceSnapshot = await transaction.get(serviceRef);
+
+        if (!serviceSnapshot.exists()) {
+          throw new Error('Data servis tidak ditemukan');
+        }
+
+        const currentService = serviceSnapshot.data() as ServiceItem;
+        await syncSparepartUsage({
+          serviceId: id,
+          service: currentService,
+          previousSpareparts: currentService.sparepartDigunakan ?? [],
+          nextSpareparts: [],
+          wasDeducted: currentService.stokDikurangi ?? false,
+          shouldDeduct: false,
+          transaction,
+        });
+        transaction.delete(serviceRef);
+      });
+
       return { success: true };
     } catch (err: unknown) {
       const message = getErrorMessage(err, 'Gagal menghapus servis');
       setError(message);
       return { success: false, error: message };
     }
-  }, []);
+  }, [syncSparepartUsage]);
 
   return {
     services,

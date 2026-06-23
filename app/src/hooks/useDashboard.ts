@@ -123,14 +123,16 @@ export function useDashboard() {
       isSameDayOrAfterStart(service.completedAt ?? service.updatedAt ?? service.createdAt)
     ).length;
     const totalSparepartTerpakai = services.reduce(
-      (sum, service) => sum + (service.sparepartDigunakan?.reduce((subtotal, item) => subtotal + item.jumlah, 0) ?? 0),
+      (sum, service) => sum + (service.stokDikurangi
+        ? service.sparepartDigunakan?.reduce((subtotal, item) => subtotal + item.jumlah, 0) ?? 0
+        : 0),
       0
     );
 
     // === Laba Hari Ini ===
     // 1. Laba dari transaksi barang keluar hari ini (margin = hargaJual - hargaBeli)
     const labaBarangKeluarHariIni = transaksiList
-      .filter((t) => t.tipe === 'keluar' && isSameDayOrAfterStart(t.createdAt))
+      .filter((t) => t.tipe === 'keluar' && !t.serviceId && t.source !== 'service' && isSameDayOrAfterStart(t.createdAt))
       .reduce((sum, t) => {
         const barang = barangList.find((b) => b.id === t.barangId);
         if (!barang) return sum;

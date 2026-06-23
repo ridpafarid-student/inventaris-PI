@@ -89,12 +89,17 @@ export default function AddServiceModal({
     onOpenChange(nextOpen);
   };
 
+  const selectedProductIds = useMemo(
+    () => new Set(formData.sparepartDigunakan.map((item) => item.productId).filter(Boolean)),
+    [formData.sparepartDigunakan]
+  );
+
   const availableProducts = useMemo(
     () => products.filter((product) => {
       const kategoriNama = product.kategoriNama?.toLowerCase() ?? '';
-      return product.stok > 0 && kategoriNama.includes('sparepart');
+      return kategoriNama.includes('sparepart') && (product.stok > 0 || selectedProductIds.has(product.id));
     }),
-    [products]
+    [products, selectedProductIds]
   );
 
   const handleFieldChange = <K extends keyof ServiceFormState>(key: K, value: ServiceFormState[K]) => {
@@ -297,8 +302,8 @@ export default function AddServiceModal({
           <div className="space-y-3 rounded-xl border p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-medium text-slate-900">Sparepart Digunakan</p>
-                <p className="text-sm text-slate-500">Pilih dari stok barang yang sudah ada</p>
+                <p className="font-medium text-slate-900">Sparepart Servis</p>
+                <p className="text-sm text-slate-500">Stok dikurangi saat status Proses, Selesai, atau Diserahkan</p>
               </div>
               <Button type="button" variant="outline" onClick={addSparepartRow}>
                 Tambah Sparepart

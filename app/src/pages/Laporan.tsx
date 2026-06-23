@@ -116,8 +116,11 @@ export default function Laporan() {
     return matchesStart && matchesEnd;
   });
 
+  const isServiceTransaction = (transaksi: TransaksiStok) =>
+    transaksi.source === 'service' || Boolean(transaksi.serviceId);
+
   const labaBarangKeluar = filteredTransaksi
-    .filter((transaksi) => transaksi.tipe === 'keluar')
+    .filter((transaksi) => transaksi.tipe === 'keluar' && !isServiceTransaction(transaksi))
     .reduce((sum, transaksi) => {
       const barang = barangList.find((item) => item.id === transaksi.barangId);
       const margin = barang ? barang.hargaJual - barang.hargaBeli : 0;
@@ -139,36 +142,44 @@ export default function Laporan() {
 
   const totalTransaksiMarginPeriodik =
     filteredTransaksi
-      .filter((transaksi) => transaksi.tipe === 'keluar')
+      .filter((transaksi) => transaksi.tipe === 'keluar' && !isServiceTransaction(transaksi))
       .length +
     filteredServices
       .filter((service) => service.status === 'diambil')
       .length;
 
-  const serviceStockTransaksi = filteredServices.flatMap((service) =>
-    (service.sparepartDigunakan ?? [])
-      .filter(() => service.stokDikurangi)
-      .map((item) => {
-        const barang = barangList.find((product) => product.id === item.productId);
-        const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
+  const officialServiceTransactionIds = new Set(
+    transaksiList.map((transaksi) => transaksi.serviceId).filter(Boolean)
+  );
 
-        return {
-          id: `service-${service.id}-${item.productId}`,
-          barangId: item.productId,
-          barangNama: item.namaProduk,
-          barangKode: barang?.kodeBarang ?? '-',
-          tipe: 'keluar' as const,
-          jumlah: item.jumlah,
-          stokSebelum: 0,
-          stokSesudah: 0,
-          hargaSatuan,
-          totalHarga: hargaSatuan * item.jumlah,
-          keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
-          userId: '',
-          userName: 'Servis',
-          createdAt: service.updatedAt ?? service.createdAt,
-        };
-      })
+  const serviceStockTransaksi = filteredServices.flatMap((service) =>
+    officialServiceTransactionIds.has(service.id)
+      ? []
+      : (service.sparepartDigunakan ?? [])
+        .filter(() => service.stokDikurangi)
+        .map((item) => {
+          const barang = barangList.find((product) => product.id === item.productId);
+          const hargaSatuan = barang?.hargaJual ?? barang?.hargaBeli ?? 0;
+
+          return {
+            id: `service-${service.id}-${item.productId}`,
+            barangId: item.productId,
+            barangNama: item.namaProduk,
+            barangKode: barang?.kodeBarang ?? '-',
+            tipe: 'keluar' as const,
+            jumlah: item.jumlah,
+            stokSebelum: 0,
+            stokSesudah: 0,
+            hargaSatuan,
+            totalHarga: hargaSatuan * item.jumlah,
+            keterangan: `Pemakaian sparepart untuk servis ${service.modelPerangkat} - ${service.namaPelanggan}`,
+            userId: '',
+            userName: 'Servis',
+            source: 'service' as const,
+            serviceId: service.id,
+            createdAt: service.updatedAt ?? service.createdAt,
+          };
+        })
   );
 
   const filteredTransaksiGabungan = [...filteredTransaksi, ...serviceStockTransaksi]
@@ -201,11 +212,15 @@ export default function Laporan() {
     menungguSparepart: filteredServices.filter((service) => service.status === 'menunggu-sparepart').length,
     selesai: filteredServices.filter((service) => service.status === 'selesai').length,
     totalSparepart: filteredServices.reduce(
-      (total, service) => total + (service.sparepartDigunakan?.reduce((sum, item) => sum + item.jumlah, 0) ?? 0),
+      (total, service) => total + (service.stokDikurangi
+        ? service.sparepartDigunakan?.reduce((sum, item) => sum + item.jumlah, 0) ?? 0
+        : 0),
       0
     ),
     totalBiayaJasa: filteredServices.reduce((total, service) => total + (service.biayaJasa ?? 0), 0),
-    nilaiSparepart: serviceStockTransaksi.reduce((total, transaksi) => total + transaksi.totalHarga, 0),
+    nilaiSparepart: filteredTransaksiGabungan
+      .filter((transaksi) => isServiceTransaction(transaksi))
+      .reduce((total, transaksi) => total + transaksi.totalHarga, 0),
     labaPeriodik,
   };
 
@@ -545,7 +560,7 @@ export default function Laporan() {
                     <TableHead className="text-right">Stok</TableHead>
                     <TableHead className="text-center">Minimum</TableHead>
                     <TableHead className="text-center">Kekurangan</TableHead>
-                    <TableHead className="text-center">Buffer Aman</TableHead>
+                    <TableHead className="text-center">Stok Pengaman</TableHead>
                     <TableHead className="text-center">Rekomendasi Beli</TableHead>
                     <TableHead className="text-right">Estimasi</TableHead>
                   </TableRow>
@@ -707,7 +722,7 @@ export default function Laporan() {
                       <p className="text-xs text-gray-500">#{index + 1} - {formatDate(transaksi.createdAt)}</p>
                       <p className="font-semibold text-gray-900 break-words">{transaksi.barangNama}</p>
                       <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
-                      {transaksi.userName === 'Servis' && (
+                      {isServiceTransaction(transaksi) && (
                         <p className="text-xs text-blue-600 mt-1">{transaksi.keterangan}</p>
                       )}
                     </div>
@@ -765,7 +780,7 @@ export default function Laporan() {
                   <TableCell>
                     <p className="font-medium">{transaksi.barangNama}</p>
                     <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
-                    {transaksi.userName === 'Servis' && (
+                    {isServiceTransaction(transaksi) && (
                       <p className="text-xs text-blue-600">{transaksi.keterangan}</p>
                     )}
                   </TableCell>
