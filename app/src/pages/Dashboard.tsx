@@ -11,8 +11,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   TrendingUp,
-  Package,
-  ChevronRight,
   Laptop,
   Cpu,
   Smartphone,
@@ -29,7 +27,7 @@ import {
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useEffect } from 'react';
-import type { ServiceItem, Barang } from '@/types';
+import type { ServiceItem } from '@/types';
 
 // ─── Status badge helper ───────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -100,6 +98,7 @@ function StatCard({
   iconColor,
   valueColor = 'text-[#1F2937]',
   accent = false,
+  onClick,
 }: {
   title: string;
   value: React.ReactNode;
@@ -109,11 +108,21 @@ function StatCard({
   iconColor: string;
   valueColor?: string;
   accent?: boolean;
+  onClick?: () => void;
 }) {
+  const isClickable = Boolean(onClick);
   return (
     <div
-      className={`bg-white rounded-xl border p-5 shadow-sm flex items-start justify-between gap-4 transition-shadow hover:shadow-md ${accent ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100'
-        }`}
+      onClick={onClick}
+      className={`bg-white rounded-xl border p-5 shadow-sm flex items-start justify-between gap-4 transition-all ${
+        isClickable
+          ? 'cursor-pointer hover:shadow-md hover:border-gray-300 active:scale-[0.98]'
+          : 'hover:shadow-md'
+      } ${
+        accent
+          ? 'border-orange-200 ring-1 ring-orange-100 hover:border-orange-300'
+          : 'border-gray-100'
+      }`}
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-500 truncate">{title}</p>
@@ -166,9 +175,6 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
 
   // Ambil 5 servis terbaru langsung
   const [recentServices, setRecentServices] = useState<ServiceItem[]>([]);
-  // Ambil barang stok rendah berdasarkan batas minimum tiap barang.
-  const [lowStockBarang, setLowStockBarang] = useState<Barang[]>([]);
-  const [totalLowStock, setTotalLowStock] = useState(0);
 
   useEffect(() => {
     // Services terbaru
@@ -180,18 +186,9 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
         setRecentServices(list);
       }
     );
-    // Stok rendah
-    const unsubBarang = onSnapshot(collection(db, 'barang'), (snap) => {
-      const list: Barang[] = [];
-      snap.forEach((d) => list.push({ id: d.id, ...d.data() } as Barang));
-      const filtered = list.filter((b) => b.stok <= b.stokMinimum).sort((a, b) => a.stok - b.stok);
-      setTotalLowStock(filtered.length);
-      setLowStockBarang(filtered.slice(0, 5));
-    });
 
     return () => {
       unsubSvc();
-      unsubBarang();
     };
   }, []);
 
@@ -266,6 +263,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           iconColor="text-orange-500"
           valueColor="text-orange-600"
           accent
+          onClick={() => onPageChange?.('laporan')}
         />
         {!isTeknisi && (
           <StatCard
@@ -286,87 +284,6 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
         {/* LEFT — service table (2/3 width) */}
         <div className="xl:col-span-2 space-y-6">
 
-          {/* Tabel Stok Kritikal */}
-          <div className="bg-white rounded-xl border border-orange-100 shadow-sm overflow-hidden ring-1 ring-orange-50">
-            <div className="px-6 py-5 border-b border-orange-50 bg-orange-50/50">
-              <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="w-4.5 h-4.5 text-orange-500" style={{ width: '18px', height: '18px' }} />
-                <h2 className="text-lg font-semibold text-[#1F2937]">Rekomendasi Restock</h2>
-                <span className="text-xs font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full ml-1">
-                  Ambang Batas Minimum
-                </span>
-              </div>
-              <p className="text-sm text-gray-400">Item berikut telah mencapai atau berada di bawah ambang batas minimum stok</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3">Kode Barang</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Nama Barang</th>
-                    <th className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Spesifikasi</th>
-                    <th className="text-center text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3">Stok Sisa</th>
-                    <th className="text-right text-xs font-semibold text-gray-400 uppercase tracking-wide px-5 py-3 hidden sm:table-cell">Harga</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {lowStockBarang.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-12 text-gray-400">
-                        <Package className="w-10 h-10 mx-auto mb-2 text-gray-200" />
-                        <p className="text-sm font-medium text-green-600">🎉 Semua stok aman!</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    lowStockBarang.map((barang) => (
-                      <tr key={barang.id} className="hover:bg-orange-50/30 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <span className="font-mono text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {barang.kodeBarang}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <p className="font-semibold text-[#1F2937]">{barang.nama}</p>
-                          <p className="text-xs text-gray-400">Min stok: {barang.stokMinimum}</p>
-                        </td>
-                        <td className="px-4 py-3.5 hidden md:table-cell">
-                          <p className="text-sm text-gray-500">{barang.satuan}</p>
-                        </td>
-                        <td className="px-4 py-3.5 text-center">
-                          <span className={`inline-flex items-center justify-center w-10 h-7 rounded-lg text-sm font-bold ring-1 ${barang.stok === 0
-                            ? 'bg-red-100 text-red-700 ring-red-200'
-                            : 'bg-orange-100 text-orange-700 ring-orange-200'
-                            }`}>
-                            {barang.stok}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5 text-right hidden sm:table-cell">
-                          <span className="text-sm font-semibold text-[#1F2937]">
-                            {formatRp(barang.hargaJual)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {/* Footer: Lihat Semua */}
-            {totalLowStock > 5 && (
-              <div className="px-6 py-3.5 border-t border-orange-100 bg-orange-50/30 flex items-center justify-between">
-                <span className="text-xs text-orange-600 font-medium">
-                  Menampilkan 5 dari {totalLowStock} item kritis
-                </span>
-                <button
-                  onClick={() => onPageChange?.('laporan')}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 bg-orange-100 hover:bg-orange-200 px-3 py-1.5 rounded-lg transition-colors"
-                >
-                  Lihat Semua
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-          </div>
 
           {/* Tabel Servis Terbaru */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
