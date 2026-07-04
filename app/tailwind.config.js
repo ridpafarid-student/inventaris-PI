@@ -4,7 +4,50 @@ module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
-      colors: {
+      /* ═══════════════════════════════════════════════════════ */
+      /* VERCEL DESIGN TOKENS - Tailwind Integration            */
+      /* ═══════════════════════════════════════════════════════ */
+      
+      fontFamily: {
+        sans: ['var(--font-family-primary)'],
+        primary: ['var(--font-family-primary)'],
+      },
+      
+      fontSize: {
+        xs: ['var(--font-size-xs)', { lineHeight: 'var(--font-line-height-base)' }],
+        sm: ['var(--font-size-sm)', { lineHeight: 'var(--font-line-height-base)' }],
+        base: ['var(--font-size-base)', { lineHeight: 'var(--font-line-height-base)' }],
+        md: ['var(--font-size-md)', { lineHeight: 'var(--font-line-height-base)' }],
+      },
+      
+      spacing: {
+        '1': 'var(--space-1)',
+        '2': 'var(--space-2)',
+        '3': 'var(--space-3)',
+        '4': 'var(--space-4)',
+        '5': 'var(--space-5)',
+        '6': 'var(--space-6)',
+        '7': 'var(--space-7)',
+        '8': 'var(--space-8)',
+      },
+      
+            colors: {
+        /* Vercel semantic tokens */
+        'surface-base': 'hsl(var(--color-surface-base))',
+        'surface-muted': 'hsl(var(--color-surface-muted))',
+        'text-primary': 'hsl(var(--color-text-primary))',
+        'text-secondary': 'hsl(var(--color-text-secondary))',
+        'text-inverse': 'hsl(var(--color-text-inverse))',
+        'border-default': 'hsl(var(--color-border-default))',
+        'border-muted': 'hsl(var(--color-border-muted))',
+        
+        /* Status tokens (project extension) */
+        'status-warning': 'hsl(var(--color-status-warning))',
+        'status-danger': 'hsl(var(--color-status-danger))',
+        'status-success': 'hsl(var(--color-status-success))',
+        'status-info': 'hsl(var(--color-status-info))',
+        
+        /* Legacy compatibility */
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -49,16 +92,30 @@ module.exports = {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      
       borderRadius: {
-        xl: "calc(var(--radius) + 4px)",
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xs: "calc(var(--radius) - 6px)",
+        'xs': 'var(--radius-xs)',
+        'sm': 'var(--radius-sm)',
+        'md': 'var(--radius-md)',
+        'lg': 'var(--radius-lg)',
+        'pill': 'var(--radius-lg)',
+        'full': 'var(--radius-lg)',
       },
+      
       boxShadow: {
-        xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        '1': 'var(--shadow-1)',
+        '2': 'var(--shadow-2)',
+        '3': 'var(--shadow-3)',
+        'card': 'var(--shadow-1)',
+        'focus': 'var(--shadow-2)',
+        'elevated': 'var(--shadow-3)',
       },
+      
+      transitionDuration: {
+        'instant': 'var(--motion-duration-instant)',
+        'fast': 'var(--motion-duration-fast)',
+      },
+      
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -73,9 +130,10 @@ module.exports = {
           "20%,50%": { opacity: "0" },
         },
       },
+      
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": "accordion-down var(--motion-duration-fast) ease-out",
+        "accordion-up": "accordion-up var(--motion-duration-fast) ease-out",
         "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
     },

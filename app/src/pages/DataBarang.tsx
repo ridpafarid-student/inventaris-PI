@@ -268,8 +268,8 @@ export default function DataBarang() {
               <SelectValue placeholder="Pilih kategori" />
             </SelectTrigger>
             <SelectContent>
-              {kategoriList.length === 0 ? (
-                <div className="px-2 py-2 text-sm text-gray-500">
+                            {kategoriList.length === 0 ? (
+                <div className="px-2 py-2 text-sm text-text-secondary">
                   Belum ada kategori
                 </div>
               ) : (
@@ -279,11 +279,11 @@ export default function DataBarang() {
               )}
             </SelectContent>
           </Select>
-          {kategoriList.length === 0 && (
-            <p className="text-xs text-amber-600">
-              Tambahkan kategori terlebih dahulu agar barang bisa dipilih kategorinya.
-            </p>
-          )}
+                    {kategoriList.length === 0 && (
+                      <p className="text-xs text-status-warning">
+                        Tambahkan kategori terlebih dahulu agar barang bisa dipilih kategorinya.
+                      </p>
+                    )}
         </div>
       </div>
 
@@ -360,11 +360,11 @@ export default function DataBarang() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
+            {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border-default">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Data Barang</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Kelola data barang inventaris</p>
+          <h1 className="text-xl font-semibold text-text-primary">Data Barang</h1>
+          <p className="text-sm text-text-secondary mt-0.5">Kelola data barang inventaris</p>
         </div>
         
         {isAdmin && (
@@ -404,16 +404,16 @@ export default function DataBarang() {
                   </div>
                   <div className="space-y-2">
                     <Label>Daftar Kategori</Label>
-                    <div className="max-h-52 space-y-2 overflow-auto rounded-md border p-3">
+                                        <div className="max-h-52 space-y-2 overflow-auto rounded-sm border border-border-default p-3">
                       {kategoriList.length === 0 ? (
-                        <p className="text-sm text-gray-500">Belum ada kategori.</p>
+                        <p className="text-sm text-text-secondary">Belum ada kategori.</p>
                       ) : (
-                        kategoriList.map((kategori) => (
-                          <div key={kategori.id} className="rounded-md border p-2 space-y-2">
+                                                kategoriList.map((kategori) => (
+                          <div key={kategori.id} className="rounded-sm border border-border-default p-2 space-y-2">
                             <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm text-gray-900">{kategori.nama}</p>
-                                <p className="text-xs text-gray-500">{kategori.deskripsi || 'Tanpa deskripsi'}</p>
+                                                            <div className="min-w-0">
+                                <p className="font-medium text-sm text-text-primary">{kategori.nama}</p>
+                                <p className="text-xs text-text-secondary">{kategori.deskripsi || 'Tanpa deskripsi'}</p>
                               </div>
                               {confirmDeleteId === kategori.id ? (
                                 <div className="flex items-center gap-1 shrink-0">
@@ -445,11 +445,11 @@ export default function DataBarang() {
                                 </Button>
                               )}
                             </div>
-                            {confirmDeleteId === kategori.id && (
-                              <p className="text-xs text-red-600 font-medium">
-                                ⚠ Yakin hapus kategori ini? Aksi tidak dapat dibatalkan.
-                              </p>
-                            )}
+                                                        {confirmDeleteId === kategori.id && (
+                                                          <p className="text-xs text-status-danger font-medium">
+                                                            ⚠ Yakin hapus kategori ini? Aksi tidak dapat dibatalkan.
+                                                          </p>
+                                                        )}
                           </div>
                         ))
                       )}
@@ -465,9 +465,9 @@ export default function DataBarang() {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm}>
+                <Button variant="outline" onClick={resetForm}>
                   <Plus className="w-4 h-4 mr-2" />
                   Tambah Barang
                 </Button>
@@ -499,8 +499,8 @@ export default function DataBarang() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
           <Input
             placeholder="Cari barang..."
             value={searchQuery}
@@ -526,53 +526,53 @@ export default function DataBarang() {
         <CardContent className="p-0">
           <div className="md:hidden divide-y">
             {filteredBarang.length === 0 ? (
-              <div className="py-8 text-center">
-                <Package className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                <p className="text-gray-500">Tidak ada data barang</p>
+                            <div className="py-8 text-center">
+                <Package className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                <p className="text-text-secondary">Tidak ada data barang</p>
               </div>
             ) : (
               filteredBarang.map((barang) => (
                 <div key={barang.id} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs text-gray-500">{barang.kodeBarang}</p>
-                      <p className="font-semibold text-gray-900 break-words">{barang.nama}</p>
-                      <p className="text-xs text-gray-500">{barang.satuan}</p>
-                    </div>
+                        <p className="text-xs text-text-secondary">{barang.kodeBarang}</p>
+                        <p className="font-semibold text-text-primary break-words">{barang.nama}</p>
+                        <p className="text-xs text-text-secondary">{barang.satuan}</p>
+                      </div>
                     <Badge variant="secondary" className="shrink-0 max-w-28 truncate">
                       {barang.kategoriNama}
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg bg-gray-50 p-3">
-                      <p className="text-gray-500">Stok</p>
-                      <div className="mt-1 flex items-center gap-2">
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-sm bg-surface-muted p-3">
+                      <p className="text-text-secondary">Stok</p>
+                                            <div className="mt-1 flex items-center gap-2">
                         {barang.stok <= barang.stokMinimum && (
-                          <AlertTriangle className="w-4 h-4 text-orange-500" />
+                          <AlertTriangle className="w-4 h-4 text-status-warning" />
                         )}
-                        <span className={barang.stok <= barang.stokMinimum ? 'font-semibold text-orange-600' : 'font-semibold text-gray-900'}>
+                        <span className={barang.stok <= barang.stokMinimum ? 'font-semibold text-status-warning' : 'font-semibold text-text-primary'}>
                           {barang.stok}
                         </span>
                       </div>
                     </div>
-                    {!shouldHideHargaBeli && (
-                      <div className="rounded-lg bg-gray-50 p-3">
-                        <p className="text-gray-500">Harga Beli</p>
-                        <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(barang.hargaBeli)}</p>
+                                        {!shouldHideHargaBeli && (
+                      <div className="rounded-sm bg-surface-muted p-3">
+                        <p className="text-text-secondary">Harga Beli</p>
+                        <p className="mt-1 font-semibold text-text-primary break-words">{formatRupiah(barang.hargaBeli)}</p>
                       </div>
                     )}
-                    <div className={`${shouldHideHargaBeli ? '' : 'col-span-2'} rounded-lg bg-gray-50 p-3`}>
-                      <p className="text-gray-500">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</p>
-                      <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(barang.hargaJual)}</p>
+                    <div className={`${shouldHideHargaBeli ? '' : 'col-span-2'} rounded-sm bg-surface-muted p-3`}>
+                      <p className="text-text-secondary">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</p>
+                      <p className="mt-1 font-semibold text-text-primary break-words">{formatRupiah(barang.hargaJual)}</p>
                     </div>
                   </div>
 
                   {isAdmin && (
                     <div className="space-y-2">
-                      {confirmDeleteBarangId === barang.id ? (
-                        <div className="rounded-lg bg-red-50 border border-red-200 p-3 space-y-2">
-                          <p className="text-xs text-red-700 font-medium">⚠ Yakin ingin menghapus barang ini? Aksi tidak dapat dibatalkan.</p>
+                                            {confirmDeleteBarangId === barang.id ? (
+                                              <div className="rounded-sm bg-status-danger/10 border border-status-danger/40 p-3 space-y-2">
+                                                <p className="text-xs text-status-danger font-medium">⚠ Yakin ingin menghapus barang ini? Aksi tidak dapat dibatalkan.</p>
                           <div className="flex gap-2">
                             <Button
                               variant="destructive"
@@ -602,14 +602,14 @@ export default function DataBarang() {
                             <Edit2 className="w-4 h-4 mr-2" />
                             Edit
                           </Button>
-                          <Button
-                            variant="outline"
-                            className="flex-1 text-red-600 hover:text-red-700"
-                            onClick={() => setConfirmDeleteBarangId(barang.id)}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Hapus
-                          </Button>
+                                                    <Button
+                                                      variant="outline"
+                                                      className="flex-1 text-status-danger hover:text-status-danger/80 focus-visible:shadow-focus"
+                                                      onClick={() => setConfirmDeleteBarangId(barang.id)}
+                                                    >
+                                                      <Trash2 className="w-4 h-4 mr-2" />
+                                                      Hapus
+                                                    </Button>
                         </div>
                       )}
                     </div>
@@ -642,21 +642,21 @@ export default function DataBarang() {
               )}
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Kode</TableHead>
-                  <TableHead className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Barang</TableHead>
-                  <TableHead className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Kategori</TableHead>
-                  <TableHead className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Stok</TableHead>
-                  {!shouldHideHargaBeli && <TableHead className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Harga Beli</TableHead>}
-                  <TableHead className="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</TableHead>
-                  {isAdmin && <TableHead className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</TableHead>}
+                                    <TableHead className="px-3 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Kode</TableHead>
+                  <TableHead className="px-3 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Nama Barang</TableHead>
+                  <TableHead className="px-3 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Kategori</TableHead>
+                  <TableHead className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">Stok</TableHead>
+                  {!shouldHideHargaBeli && <TableHead className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">Harga Beli</TableHead>}
+                  <TableHead className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</TableHead>
+                  {isAdmin && <TableHead className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredBarang.length === 0 ? (
-                  <TableRow>
+                                    <TableRow>
                     <TableCell colSpan={(isAdmin ? 6 : 5) + (shouldHideHargaBeli ? 0 : 1)} className="text-center py-8">
-                      <Package className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                      <p className="text-gray-500">Tidak ada data barang</p>
+                      <Package className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                      <p className="text-text-secondary">Tidak ada data barang</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -664,9 +664,9 @@ export default function DataBarang() {
                     <TableRow key={barang.id}>
                       <TableCell className={shouldHideHargaBeli ? 'px-3 py-3 font-semibold text-xs' : 'px-3 py-3 font-medium'}>{barang.kodeBarang}</TableCell>
                       <TableCell className="px-3 py-3">
-                        <div>
+                                                <div>
                           <p className="font-medium truncate">{barang.nama}</p>
-                          <p className="text-xs text-gray-500">{barang.satuan}</p>
+                          <p className="text-xs text-text-secondary">{barang.satuan}</p>
                         </div>
                       </TableCell>
                       <TableCell className="px-3 py-3">
@@ -675,11 +675,11 @@ export default function DataBarang() {
                         </Badge>
                       </TableCell>
                       <TableCell className="px-3 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                                                <div className="flex items-center justify-end gap-2">
                           {barang.stok <= barang.stokMinimum && (
-                            <AlertTriangle className="w-4 h-4 text-orange-500" />
+                            <AlertTriangle className="w-4 h-4 text-status-warning" />
                           )}
-                          <span className={barang.stok <= barang.stokMinimum ? 'text-orange-600 font-medium' : ''}>
+                          <span className={barang.stok <= barang.stokMinimum ? 'text-status-warning font-medium' : ''}>
                             {barang.stok}
                           </span>
                         </div>
@@ -718,14 +718,14 @@ export default function DataBarang() {
                               >
                                 <Edit2 className="w-4 h-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-600 hover:text-red-700"
-                                onClick={() => setConfirmDeleteBarangId(barang.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                                                            <Button
+                                                              variant="ghost"
+                                                              size="icon"
+                                                              className="text-status-danger hover:text-status-danger/80 focus-visible:shadow-focus"
+                                                              onClick={() => setConfirmDeleteBarangId(barang.id)}
+                                                            >
+                                                              <Trash2 className="w-4 h-4" />
+                                                            </Button>
                             </div>
                           )}
                         </TableCell>

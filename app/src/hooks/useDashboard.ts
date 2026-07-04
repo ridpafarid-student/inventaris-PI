@@ -108,7 +108,10 @@ export function useDashboard() {
     const totalBarang = barangList.length;
     const kategoriSet = new Set(barangList.map(b => b.kategoriId));
     const totalKategori = kategoriSet.size;
-    const totalTransaksiStokHariIni = transaksiList.filter((transaksi) =>
+        const totalTransaksiStokHariIni = transaksiList.filter((transaksi) =>
+      transaksi.tipe === 'keluar' && 
+      !transaksi.serviceId && 
+      transaksi.source !== 'service' && 
       isSameDayOrAfterStart(transaksi.createdAt)
     ).length;
     const stokMenipis = barangList.filter(b => b.stok <= b.stokMinimum).length;
@@ -118,10 +121,9 @@ export function useDashboard() {
     const servisAktif = services.filter((service) => service.status !== 'selesai' && service.status !== 'diambil').length;
     const servisMenungguSparepart = services.filter((service) => service.status === 'menunggu-sparepart').length;
     const servisSelesai = services.filter((service) => service.status === 'selesai').length;
-    const servisSelesaiHariIni = services.filter((service) =>
-      service.status === 'selesai' &&
-      isSameDayOrAfterStart(service.completedAt ?? service.updatedAt ?? service.createdAt)
-    ).length;
+    const servisSelesaiHariIni = services.filter((service) => {
+      return service.status === 'diambil' && isSameDayOrAfterStart(service.pickedUpAt ?? service.updatedAt ?? service.createdAt);
+    }).length;
     const totalSparepartTerpakai = services.reduce(
       (sum, service) => sum + (service.stokDikurangi
         ? service.sparepartDigunakan?.reduce((subtotal, item) => subtotal + item.jumlah, 0) ?? 0
@@ -130,26 +132,32 @@ export function useDashboard() {
     );
 
     // === Laba Hari Ini ===
-    // 1. Laba dari transaksi barang keluar hari ini (margin = hargaJual - hargaBeli)
+    // 1. Laba dari transaksi barang keluar hari ini (penjualan aktual dikurangi modal barang)
     const labaBarangKeluarHariIni = transaksiList
       .filter((t) => t.tipe === 'keluar' && !t.serviceId && t.source !== 'service' && isSameDayOrAfterStart(t.createdAt))
       .reduce((sum, t) => {
         const barang = barangList.find((b) => b.id === t.barangId);
         if (!barang) return sum;
-        const margin = barang.hargaJual - barang.hargaBeli;
-        return sum + (margin * t.jumlah);
+
+        const penjualan = t.totalHarga > 0 ? t.totalHarga : (t.hargaSatuan * t.jumlah);
+        const biayaPokok = (barang.hargaBeli ?? 0) * t.jumlah;
+        return sum + Math.max(0, penjualan - biayaPokok);
       }, 0);
 
-    // 2. Pendapatan dari servis yang diambil hari ini (biayaJasa + nilai sparepart)
+    // 2. Margin servis yang diambil hari ini (biaya jasa + penjualan sparepart dikurangi modal sparepart)
     const labaServisDiambilHariIni = services
-      .filter((s) => s.status === 'diambil' && isSameDayOrAfterStart(s.pickedUpAt ?? s.updatedAt))
+      .filter((s) => s.status === 'diambil' && isSameDayOrAfterStart(s.pickedUpAt ?? s.updatedAt ?? s.createdAt))
       .reduce((sum, s) => {
         const biayaJasa = s.biayaJasa ?? 0;
-        const nilaiSparepart = (s.sparepartDigunakan ?? []).reduce((subtotal, item) => {
+        const penjualanSparepart = (s.sparepartDigunakan ?? []).reduce((subtotal, item) => {
           const barang = barangList.find((b) => b.id === item.productId);
           return subtotal + ((barang?.hargaJual ?? 0) * item.jumlah);
         }, 0);
-        return sum + biayaJasa + nilaiSparepart;
+        const modalSparepart = (s.sparepartDigunakan ?? []).reduce((subtotal, item) => {
+          const barang = barangList.find((b) => b.id === item.productId);
+          return subtotal + ((barang?.hargaBeli ?? 0) * item.jumlah);
+        }, 0);
+        return sum + biayaJasa + penjualanSparepart - modalSparepart;
       }, 0);
 
     const labaHariIni = labaBarangKeluarHariIni + labaServisDiambilHariIni;

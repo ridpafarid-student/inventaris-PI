@@ -84,8 +84,8 @@ export default function Users() {
   };
 
   // Reset form
-  const resetForm = () => {
-    setFormData({
+    const resetForm = () => {
+  setFormData({
       name: '',
       email: '',
       password: '',
@@ -147,10 +147,10 @@ export default function Users() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border-default">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Manajemen Pengguna</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Kelola user dan hak akses</p>
+          <h1 className="text-xl font-semibold text-text-primary">Manajemen Pengguna</h1>
+          <p className="text-sm text-text-secondary mt-0.5">Kelola user dan hak akses</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -194,7 +194,7 @@ export default function Users() {
               <div className="space-y-2">
                 <Label>Role *</Label>
                 <div className="flex gap-4">
-                  <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 flex-1">
+                                    <label className="flex items-center gap-2 p-3 border border-border-default rounded-sm cursor-pointer hover:bg-surface-muted flex-1">
                     <input
                       type="radio"
                       name="role"
@@ -202,10 +202,10 @@ export default function Users() {
                       checked={formData.role === 'admin'}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                     />
-                    <Shield className="w-4 h-4 text-purple-600" />
-                    <span className="text-sm">Admin</span>
+                    <Shield className="w-4 h-4 text-status-info" />
+                    <span className="text-sm text-text-primary">Admin</span>
                   </label>
-                  <label className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 flex-1">
+                  <label className="flex items-center gap-2 p-3 border border-border-default rounded-sm cursor-pointer hover:bg-surface-muted flex-1">
                     <input
                       type="radio"
                       name="role"
@@ -213,8 +213,8 @@ export default function Users() {
                       checked={formData.role === 'Teknisi'}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                     />
-                    <UserCircle className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm">Teknisi</span>
+                    <UserCircle className="w-4 h-4 text-text-secondary" />
+                    <span className="text-sm text-text-primary">Teknisi</span>
                   </label>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default function Users() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
         <Input
           placeholder="Cari pengguna..."
           value={searchQuery}
@@ -268,32 +268,34 @@ export default function Users() {
         <CardContent className="p-0">
           <div className="md:hidden divide-y">
             {loading ? (
-              <div className="py-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <div className="py-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-text-inverse mx-auto"></div>
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="py-8 text-center">
-                <User className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                <p className="text-gray-500">Tidak ada data pengguna</p>
+                            <div className="py-8 text-center">
+                <User className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                <p className="text-text-secondary">Tidak ada data pengguna</p>
               </div>
             ) : (
               filteredUsers.map((user) => (
                 <div key={user.uid} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
-                        <span className="font-semibold text-gray-600">
+                                            <div className="w-10 h-10 bg-surface-muted rounded-full flex items-center justify-center shrink-0">
+                        <span className="font-semibold text-text-primary">
                           {user.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{user.name}</p>
-                        <p className="text-sm text-gray-500 break-all">{user.email}</p>
+                        <p className="font-medium text-text-primary truncate">{user.name}</p>
+                        <p className="text-sm text-text-secondary break-all">{user.email}</p>
                       </div>
                     </div>
-                    <Badge
-                      variant={user.role === 'admin' ? 'default' : 'secondary'}
-                      className={user.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-100 shrink-0' : 'bg-blue-100 text-blue-700 hover:bg-blue-100 shrink-0'}
+                                        <Badge
+                      variant="outline"
+                      className={user.role === 'admin'
+                        ? 'bg-status-info/10 border-status-info/40 text-status-info shrink-0'
+                        : 'bg-surface-muted border-border-default text-text-secondary shrink-0'}
                     >
                       {user.role === 'admin' ? (
                         <Shield className="w-3 h-3 mr-1" />
@@ -304,9 +306,9 @@ export default function Users() {
                     </Badge>
                   </div>
 
-                  <div className="rounded-lg bg-gray-50 p-3 text-sm">
-                    <p className="text-gray-500">Bergabung</p>
-                    <p className="mt-1 font-medium text-gray-900">
+                                    <div className="rounded-sm bg-surface-muted border border-border-default p-3 text-sm">
+                    <p className="text-text-secondary">Bergabung</p>
+                    <p className="mt-1 font-medium text-text-primary">
                       {formatDate(user.createdAt)}
                     </p>
                   </div>
@@ -317,8 +319,8 @@ export default function Users() {
 
                   {user.uid !== currentUser?.uid && (
                     confirmDeleteUserId === user.uid ? (
-                      <div className="rounded-lg bg-red-50 border border-red-200 p-3 space-y-2">
-                        <p className="text-xs text-red-700 font-medium">⚠ Yakin hapus pengguna ini?</p>
+                                            <div className="rounded-sm bg-status-danger/5 border border-status-danger/20 p-3 space-y-2">
+                        <p className="text-xs text-status-danger font-medium">⚠ Yakin hapus pengguna ini?</p>
                         <div className="flex gap-2">
                           <Button
                             variant="destructive"
@@ -339,9 +341,9 @@ export default function Users() {
                         </div>
                       </div>
                     ) : (
-                      <Button
+                                            <Button
                         variant="outline"
-                        className="w-full text-red-600 hover:text-red-700"
+                        className="w-full text-status-danger hover:text-status-danger hover:bg-status-danger/5 border-status-danger/30"
                         onClick={() => setConfirmDeleteUserId(user.uid)}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -367,15 +369,15 @@ export default function Users() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                                        <TableCell colSpan={4} className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-text-inverse mx-auto"></div>
                     </TableCell>
                   </TableRow>
                 ) : filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8">
-                      <User className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                      <p className="text-gray-500">Tidak ada data pengguna</p>
+                                        <TableCell colSpan={4} className="text-center py-8">
+                      <User className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                      <p className="text-text-secondary">Tidak ada data pengguna</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -383,21 +385,23 @@ export default function Users() {
                     <TableRow key={user.uid}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                            <span className="font-semibold text-gray-600">
+                                                    <div className="w-10 h-10 bg-surface-muted rounded-full flex items-center justify-center">
+                            <span className="font-semibold text-text-primary">
                               {user.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+                            <p className="font-medium text-text-primary">{user.name}</p>
+                            <p className="text-sm text-text-secondary">{user.email}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={user.role === 'admin' ? 'default' : 'secondary'}
-                          className={user.role === 'admin' ? 'bg-purple-100 text-purple-700 hover:bg-purple-100' : 'bg-blue-100 text-blue-700 hover:bg-blue-100'}
+                                                <Badge
+                          variant="outline"
+                          className={user.role === 'admin'
+                            ? 'bg-status-info/10 border-status-info/40 text-status-info'
+                            : 'bg-surface-muted border-border-default text-text-secondary'}
                         >
                           {user.role === 'admin' ? (
                             <Shield className="w-3 h-3 mr-1" />
@@ -435,7 +439,7 @@ export default function Users() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-red-600 hover:text-red-700"
+                              className="text-status-danger hover:text-status-danger hover:bg-status-danger/10"
                               onClick={() => setConfirmDeleteUserId(user.uid)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -453,13 +457,13 @@ export default function Users() {
       </Card>
 
       {/* Role Info */}
-      <div className="grid md:grid-cols-2 gap-3">
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="grid md:grid-cols-2 gap-3">
+        <div className="bg-surface-base border border-border-default rounded-sm p-4">
           <div className="flex items-start gap-3">
-            <Shield className="w-4 h-4 text-gray-500 mt-0.5" />
+            <Shield className="w-4 h-4 text-status-info mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-800 text-sm">Administrator</h4>
-              <ul className="text-sm text-gray-500 mt-1.5 space-y-1">
+              <h4 className="font-semibold text-text-primary text-sm">Administrator</h4>
+              <ul className="text-sm text-text-secondary mt-1.5 space-y-1">
                 <li>• Akses semua fitur</li>
                 <li>• Kelola data barang</li>
                 <li>• Kelola pengguna</li>
@@ -469,12 +473,12 @@ export default function Users() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="bg-surface-base border border-border-default rounded-sm p-4">
           <div className="flex items-start gap-3">
-            <UserCircle className="w-4 h-4 text-gray-500 mt-0.5" />
+            <UserCircle className="w-4 h-4 text-text-secondary mt-0.5" />
             <div>
-              <h4 className="font-semibold text-gray-800 text-sm">Teknisi</h4>
-              <ul className="text-sm text-gray-500 mt-1.5 space-y-1">
+              <h4 className="font-semibold text-text-primary text-sm">Teknisi</h4>
+              <ul className="text-sm text-text-secondary mt-1.5 space-y-1">
                 <li>• Input stok masuk/keluar</li>
                 <li>• Lihat data barang</li>
                 <li>• Lihat riwayat transaksi</li>

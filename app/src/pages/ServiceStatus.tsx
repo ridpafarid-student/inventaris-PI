@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AddServiceModal, { type ServiceFormState } from '@/components/AddServiceModal';
 import ServiceCard from '@/components/ServiceCard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -18,7 +18,7 @@ import { Plus, Search, Wrench } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ServiceItem, ServiceStatus } from '@/types';
 
-export default function ServiceStatus() {
+export default function ServiceStatus({ initialStatus = 'all' }: { initialStatus?: 'all' | ServiceStatus }) {
   const { userData } = useAuth();
   const { barangList } = useBarang();
   const {
@@ -30,7 +30,7 @@ export default function ServiceStatus() {
     updateServiceStatus,
   } = useServices();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<'all' | ServiceStatus>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | ServiceStatus>(initialStatus);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
@@ -98,12 +98,16 @@ export default function ServiceStatus() {
     await updateServiceStatus(service.id, 'diambil');
   };
 
+  useEffect(() => {
+    setSelectedStatus(initialStatus);
+  }, [initialStatus]);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-border-default">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Manajemen Servis</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Lacak progres perbaikan unit dan pemakaian sparepart.</p>
+          <h1 className="text-xl font-semibold text-text-primary">Jasa Servis</h1>
+          <p className="text-sm text-text-secondary mt-0.5">Kelola status dan monitoring servis pelanggan</p>
         </div>
 
         <Button onClick={handleCreate} size="sm" className="sm:w-auto">
@@ -119,21 +123,21 @@ export default function ServiceStatus() {
       )}
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary" />
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Cari pelanggan, HP, atau model perangkat..."
-            className="pl-10"
+            className="pl-10 focus-visible:ring-1 focus-visible:ring-text-inverse/20 focus-visible:shadow-focus"
           />
         </div>
 
-        <Select
+                <Select
           value={selectedStatus}
           onValueChange={(value) => setSelectedStatus(value as 'all' | ServiceStatus)}
         >
-          <SelectTrigger className="w-full sm:w-56">
+          <SelectTrigger className="w-full sm:w-56 focus:ring-1 focus:ring-text-inverse/20 focus:shadow-focus">
             <SelectValue placeholder="Semua Status" />
           </SelectTrigger>
           <SelectContent>
@@ -147,23 +151,19 @@ export default function ServiceStatus() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {loading ? (
-          <Card className="lg:col-span-2">
-            <CardContent className="flex min-h-40 items-center justify-center text-slate-500">
-              Memuat data servis...
-            </CardContent>
-          </Card>
+          <div className="lg:col-span-2 flex min-h-40 items-center justify-center text-text-secondary">
+            Memuat data servis...
+          </div>
         ) : filteredServices.length === 0 ? (
-          <Card className="lg:col-span-2">
-            <CardContent className="flex min-h-48 flex-col items-center justify-center text-center">
-              <Wrench className="mb-3 h-12 w-12 text-slate-300" />
-              <p className="font-medium text-slate-700">Belum ada data servis yang cocok</p>
-              <p className="mt-1 max-w-sm text-sm text-slate-500">
-                Tambahkan unit servis baru untuk mulai memantau progres perbaikan dan pemakaian sparepart.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="lg:col-span-2 flex min-h-48 flex-col items-center justify-center text-center py-12 border border-border-default rounded-sm bg-surface-base">
+            <Wrench className="mb-3 h-12 w-12 text-text-secondary/30" />
+            <p className="font-semibold text-text-primary">Belum ada data servis yang cocok</p>
+            <p className="mt-1 max-w-sm text-sm text-text-secondary">
+              Tambahkan unit servis baru untuk mulai memantau progres perbaikan dan pemakaian sparepart.
+            </p>
+          </div>
         ) : (
           filteredServices.map((service) => (
             <ServiceCard

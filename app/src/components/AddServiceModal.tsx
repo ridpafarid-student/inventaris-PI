@@ -52,6 +52,14 @@ const initialForm: ServiceFormState = {
   sparepartDigunakan: [],
 };
 
+const STATUS_LABELS: Record<ServiceStatus, string> = {
+  pending: 'Pending',
+  proses: 'Proses',
+  'menunggu-sparepart': 'Menunggu Sparepart',
+  selesai: 'Selesai',
+  diambil: 'Diserahkan',
+};
+
 const createInitialForm = (service?: ServiceItem | null): ServiceFormState => {
   if (!service) {
     return initialForm;
@@ -97,7 +105,7 @@ export default function AddServiceModal({
   const availableProducts = useMemo(
     () => products.filter((product) => {
       const kategoriNama = product.kategoriNama?.toLowerCase() ?? '';
-      return kategoriNama.includes('sparepart') && (product.stok > 0 || selectedProductIds.has(product.id));
+      return kategoriNama.includes('sparepart') && (product.stok >= 0 || selectedProductIds.has(product.id));
     }),
     [products, selectedProductIds]
   );
@@ -261,21 +269,25 @@ export default function AddServiceModal({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleFieldChange('status', value as ServiceStatus)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
-                  <SelectItem value="proses">Proses</SelectItem>
-                  <SelectItem value="selesai">Selesai</SelectItem>
-                  <SelectItem value="diambil">Diserahkan</SelectItem>
-                </SelectContent>
-              </Select>
+              {service && (service.status === 'selesai' || service.status === 'diambil') ? (
+                <div className="rounded-md border border-border-default bg-surface-muted px-3 py-2 text-sm text-text-secondary">
+                  {STATUS_LABELS[formData.status]}
+                </div>
+              ) : (
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleFieldChange('status', value as ServiceStatus)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="menunggu-sparepart">Menunggu Sparepart</SelectItem>
+                    <SelectItem value="proses">Proses</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Biaya Jasa (Rp)</Label>
@@ -299,11 +311,11 @@ export default function AddServiceModal({
             />
           </div>
 
-          <div className="space-y-3 rounded-xl border p-4">
+          <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="font-medium text-slate-900">Sparepart Servis</p>
-                <p className="text-sm text-slate-500">Stok dikurangi saat status Proses, Selesai, atau Diserahkan</p>
+                <p className="text-sm font-semibold text-text-primary">Sparepart Servis</p>
+                <p className="text-sm text-text-secondary">Stok dikurangi saat status Proses, Selesai, atau Diserahkan</p>
               </div>
               <Button type="button" variant="outline" onClick={addSparepartRow}>
                 Tambah Sparepart
@@ -311,7 +323,7 @@ export default function AddServiceModal({
             </div>
 
             {formData.sparepartDigunakan.length === 0 ? (
-              <div className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-slate-500">
+              <div className="rounded-lg border border-border-default bg-surface-muted px-3 py-4 text-sm text-text-secondary">
                 Belum ada sparepart untuk servis ini.
               </div>
             ) : (
@@ -355,7 +367,11 @@ export default function AddServiceModal({
           <Button variant="outline" onClick={() => handleDialogChange(false)}>
             Batal
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button
+            variant="ghost"
+            className="text-text-primary hover:bg-accent hover:text-accent-foreground"
+            onClick={handleSubmit}
+          >
             {service ? 'Simpan Perubahan' : 'Simpan Servis'}
           </Button>
         </div>

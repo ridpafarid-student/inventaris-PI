@@ -9,6 +9,7 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
   type User as FirebaseUser
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -23,6 +24,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   isAdmin: boolean;
   isTeknisi: boolean;
 }
@@ -80,22 +82,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Logout function
+    // Logout function
   const logout = async () => {
     await signOut(auth);
+  };
+
+  // Reset password function
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
   };
 
   // Check roles
   const isAdmin = userData?.role === 'admin';
   const isTeknisi = userData?.role === 'Teknisi';
 
-  const value: AuthContextType = {
+    const value: AuthContextType = {
     currentUser,
     userData,
     loading,
     login,
     register,
     logout,
+    resetPassword,
     isAdmin,
     isTeknisi
   };

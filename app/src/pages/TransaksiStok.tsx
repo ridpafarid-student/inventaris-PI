@@ -3,6 +3,7 @@
 // ============================================
 
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { useBarang } from '@/hooks/useBarang';
 import { useTransaksi } from '@/hooks/useTransaksi';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,7 +28,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, ArrowDownLeft, ArrowUpRight, Package, AlertTriangle } from 'lucide-react';
 import type { Barang, TipeTransaksi } from '@/types';
 
-export default function TransaksiStok() {
+export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFilterMode?: 'all' | 'perlu-restock' } = {}) {
   const { barangList, kategoriList } = useBarang();
   const { addTransaksi, error: transaksiError } = useTransaksi();
   const { userData, isTeknisi } = useAuth();
@@ -36,6 +37,13 @@ export default function TransaksiStok() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBarang, setSelectedBarang] = useState<Barang | null>(null);
   const [error, setError] = useState('');
+
+  // Set initial filter mode
+  useEffect(() => {
+    if (initialFilterMode === 'perlu-restock') {
+      setSelectedKategori('perlu-restock');
+    }
+  }, [initialFilterMode]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -47,19 +55,30 @@ export default function TransaksiStok() {
   const shouldHideHargaBeli = isTeknisi;
   const shouldHideHargaSatuan = shouldHideHargaBeli && formData.tipe === 'masuk';
 
-  // Filter barang
-  const filteredBarang = barangList.filter(barang => {
-    const matchesSearch =
-      barang.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      barang.kodeBarang.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesKategori =
-      selectedKategori === 'all'
-        ? true
-        : selectedKategori === 'perlu-restock'
-          ? barang.stok <= barang.stokMinimum
-          : barang.kategoriId === selectedKategori;
-    return matchesSearch && matchesKategori;
-  });
+    // Filter barang
+  const filteredBarang = barangList
+    .filter(barang => {
+      const matchesSearch =
+        barang.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        barang.kodeBarang.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesKategori =
+        selectedKategori === 'all'
+          ? true
+          : selectedKategori === 'perlu-restock'
+            ? barang.stok <= barang.stokMinimum
+            : barang.kategoriId === selectedKategori;
+      return matchesSearch && matchesKategori;
+    })
+    .sort((a, b) => {
+      // When filtering by restock, sort by urgency (consistent with Laporan.tsx)
+      if (selectedKategori === 'perlu-restock') {
+        const kekuranganA = Math.max(a.stokMinimum - a.stok, 0);
+        const kekuranganB = Math.max(b.stokMinimum - b.stok, 0);
+        // Sort by kekurangan DESC (most critical first), then by stok ASC
+        return kekuranganB - kekuranganA || a.stok - b.stok;
+      }
+      return 0; // No sorting for other filters
+    });
 
   // Reset form
   const resetForm = () => {
@@ -132,10 +151,10 @@ export default function TransaksiStok() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="pb-4 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800">Stok Masuk / Keluar</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Catat penerimaan dan pengeluaran stok barang</p>
+            {/* Header */}
+      <div className="pb-4 border-b border-border-default">
+        <h1 className="text-xl font-semibold text-text-primary">Mutasi Stok</h1>
+        <p className="text-sm text-text-secondary mt-0.5">Catat dan kelola transaksi stok masuk serta stok keluar barang.</p>
       </div>
 
       {/* Filters */}
@@ -146,8 +165,8 @@ export default function TransaksiStok() {
           </Alert>
         )}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
             <Input
               placeholder="Cari barang..."
               value={searchQuery}
@@ -156,10 +175,10 @@ export default function TransaksiStok() {
             />
           </div>
           <Select value={selectedKategori} onValueChange={setSelectedKategori}>
-            <SelectTrigger
+                        <SelectTrigger
               className={`w-full sm:w-56 ${
                 isFilterRestock
-                  ? 'border-orange-300 bg-orange-50 text-orange-700 ring-1 ring-orange-200'
+                  ? 'border-status-warning bg-status-warning/10 text-status-warning ring-1 ring-status-warning/20'
                   : ''
               }`}
             >
@@ -171,8 +190,8 @@ export default function TransaksiStok() {
                 <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
               ))}
               <SelectSeparator />
-              <SelectItem value="perlu-restock">
-                <span className="flex items-center gap-1.5 text-orange-600 font-semibold">
+                            <SelectItem value="perlu-restock">
+                <span className="flex items-center gap-1.5 text-status-warning font-semibold">
                   <AlertTriangle style={{ width: '13px', height: '13px' }} />
                   Perlu Restock
                 </span>
@@ -181,96 +200,134 @@ export default function TransaksiStok() {
           </Select>
         </div>
 
-        {/* Banner info saat filter Perlu Restock aktif */}
-        {isFilterRestock && (
-          <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 text-sm font-medium px-4 py-2.5 rounded-xl ring-1 ring-orange-100">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>
-              Menampilkan <strong>{filteredBarang.length}</strong> item yang telah mencapai atau berada di bawah ambang batas minimum stok
-            </span>
-          </div>
-        )}
+                {/* Banner info saat filter Perlu Restock aktif */}
+                                {isFilterRestock && (
+                  <div className="flex items-center gap-2 bg-status-warning/10 border border-status-warning/20 text-status-warning text-sm font-medium px-4 py-2.5 rounded-sm ring-1 ring-status-warning/10">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>
+                      Menampilkan <strong>{filteredBarang.length}</strong> item yang telah mencapai atau berada di bawah ambang batas minimum stok
+                    </span>
+                  </div>
+                )}
       </div>
+
+      {/* Stats Summary - Restock Overview */}
+      {isFilterRestock && filteredBarang.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-surface-base border border-border-default rounded-sm p-4">
+            <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Item Perlu Restock</p>
+            <p className="text-2xl font-bold text-text-primary mt-1">{filteredBarang.length}</p>
+          </div>
+          <div className="bg-surface-base border border-border-default rounded-sm p-4">
+            <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Rekomendasi Unit</p>
+            <p className="text-2xl font-bold text-text-primary mt-1">
+              {filteredBarang.reduce((sum, barang) => sum + Math.max(barang.stokMinimum - barang.stok, 0), 0)}
+            </p>
+          </div>
+          <div className="bg-surface-base border border-border-default rounded-sm p-4">
+            <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Estimasi Budget</p>
+            <p className="text-base font-bold text-text-primary mt-1">
+              {formatRupiah(filteredBarang.reduce((sum, barang) => sum + (Math.max(barang.stokMinimum - barang.stok, 0) * barang.hargaBeli), 0))}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Barang Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredBarang.length === 0 ? (
+                {filteredBarang.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <Package className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-            <p className="text-gray-500">
+            <Package className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+            <p className="text-text-secondary">
               {isFilterRestock ? '🎉 Semua stok aman! Tidak ada item yang perlu restock.' : 'Tidak ada data barang'}
             </p>
           </div>
         ) : (
-          filteredBarang.map((barang) => {
-            const isKritis = barang.stok <= barang.stokMinimum;
+                    filteredBarang.map((barang) => {
+            const isHabis = barang.stok === 0;
+            const isRendah = barang.stok > 0 && barang.stok <= barang.stokMinimum;
+            const isKritis = isHabis || isRendah;
             return (
-              <div
-                key={barang.id}
-                className={`rounded-xl p-4 transition-all ${
-                  isKritis
-                    ? 'bg-white border border-orange-200 ring-1 ring-orange-100 hover:shadow-md hover:border-orange-300'
-                    : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm'
-                }`}
+                            <div
+                            key={barang.id}
+                                                        className={`flex flex-col rounded-sm p-4 transition-all bg-surface-base border ${
+                              isHabis
+                                ? 'border-status-danger ring-2 ring-status-danger/20 hover:shadow-card'
+                                : isRendah
+                                  ? 'border-status-warning ring-1 ring-status-warning/20 hover:shadow-card'
+                                  : 'border-border-default hover:border-text-secondary hover:shadow-card'
+                            }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-400 font-mono">{barang.kodeBarang}</p>
-                    <h3 className={`font-semibold mt-0.5 truncate ${isKritis ? 'text-[#1F2937]' : 'text-gray-800'}`}>
+                    <p className="text-xs text-text-secondary font-mono">{barang.kodeBarang}</p>
+                                        <h3 className="font-semibold mt-0.5 truncate text-text-primary">
                       {barang.nama}
                     </h3>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">
+                                    <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                                        <span className="text-xs bg-surface-muted text-text-primary px-2 py-0.5 rounded-sm font-medium">
                       {barang.kategoriNama}
                     </span>
-                    {isKritis && (
-                      <span className="flex items-center gap-1 text-xs font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                                        {isHabis && (
+                      <span className="flex items-center gap-1 text-xs font-bold bg-status-danger text-white px-2 py-0.5 rounded-pill">
                         <AlertTriangle style={{ width: '11px', height: '11px' }} />
-                        Ambang Batas Minimum
+                        HABIS
+                      </span>
+                    )}
+                    {isRendah && (
+                      <span className="flex items-center gap-1 text-xs font-bold bg-status-warning text-surface-base px-2 py-0.5 rounded-pill">
+                        <AlertTriangle style={{ width: '11px', height: '11px' }} />
+                        RENDAH
                       </span>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-1.5 mb-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400">Stok Sisa</span>
-                    {isKritis ? (
-                      <span className={`inline-flex items-center justify-center min-w-[2.5rem] h-7 px-2 rounded-lg text-sm font-bold ring-1 ${
-                        barang.stok === 0
-                          ? 'bg-red-100 text-red-700 ring-red-200'
-                          : 'bg-orange-100 text-orange-700 ring-orange-200'
-                      }`}>
+                                    <div className="flex justify-between items-center text-sm">
+                    <span className="text-text-primary">Stok Sisa</span>
+                                        {isHabis ? (
+                      <span className="inline-flex items-center justify-center min-w-[2.5rem] h-7 px-2 rounded-sm text-sm font-bold ring-1 bg-status-danger/10 text-status-danger ring-status-danger/20">
+                        {barang.stok} {barang.satuan}
+                      </span>
+                    ) : isRendah ? (
+                      <span className="inline-flex items-center justify-center min-w-[2.5rem] h-7 px-2 rounded-sm text-sm font-bold ring-1 bg-status-warning/10 text-status-warning ring-status-warning/20">
                         {barang.stok} {barang.satuan}
                       </span>
                     ) : (
-                      <span className="font-medium text-gray-700">{barang.stok} {barang.satuan}</span>
+                      <span className="font-medium text-text-primary">{barang.stok} {barang.satuan}</span>
                     )}
                   </div>
-                  {isKritis && (
+                                    {isKritis && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-orange-400">Min stok</span>
-                      <span className="text-orange-600 font-medium">{barang.stokMinimum} {barang.satuan}</span>
+                      <span className="text-status-warning">Min stok</span>
+                      <span className="text-status-warning font-medium">{barang.stokMinimum} {barang.satuan}</span>
                     </div>
                   )}
-                  {!shouldHideHargaBeli && (
+                                    {!shouldHideHargaBeli && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Harga Beli</span>
-                      <span className="text-gray-600">{formatRupiah(barang.hargaBeli)}</span>
+                      <span className="text-text-primary">Harga Beli</span>
+                      <span className="text-text-primary">{formatRupiah(barang.hargaBeli)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Harga Jual</span>
-                    <span className="font-medium text-gray-700">{formatRupiah(barang.hargaJual)}</span>
+                    <span className="text-text-primary">Harga Jual</span>
+                    <span className="font-medium text-text-primary">{formatRupiah(barang.hargaJual)}</span>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
+                <div className="flex gap-2 mt-auto">
+                                                                        <Button
                     variant="outline"
-                    size="sm"
-                    className={`flex-1 text-xs ${isKritis ? 'border-orange-300 bg-white text-orange-700 hover:bg-orange-50' : ''}`}
+                    size="default"
+                    className={`flex-1 text-xs !py-3 ${
+                      isHabis
+                        ? 'border-status-danger text-status-danger hover:bg-status-danger/10 font-semibold'
+                        : isRendah
+                          ? 'border-status-warning text-status-warning hover:bg-status-warning/10'
+                          : ''
+                    }`}
                     onClick={() => openDialog(barang, 'masuk')}
                   >
                     <ArrowDownLeft className="w-3.5 h-3.5 mr-1" />
@@ -278,8 +335,8 @@ export default function TransaksiStok() {
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex-1 text-xs"
+                    size="default"
+                    className="flex-1 text-xs !py-3"
                     onClick={() => openDialog(barang, 'keluar')}
                     disabled={barang.stok === 0}
                   >
@@ -300,23 +357,23 @@ export default function TransaksiStok() {
             <DialogTitle className="flex items-center gap-2">
               {formData.tipe === 'masuk' ? (
                 <>
-                  <ArrowDownLeft className="w-5 h-5 text-green-600" />
+                  <ArrowDownLeft className="w-5 h-5 text-status-success" />
                   Stok Masuk
                 </>
               ) : (
                 <>
-                  <ArrowUpRight className="w-5 h-5 text-red-600" />
+                  <ArrowUpRight className="w-5 h-5 text-status-danger" />
                   Stok Keluar
                 </>
               )}
             </DialogTitle>
           </DialogHeader>
 
-          {selectedBarang && (
-            <div className="bg-gray-50 p-3 rounded-lg mb-4">
-              <p className="text-sm text-gray-500">{selectedBarang.kodeBarang}</p>
-              <p className="font-semibold">{selectedBarang.nama}</p>
-              <p className="text-sm">Stok saat ini: <span className="font-medium">{selectedBarang.stok} {selectedBarang.satuan}</span></p>
+                    {selectedBarang && (
+            <div className="bg-surface-muted p-3 rounded-sm mb-4">
+              <p className="text-sm text-text-secondary">{selectedBarang.kodeBarang}</p>
+              <p className="font-semibold text-text-primary">{selectedBarang.nama}</p>
+              <p className="text-sm text-text-primary">Stok saat ini: <span className="font-medium">{selectedBarang.stok} {selectedBarang.satuan}</span></p>
             </div>
           )}
 
@@ -335,8 +392,8 @@ export default function TransaksiStok() {
                 value={formData.jumlah}
                 onChange={(e) => setFormData({ ...formData, jumlah: parseInt(e.target.value) || 0 })}
               />
-              {formData.tipe === 'keluar' && selectedBarang && formData.jumlah > selectedBarang.stok && (
-                <p className="text-sm text-red-500">Jumlah melebihi stok tersedia</p>
+                            {formData.tipe === 'keluar' && selectedBarang && formData.jumlah > selectedBarang.stok && (
+                <p className="text-sm text-status-danger">Jumlah melebihi stok tersedia</p>
               )}
             </div>
 
@@ -360,16 +417,16 @@ export default function TransaksiStok() {
               />
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg">
+                        <div className="bg-surface-muted border border-border-default p-3 rounded-sm">
               {!shouldHideHargaSatuan && (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-text-primary">
                   <span className="font-medium">Total:</span> {formatRupiah(formData.jumlah * formData.hargaSatuan)}
                 </p>
               )}
               {selectedBarang && (
-                <p className={`text-sm text-gray-500 ${shouldHideHargaSatuan ? '' : 'mt-1'}`}>
+                <p className={`text-sm text-text-secondary ${shouldHideHargaSatuan ? '' : 'mt-1'}`}>
                   Stok setelah transaksi:{' '}
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium text-text-primary">
                     {formData.tipe === 'masuk'
                       ? selectedBarang.stok + formData.jumlah
                       : selectedBarang.stok - formData.jumlah} {selectedBarang.satuan}
@@ -383,10 +440,10 @@ export default function TransaksiStok() {
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Batal
             </Button>
-            <Button
+                        <Button
+              variant="outline"
               onClick={handleSubmit}
               disabled={formData.jumlah <= 0 || (formData.tipe === 'keluar' && selectedBarang !== null && formData.jumlah > selectedBarang.stok)}
-              className={formData.tipe === 'masuk' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
             >
               {formData.tipe === 'masuk' ? 'Simpan Stok Masuk' : 'Simpan Stok Keluar'}
             </Button>

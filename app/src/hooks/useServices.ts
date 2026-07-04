@@ -37,9 +37,11 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const shouldDeductStock = (
   nextStatus: ServiceStatus,
-  spareparts: ServiceSparepartItem[]
+  currentStatus: ServiceStatus | undefined,
+  spareparts: ServiceSparepartItem[],
+  wasDeducted = false
 ) => spareparts.length > 0 && (
-  nextStatus === 'proses' || nextStatus === 'selesai' || nextStatus === 'diambil'
+  nextStatus === 'proses' || nextStatus === 'selesai' || nextStatus === 'diambil' || currentStatus === 'diambil' || wasDeducted
 );
 
 const aggregateSpareparts = (spareparts: ServiceSparepartItem[]) => {
@@ -198,7 +200,7 @@ export function useServices() {
   ): Promise<{ success: boolean; error?: string }> => {
     try {
       const spareparts = payload.sparepartDigunakan ?? [];
-      const deductStock = shouldDeductStock(payload.status, spareparts);
+      const deductStock = shouldDeductStock(payload.status, undefined, spareparts);
 
       await runTransaction(db, async (transaction) => {
         const serviceRef = doc(collection(db, 'services'));
@@ -245,7 +247,7 @@ export function useServices() {
         const currentService = serviceSnapshot.data() as ServiceItem;
         const nextStatus = payload.status ?? currentService.status;
         const spareparts = payload.sparepartDigunakan ?? currentService.sparepartDigunakan ?? [];
-        const deductStock = shouldDeductStock(nextStatus, spareparts);
+        const deductStock = shouldDeductStock(nextStatus, currentService.status, spareparts, currentService.stokDikurangi ?? false);
         const wasCompleted = currentService.status === 'selesai' || currentService.status === 'diambil';
         const isCompletingNow = (nextStatus === 'selesai' || nextStatus === 'diambil') && !wasCompleted;
         const isPickedUpNow = nextStatus === 'diambil' && currentService.status !== 'diambil';

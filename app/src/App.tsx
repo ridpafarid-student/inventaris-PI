@@ -3,6 +3,7 @@
 // ============================================
 
 import { useState } from 'react';
+import type { ServiceStatus as ServiceStatusType } from '@/types';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import Login from '@/pages/Login';
 import Layout from '@/pages/Layout';
@@ -22,9 +23,21 @@ const ADMIN_ONLY_PAGES = ['laporan', 'users', 'seed'];
 function AppContent() {
   const { currentUser, isAdmin } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [serviceFilterStatus, setServiceFilterStatus] = useState<'all' | ServiceStatusType>('all');
+  const [transaksiFilterMode, setTransaksiFilterMode] = useState<'all' | 'perlu-restock'>('all');
   const effectivePage = !isAdmin && ADMIN_ONLY_PAGES.includes(currentPage) ? 'dashboard' : currentPage;
 
-  const handlePageChange = (page: string) => {
+  const handlePageChange = (page: string, status?: 'all' | ServiceStatusType | 'perlu-restock') => {
+    if (page === 'servis' && (status === 'all' || status === 'perlu-restock' || typeof status === 'string')) {
+      if (status !== 'perlu-restock') {
+        setServiceFilterStatus(status as 'all' | ServiceStatusType ?? 'all');
+      }
+    }
+    if (page === 'transaksi' && status === 'perlu-restock') {
+      setTransaksiFilterMode('perlu-restock');
+    } else if (page === 'transaksi') {
+      setTransaksiFilterMode('all');
+    }
     setCurrentPage(!isAdmin && ADMIN_ONLY_PAGES.includes(page) ? 'dashboard' : page);
   };
 
@@ -36,7 +49,7 @@ function AppContent() {
       case 'barang':
         return <DataBarang />;
       case 'transaksi':
-        return <TransaksiStok />;
+        return <TransaksiStok initialFilterMode={transaksiFilterMode} />;
       case 'riwayat':
         return <Riwayat />;
       case 'laporan':
@@ -44,7 +57,7 @@ function AppContent() {
       case 'users':
         return isAdmin ? <Users /> : <Dashboard onPageChange={handlePageChange} />;
       case 'servis':
-        return <ServiceStatus />;
+        return <ServiceStatus initialStatus={serviceFilterStatus} />;
       case 'seed':
         return isAdmin ? <SeedData /> : <Dashboard onPageChange={handlePageChange} />;
       default:

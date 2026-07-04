@@ -44,7 +44,7 @@ export default function Riwayat() {
 
   const serviceStockTransaksi = useMemo(() => (
     services.flatMap((service) =>
-      officialServiceTransactionIds.has(service.id)
+      service.status !== 'diambil' || officialServiceTransactionIds.has(service.id)
         ? []
         : (service.sparepartDigunakan ?? [])
           .filter(() => service.stokDikurangi)
@@ -116,16 +116,16 @@ export default function Riwayat() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="pb-4 border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800">Riwayat Transaksi</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Semua riwayat perubahan stok barang</p>
+            {/* Header */}
+      <div className="pb-4 border-b border-border-default">
+        <h1 className="text-xl font-semibold text-text-primary">Riwayat Transaksi</h1>
+        <p className="text-sm text-text-secondary mt-0.5">Menampilkan seluruh riwayat transaksi barang masuk dan barang keluar.</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
           <Input
             placeholder="Cari barang atau user..."
             value={searchQuery}
@@ -149,26 +149,26 @@ export default function Riwayat() {
       <Card>
         <CardContent className="p-0">
           <div className="md:hidden divide-y">
-            {loading ? (
+                        {loading ? (
               <div className="py-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-text-inverse mx-auto"></div>
               </div>
             ) : filteredTransaksi.length === 0 ? (
               <div className="py-8 text-center">
-                <History className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                <p className="text-gray-500">Tidak ada riwayat transaksi</p>
+                <History className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                <p className="text-text-secondary">Tidak ada riwayat transaksi</p>
               </div>
             ) : (
               filteredTransaksi.map((transaksi) => (
                 <div key={transaksi.id} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 break-words">{transaksi.barangNama}</p>
-                      <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
+                                        <div className="min-w-0">
+                      <p className="font-semibold text-text-primary break-words">{transaksi.barangNama}</p>
+                      <p className="text-xs text-text-secondary">{transaksi.barangKode}</p>
                     </div>
-                    <Badge
+                                        <Badge
                       variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
-                      className={transaksi.tipe === 'masuk' ? 'bg-green-100 text-green-700 hover:bg-green-100 shrink-0' : 'bg-red-100 text-red-700 hover:bg-red-100 shrink-0'}
+                      className={transaksi.tipe === 'masuk' ? 'bg-status-success/10 text-status-success hover:bg-status-success/10 shrink-0' : 'bg-status-danger/10 text-status-danger hover:bg-status-danger/10 shrink-0'}
                     >
                       {transaksi.tipe === 'masuk' ? (
                         <ArrowDownLeft className="w-3 h-3 mr-1" />
@@ -179,28 +179,28 @@ export default function Riwayat() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg bg-gray-50 p-3">
-                      <p className="text-gray-500">Waktu</p>
-                      <p className="mt-1 font-medium text-gray-900">{formatDate(transaksi.createdAt)}</p>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-sm bg-surface-muted p-3">
+                      <p className="text-text-secondary">Waktu</p>
+                      <p className="mt-1 font-medium text-text-primary">{formatDate(transaksi.createdAt)}</p>
                     </div>
-                    <div className="rounded-lg bg-gray-50 p-3">
-                      <p className="text-gray-500">Jumlah</p>
-                      <p className="mt-1 font-medium text-gray-900">{transaksi.jumlah}</p>
+                    <div className="rounded-sm bg-surface-muted p-3">
+                      <p className="text-text-secondary">Jumlah</p>
+                      <p className="mt-1 font-medium text-text-primary">{transaksi.jumlah}</p>
                     </div>
-                    <div className="rounded-lg bg-gray-50 p-3">
-                      <p className="text-gray-500">Stok</p>
-                      <p className="mt-1 font-medium text-gray-900">{transaksi.stokSebelum} ke {transaksi.stokSesudah}</p>
+                    <div className="rounded-sm bg-surface-muted p-3">
+                      <p className="text-text-secondary">Stok</p>
+                      <p className="mt-1 font-medium text-text-primary">{transaksi.stokSebelum} ke {transaksi.stokSesudah}</p>
                     </div>
                     {!shouldHideFinancials && (
-                      <div className="rounded-lg bg-gray-50 p-3">
-                        <p className="text-gray-500">Total</p>
-                        <p className="mt-1 font-medium text-gray-900 break-words">{formatRupiah(transaksi.totalHarga)}</p>
+                      <div className="rounded-sm bg-surface-muted p-3">
+                        <p className="text-text-secondary">Total</p>
+                        <p className="mt-1 font-medium text-text-primary break-words">{formatRupiah(transaksi.totalHarga)}</p>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <div className="flex items-center gap-2 text-sm text-text-secondary">
                     <User className="w-4 h-4" />
                     <span>{transaksi.userName}</span>
                   </div>
@@ -276,7 +276,7 @@ export default function Riwayat() {
                       <TableCell className="px-1 text-center">
                         <Badge 
                           variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
-                          className={transaksi.tipe === 'masuk' ? 'bg-green-100 text-green-700 hover:bg-green-100' : 'bg-red-100 text-red-700 hover:bg-red-100'}
+                          className={transaksi.tipe === 'masuk' ? 'bg-status-success/10 border-status-success/40 text-status-success' : 'bg-status-danger/10 border-status-danger/40 text-status-danger'}
                         >
                           {transaksi.tipe === 'masuk' ? (
                             <ArrowDownLeft className="w-3 h-3 mr-1" />
@@ -318,14 +318,14 @@ export default function Riwayat() {
       </Card>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="p-2 bg-gray-100 rounded-md">
-            <ArrowDownLeft className="w-4 h-4 text-gray-600" />
+            <div className="grid grid-cols-2 gap-3">
+        <div className="bg-surface-base border border-border-default rounded-sm p-4 flex items-center gap-3">
+          <div className="p-2 bg-surface-muted rounded-sm">
+            <ArrowDownLeft className="w-4 h-4 text-text-secondary" />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Masuk</p>
-            <p className="text-xl font-bold text-gray-800">
+            <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Masuk</p>
+            <p className="text-xl font-bold text-text-primary">
               {filteredTransaksi
                 .filter(t => t.tipe === 'masuk')
                 .reduce((sum, t) => sum + t.jumlah, 0)}
@@ -333,13 +333,13 @@ export default function Riwayat() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="p-2 bg-gray-100 rounded-md">
-            <ArrowUpRight className="w-4 h-4 text-gray-600" />
+        <div className="bg-surface-base border border-border-default rounded-sm p-4 flex items-center gap-3">
+          <div className="p-2 bg-surface-muted rounded-sm">
+            <ArrowUpRight className="w-4 h-4 text-text-secondary" />
           </div>
           <div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Keluar</p>
-            <p className="text-xl font-bold text-gray-800">
+            <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Keluar</p>
+            <p className="text-xl font-bold text-text-primary">
               {filteredTransaksi
                 .filter(t => t.tipe === 'keluar')
                 .reduce((sum, t) => sum + t.jumlah, 0)}

@@ -2,66 +2,136 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════ */
+/* GEIST FONT DECLARATIONS                                 */
+/* ═══════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist-sans/Geist-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist-sans/Geist-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist-sans/Geist-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/geist-sans/Geist-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    /* ═══════════════════════════════════════════════════════ */
+    /* VERCEL DESIGN TOKENS - DO NOT HARDCODE HEX VALUES      */
+    /* ═══════════════════════════════════════════════════════ */
+    
+    /* Typography */
+    --font-family-primary: 'Geist', Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    --font-size-base: 14px;
+    --font-size-xs: 13px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-weight-base: 400;
+    --font-line-height-base: 24px;
+    
+    /* Colors - Surface */
+    --color-surface-base: 0 0% 0%;           /* #000000 */
+    --color-surface-muted: 0 0% 3.9%;       /* #0a0a0a */
+    
+    /* Colors - Text */
+    --color-text-primary: 0 0% 92.9%;       /* #ededed */
+    --color-text-secondary: 0 0% 63.1%;     /* #a1a1a1 */
+    --color-text-inverse: 4 65% 48%;        /* #c8352a - Mthree brand red */
+    
+        /* Colors - Border */
+    --color-border-default: 0 0% 12.2%;     /* #1f1f1f */
+    --color-border-muted: 0 0% 100%;        /* #ffffff (for special cases) */
+    
+    /* Colors - Status (extension tokens) */
+    /* NOTE: DESIGN.md does not define semantic status colors.
+       These tokens are project-specific extensions to handle
+       warning/danger/success/info UI patterns consistently. */
+    --color-status-warning: 32 95% 60%;     /* orange for warnings, low stock alerts */
+    --color-status-danger: 0 72% 60%;       /* red for destructive actions, errors */
+    --color-status-success: 142 70% 50%;    /* green for success states, confirmations */
+    --color-status-info: var(--color-text-inverse); /* reuse accent blue for info */
+    
+    /* Spacing Scale (px values) */
+    --space-1: 2px;
+    --space-2: 4px;
+    --space-3: 6px;
+    --space-4: 8px;
+    --space-5: 10px;
+    --space-6: 12px;
+    --space-7: 16px;
+    --space-8: 24px;
+    
+    /* Radius */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 0.75rem; /* 12px standard rounded-lg */
+    
+    /* Shadows */
+    --shadow-1: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(46, 46, 46) 0px 0px 0px 1px;
+    --shadow-2: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(0, 0, 0) 0px 0px 0px 2px, rgb(200, 53, 42) 0px 0px 0px 4px;
+    --shadow-3: rgba(255, 255, 255, 0.145) 0px 0px 0px 1px, rgba(0, 0, 0, 0.16) 0px 1px 2px 0px, rgb(0, 0, 0) 0px 0px 0px 1px;
+    
+    /* Motion */
+    --motion-duration-instant: 150ms;
+    --motion-duration-fast: 200ms;
+    
+    /* ═══════════════════════════════════════════════════════ */
+    /* LEGACY COMPATIBILITY (mapped to Vercel tokens)          */
+    /* ═══════════════════════════════════════════════════════ */
+    
+    --background: var(--color-surface-base);
+    --foreground: var(--color-text-primary);
+    --card: var(--color-surface-muted);
+    --card-foreground: var(--color-text-primary);
+    --popover: var(--color-surface-muted);
+    --popover-foreground: var(--color-text-primary);
+    --primary: var(--color-text-inverse);
+    --primary-foreground: var(--color-text-primary);
+    --secondary: var(--color-surface-muted);
+    --secondary-foreground: var(--color-text-primary);
+    --muted: var(--color-surface-muted);
+    --muted-foreground: var(--color-text-secondary);
+    --accent: var(--color-text-inverse);
+    --accent-foreground: var(--color-text-primary);
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.625rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --destructive-foreground: var(--color-text-primary);
+    --border: var(--color-border-default);
+    --input: var(--color-border-default);
+    --ring: var(--color-text-inverse);
+    --radius: var(--radius-sm);
+    --sidebar-background: var(--color-surface-base);
+    --sidebar-foreground: var(--color-text-primary);
+    --sidebar-primary: var(--color-text-inverse);
+    --sidebar-primary-foreground: var(--color-text-primary);
+    --sidebar-accent: var(--color-surface-muted);
+    --sidebar-accent-foreground: var(--color-text-primary);
+    --sidebar-border: var(--color-border-default);
+    --sidebar-ring: var(--color-text-inverse);
   }
 }
 
@@ -69,7 +139,45 @@
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-base);
+    line-height: var(--font-line-height-base);
+  }
+  
+    /* Focus-visible rules (WCAG keyboard navigation) */
+  *:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-2);
+  }
+
+  /* ── Global Scrollbar Styling ─────────────────────────────────────────── */
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--color-border-default)) hsl(var(--color-surface-muted));
+  }
+
+  /* Chrome / Edge / Safari */
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: hsl(var(--color-surface-muted));
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--color-border-default));
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--color-text-secondary) / 0.4);
   }
 }
