@@ -372,7 +372,7 @@ export default function DataBarang() {
             <Dialog open={isKategoriDialogOpen} onOpenChange={(open) => { setIsKategoriDialogOpen(open); if (!open) { setConfirmDeleteId(null); setKategoriError(''); } }}>
               <DialogTrigger asChild>
                 <Button variant="outline" onClick={resetKategoriForm}>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-6 h-6 mr-2" />
                   Tambah Kategori
                 </Button>
               </DialogTrigger>
@@ -435,13 +435,12 @@ export default function DataBarang() {
                                   </Button>
                                 </div>
                               ) : (
-                                <Button
+                                                                <Button
                                   variant="ghost"
-                                  size="icon"
-                                  className="text-red-600 hover:text-red-700 shrink-0"
+                                  className="h-10 w-10 p-0 text-red-600 hover:text-red-700 shrink-0"
                                   onClick={() => setConfirmDeleteId(kategori.id)}
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-8 h-8" />
                                 </Button>
                               )}
                             </div>
@@ -468,7 +467,7 @@ export default function DataBarang() {
                         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" onClick={resetForm}>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-6 h-6 mr-2" />
                   Tambah Barang
                 </Button>
               </DialogTrigger>
@@ -599,7 +598,7 @@ export default function DataBarang() {
                             className="flex-1"
                             onClick={() => openEditDialog(barang)}
                           >
-                            <Edit2 className="w-4 h-4 mr-2" />
+                            <Edit2 className="w-6 h-6 mr-2" />
                             Edit
                           </Button>
                                                     <Button
@@ -607,7 +606,7 @@ export default function DataBarang() {
                                                       className="flex-1 text-status-danger hover:text-status-danger/80 focus-visible:shadow-focus"
                                                       onClick={() => setConfirmDeleteBarangId(barang.id)}
                                                     >
-                                                      <Trash2 className="w-4 h-4 mr-2" />
+                                                      <Trash2 className="w-6 h-6 mr-2" />
                                                       Hapus
                                                     </Button>
                         </div>
@@ -621,20 +620,20 @@ export default function DataBarang() {
 
           <div className="hidden md:block overflow-x-auto">
             <Table className={shouldHideHargaBeli ? 'table-fixed text-sm min-w-full' : 'table-fixed min-w-full'}>
-              {shouldHideHargaBeli ? (
+                            {shouldHideHargaBeli ? (
                 <colgroup>
+                  <col className="w-[12%]" />
+                  <col className="w-[38%]" />
                   <col className="w-[14%]" />
-                  <col className="w-[32%]" />
-                  <col className="w-[18%]" />
                   <col className="w-[12%]" />
                   <col className="w-[24%]" />
                 </colgroup>
               ) : (
                 <colgroup>
-                  <col className="w-[11%]" />
-                  <col className="w-[28%]" />
-                  <col className="w-[14%]" />
                   <col className="w-[10%]" />
+                  <col className="w-[32%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[9%]" />
                   <col className="w-[12%]" />
                   <col className="w-[14%]" />
                   {isAdmin && <col className="w-[11%]" />}
@@ -642,12 +641,12 @@ export default function DataBarang() {
               )}
               <TableHeader>
                 <TableRow>
-                                    <TableHead className="px-3 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Kode</TableHead>
+                                    <TableHead className="pl-8 pr-3 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Kode</TableHead>
                   <TableHead className="px-3 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Nama Barang</TableHead>
                   <TableHead className="px-3 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">Kategori</TableHead>
                   <TableHead className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">Stok</TableHead>
                   {!shouldHideHargaBeli && <TableHead className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">Harga Beli</TableHead>}
-                  <TableHead className="px-3 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</TableHead>
+                  <TableHead className="px-3 py-3 pr-8 text-right text-xs font-semibold text-text-secondary uppercase tracking-wide">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</TableHead>
                   {isAdmin && <TableHead className="px-3 py-3 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -662,7 +661,7 @@ export default function DataBarang() {
                 ) : (
                   filteredBarang.map((barang) => (
                     <TableRow key={barang.id}>
-                      <TableCell className={shouldHideHargaBeli ? 'px-3 py-3 font-semibold text-xs' : 'px-3 py-3 font-medium'}>{barang.kodeBarang}</TableCell>
+                      <TableCell className={shouldHideHargaBeli ? 'pl-8 pr-3 py-3 font-semibold text-xs' : 'pl-8 pr-3 py-3 font-medium'}>{barang.kodeBarang}</TableCell>
                       <TableCell className="px-3 py-3">
                                                 <div>
                           <p className="font-medium truncate">{barang.nama}</p>
@@ -687,7 +686,7 @@ export default function DataBarang() {
                       {!shouldHideHargaBeli && (
                         <TableCell className="px-3 py-3 text-right">{formatRupiah(barang.hargaBeli)}</TableCell>
                       )}
-                      <TableCell className="px-3 py-3 text-right font-medium">{formatRupiah(barang.hargaJual)}</TableCell>
+                      <TableCell className="px-3 py-3 pr-8 text-right font-medium">{formatRupiah(barang.hargaJual)}</TableCell>
                       {isAdmin && (
                         <TableCell className="px-3 py-3 text-center">
                           {confirmDeleteBarangId === barang.id ? (
@@ -711,20 +710,19 @@ export default function DataBarang() {
                             </div>
                           ) : (
                             <div className="flex items-center justify-center gap-1">
-                              <Button
+                                                            <Button
                                 variant="ghost"
-                                size="icon"
+                                className="h-10 w-10 p-0"
                                 onClick={() => openEditDialog(barang)}
                               >
-                                <Edit2 className="w-4 h-4" />
+                                <Edit2 className="w-8 h-8" />
                               </Button>
                                                             <Button
                                                               variant="ghost"
-                                                              size="icon"
-                                                              className="text-status-danger hover:text-status-danger/80 focus-visible:shadow-focus"
+                                                              className="h-10 w-10 p-0 text-status-danger hover:text-status-danger/80 focus-visible:shadow-focus"
                                                               onClick={() => setConfirmDeleteBarangId(barang.id)}
                                                             >
-                                                              <Trash2 className="w-4 h-4" />
+                                                              <Trash2 className="w-8 h-8" />
                                                             </Button>
                             </div>
                           )}

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import type { ServiceStatus as ServiceStatusType } from '@/types';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+
 import Login from '@/pages/Login';
 import Layout from '@/pages/Layout';
 import Dashboard from '@/pages/Dashboard';
@@ -80,7 +81,7 @@ function AppContent() {
 
 // App with Providers
 function App() {
-  return (
+      return (
     <AuthProvider>
       <AppContent />
       <Toaster position="top-right" />

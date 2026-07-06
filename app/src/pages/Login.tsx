@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
 import { getFirebaseAuthErrorMessage } from '@/lib/firebase-auth-errors';
-import logoMthree from '@/assets/logo-mthree.svg';
+import logoMthree from '@/assets/logo-mthree-darkmode.svg';
 import ForgotPasswordDialog from '@/components/ForgotPasswordDialog';
 
 export default function Login() {
@@ -61,7 +61,7 @@ export default function Login() {
 
                 {/* Logo */}
         <div className="relative z-10">
-          <img src={logoMthree} alt="Mthree Computer Logo" className="h-10 w-auto transition-all duration-700 hover:scale-105" />
+          <img src={logoMthree} alt="Mthree Computer Logo" className="h-16 w-auto transition-all duration-700 hover:scale-105" />
         </div>
 
                 {/* Center content */}
@@ -83,9 +83,9 @@ export default function Login() {
                     {/* Clean feature list with big numbers */}
           <div className="flex flex-col gap-6">
             {[
-              { no: '01', title: 'Manajemen Inventaris Barang', delay: 'delay-[200ms]' },
-              { no: '02', title: 'Pencatatan Data Servis', delay: 'delay-[400ms]' },
-              { no: '03', title: 'Laporan & Statistik', delay: 'delay-[600ms]' },
+                            { no: '01', title: 'Manajemen Inventaris Barang', delay: 'delay-&lsqb;200ms&rsqb;' },
+              { no: '02', title: 'Pencatatan Data Servis', delay: 'delay-&lsqb;400ms&rsqb;' },
+              { no: '03', title: 'Laporan & Statistik', delay: 'delay-&lsqb;600ms&rsqb;' },
             ].map((item) => (
               <div 
                 key={item.no} 
@@ -102,7 +102,7 @@ export default function Login() {
 
                 {/* Bottom tagline */}
         <div className="relative z-10">
-          <p className={`text-text-secondary/40 text-xs transition-all duration-700 delay-[800ms] ${
+          <p className={`text-text-secondary/40 text-xs transition-all duration-700 delay-&lsqb;800ms&rsqb; ${
             mounted ? 'opacity-100' : 'opacity-0'
           }`}>
             © 2026 Mthree Computer · Sistem Internal

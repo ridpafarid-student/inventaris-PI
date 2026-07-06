@@ -175,10 +175,10 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
             />
           </div>
           <Select value={selectedKategori} onValueChange={setSelectedKategori}>
-                        <SelectTrigger
+                                                <SelectTrigger
               className={`w-full sm:w-56 ${
                 isFilterRestock
-                  ? 'border-status-warning bg-status-warning/10 text-status-warning ring-1 ring-status-warning/20'
+                  ? 'border-status-danger ring-1 ring-status-danger/20'
                   : ''
               }`}
             >
@@ -190,8 +190,8 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                 <SelectItem key={k.id} value={k.id}>{k.nama}</SelectItem>
               ))}
               <SelectSeparator />
-                            <SelectItem value="perlu-restock">
-                <span className="flex items-center gap-1.5 text-status-warning font-semibold">
+                                                        <SelectItem value="perlu-restock">
+                <span className="flex items-center gap-1.5 text-status-danger font-semibold">
                   <AlertTriangle style={{ width: '13px', height: '13px' }} />
                   Perlu Restock
                 </span>
@@ -202,7 +202,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
 
                 {/* Banner info saat filter Perlu Restock aktif */}
                                 {isFilterRestock && (
-                  <div className="flex items-center gap-2 bg-status-warning/10 border border-status-warning/20 text-status-warning text-sm font-medium px-4 py-2.5 rounded-sm ring-1 ring-status-warning/10">
+                                    <div className="flex items-center gap-2 bg-status-danger/10 border border-status-danger/20 text-status-danger text-sm font-medium px-4 py-2.5 rounded-sm ring-1 ring-status-danger/10">
                     <AlertTriangle className="w-4 h-4 shrink-0" />
                     <span>
                       Menampilkan <strong>{filteredBarang.length}</strong> item yang telah mencapai atau berada di bawah ambang batas minimum stok
@@ -211,9 +211,9 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                 )}
       </div>
 
-      {/* Stats Summary - Restock Overview */}
+            {/* Stats Summary - Restock Overview */}
       {isFilterRestock && filteredBarang.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className={`grid grid-cols-1 gap-3 ${shouldHideHargaBeli ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
           <div className="bg-surface-base border border-border-default rounded-sm p-4">
             <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Item Perlu Restock</p>
             <p className="text-2xl font-bold text-text-primary mt-1">{filteredBarang.length}</p>
@@ -224,12 +224,14 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
               {filteredBarang.reduce((sum, barang) => sum + Math.max(barang.stokMinimum - barang.stok, 0), 0)}
             </p>
           </div>
-          <div className="bg-surface-base border border-border-default rounded-sm p-4">
-            <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Estimasi Budget</p>
-            <p className="text-base font-bold text-text-primary mt-1">
-              {formatRupiah(filteredBarang.reduce((sum, barang) => sum + (Math.max(barang.stokMinimum - barang.stok, 0) * barang.hargaBeli), 0))}
-            </p>
-          </div>
+          {!shouldHideHargaBeli && (
+            <div className="bg-surface-base border border-border-default rounded-sm p-4">
+              <p className="text-xs text-text-secondary font-medium uppercase tracking-wide">Estimasi Budget</p>
+              <p className="text-base font-bold text-text-primary mt-1">
+                {formatRupiah(filteredBarang.reduce((sum, barang) => sum + (Math.max(barang.stokMinimum - barang.stok, 0) * barang.hargaBeli), 0))}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
@@ -311,8 +313,8 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                       <span className="text-text-primary">{formatRupiah(barang.hargaBeli)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-text-primary">Harga Jual</span>
+                                    <div className="flex justify-between text-sm">
+                    <span className="text-text-primary">{shouldHideHargaBeli ? 'Harga' : 'Harga Jual'}</span>
                     <span className="font-medium text-text-primary">{formatRupiah(barang.hargaJual)}</span>
                   </div>
                 </div>

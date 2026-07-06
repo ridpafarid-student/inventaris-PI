@@ -1,5 +1,16 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 
 
@@ -16,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Banknote, CheckCircle2, Clock3, Cpu, Laptop, PackageCheck, Pencil, Printer, Smartphone, UserRound, Wrench } from 'lucide-react';
+import { Banknote, CheckCircle2, Clock3, Cpu, Laptop, PackageCheck, Pencil, Printer, Smartphone, Trash2, UserRound, Wrench } from 'lucide-react';
 import type { ServiceItem, ServiceStatus } from '@/types';
 
 interface ServiceCardProps {
@@ -25,6 +36,8 @@ interface ServiceCardProps {
   onComplete: (service: ServiceItem) => void;
   onPickup: (service: ServiceItem) => void;
   onStatusChange: (service: ServiceItem, status: ServiceStatus) => void;
+  onDelete?: (service: ServiceItem) => void;
+  isAdmin?: boolean;
 }
 
 
@@ -195,6 +208,8 @@ export default function ServiceCard({
   onComplete,
   onPickup,
   onStatusChange,
+  onDelete,
+  isAdmin = false,
 }: ServiceCardProps) {
   const sparepartCount = service.sparepartDigunakan?.reduce((total, item) => total + item.jumlah, 0) ?? 0;
   const biayaJasa = service.biayaJasa ?? 0;
@@ -256,51 +271,99 @@ export default function ServiceCard({
       </div>
 
       <div className="space-y-3 pt-2">
-        {(service.status !== 'selesai' && service.status !== 'diambil') ? (
-          <Select
-            value={service.status}
-            onValueChange={(value) => onStatusChange(service, value as ServiceStatus)}
-          >
-            <SelectTrigger className="h-10 focus:ring-1 focus:ring-text-inverse/20 focus:shadow-focus">
-              <SelectValue placeholder="Ubah status" />
-            </SelectTrigger>
-            <SelectContent>
-              {selectableStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {statusConfig[status].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {(service.status !== 'selesai' && service.status !== 'diambil') ? (
+          <div className="flex items-center gap-2">
+            <Select
+              value={service.status}
+              onValueChange={(value) => onStatusChange(service, value as ServiceStatus)}
+            >
+              <SelectTrigger className="h-10 flex-1 focus:ring-1 focus:ring-text-inverse/20 focus:shadow-focus">
+                <SelectValue placeholder="Ubah status" />
+              </SelectTrigger>
+              <SelectContent>
+                {selectableStatuses.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {statusConfig[status].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                              <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus data servis ini?</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                      <div className="space-y-2 text-sm">
+                        <p>
+                          Anda akan menghapus servis{' '}
+                          <span className="font-semibold text-foreground">{service.modelPerangkat}</span>
+                          {' '}milik{' '}
+                          <span className="font-semibold text-foreground">{service.namaPelanggan}</span>
+                          {service.noNota ? (
+                            <span> (Nota: <span className="font-mono font-semibold text-foreground">{service.noNota}</span>)</span>
+                          ) : null}.
+                        </p>
+                        <p>Aksi ini <span className="font-semibold text-foreground">permanen dan tidak bisa dibatalkan</span>.</p>
+                        {(service.stokDikurangi && (service.sparepartDigunakan?.length ?? 0) > 0) && (
+                          <p className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-400">
+                            ⚠ Servis ini sudah memakai sparepart. Stok akan dikembalikan otomatis saat dihapus.
+                          </p>
+                        )}
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                      onClick={() => onDelete?.(service)}
+                    >
+                      Hapus Servis
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         ) : null}
 
         <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => onEdit(service)}
-                    >
-                      <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="default"
-                      className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-                      onClick={() => onComplete(service)}
-                      disabled={service.status === 'selesai' || service.status === 'diambil'}
-                    >
-                      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                      Selesai
-                    </Button>
-                    <Button
-                      variant="default"
-                      className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-                      onClick={() => onPickup(service)}
-                      disabled={service.status !== 'selesai'}
-                    >
-                      <PackageCheck className="mr-1.5 h-3.5 w-3.5" />
-                      Serahkan
-                    </Button>
+          <Button
+            variant="outline"
+            className="flex-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => onEdit(service)}
+          >
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Edit
+          </Button>
+          <Button
+            variant="default"
+            className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={() => onComplete(service)}
+            disabled={service.status === 'selesai' || service.status === 'diambil'}
+          >
+            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+            Selesai
+          </Button>
+          <Button
+            variant="default"
+            className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={() => onPickup(service)}
+            disabled={service.status !== 'selesai'}
+          >
+            <PackageCheck className="mr-1.5 h-3.5 w-3.5" />
+            Serahkan
+          </Button>
         </div>
       </div>
     </div>

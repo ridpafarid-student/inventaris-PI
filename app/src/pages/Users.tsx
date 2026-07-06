@@ -154,8 +154,8 @@ export default function Users() {
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm} className="w-full sm:w-auto">
+                    <DialogTrigger asChild>
+            <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Tambah User
             </Button>

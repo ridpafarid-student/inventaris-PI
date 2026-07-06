@@ -53,27 +53,24 @@
     --font-weight-base: 400;
     --font-line-height-base: 24px;
     
-    /* Colors - Surface */
-    --color-surface-base: 0 0% 0%;           /* #000000 */
-    --color-surface-muted: 0 0% 3.9%;       /* #0a0a0a */
-    
-    /* Colors - Text */
-    --color-text-primary: 0 0% 92.9%;       /* #ededed */
-    --color-text-secondary: 0 0% 63.1%;     /* #a1a1a1 */
-    --color-text-inverse: 4 65% 48%;        /* #c8352a - Mthree brand red */
-    
+        /* Colors - Surface */
+        --color-surface-base: 0 0% 0%;           /* #000000 */
+        --color-surface-muted: 0 0% 3.9%;        /* #0a0a0a */
+
+        /* Colors - Text */
+        --color-text-primary: 0 0% 92.9%;        /* #ededed */
+        --color-text-secondary: 0 0% 63.1%;      /* #a1a1a1 */
+        --color-text-inverse: 4 65% 48%;         /* #c8352a - Mthree brand red */
+
         /* Colors - Border */
-    --color-border-default: 0 0% 12.2%;     /* #1f1f1f */
-    --color-border-muted: 0 0% 100%;        /* #ffffff (for special cases) */
-    
-    /* Colors - Status (extension tokens) */
-    /* NOTE: DESIGN.md does not define semantic status colors.
-       These tokens are project-specific extensions to handle
-       warning/danger/success/info UI patterns consistently. */
-    --color-status-warning: 32 95% 60%;     /* orange for warnings, low stock alerts */
-    --color-status-danger: 0 72% 60%;       /* red for destructive actions, errors */
-    --color-status-success: 142 70% 50%;    /* green for success states, confirmations */
-    --color-status-info: var(--color-text-inverse); /* reuse accent blue for info */
+        --color-border-default: 0 0% 12.2%;      /* #1f1f1f */
+        --color-border-muted: 0 0% 100%;         /* #ffffff (for special cases) */
+
+        /* Colors - Status */
+        --color-status-warning: 32 95% 60%;      /* orange for warnings, low stock alerts */
+        --color-status-danger:  0 72% 60%;       /* red for destructive actions, errors */
+        --color-status-success: 142 70% 50%;     /* green for success states, confirmations */
+        --color-status-info: var(--color-text-inverse); /* reuse accent red for info */
     
     /* Spacing Scale (px values) */
     --space-1: 2px;
@@ -134,6 +131,8 @@
     --sidebar-ring: var(--color-text-inverse);
   }
 }
+
+
 
 @layer base {
   * {

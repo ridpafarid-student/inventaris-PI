@@ -3,7 +3,7 @@
 // ============================================
 
 import { useState } from 'react';
-import LogoMThree from '@/assets/logo-mthree.svg';
+import LogoMThree from '@/assets/logo-mthree-darkmode.svg';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -17,10 +17,10 @@ import {
   Users,
   Menu,
   LogOut,
-  ChevronDown,
+    ChevronDown,
   ChevronRight,
   Package,
-  Database
+  Database,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -78,7 +78,6 @@ function LayoutNavContent({
 }: LayoutNavContentProps) {
   const isInventarisActive = inventarisChildIds.includes(currentPage);
   const [inventarisOpen, setInventarisOpen] = useState(isInventarisActive);
-
   const handleNavClick = (item: NavItem) => {
     if (item.children) {
       setInventarisOpen((prev) => !prev);
@@ -89,41 +88,34 @@ function LayoutNavContent({
 
   return (
     <div className="flex flex-col h-full bg-surface-base text-text-primary">
-      {/* Logo / Brand */}
-      <div className="px-6 pt-7 pb-6 border-b border-border-default">
-        <div className="flex items-center justify-start pb-2">
+            {/* Logo / Brand */}
+      <div className="px-4 pt-6 pb-5 border-b border-border-default">
+        <div className="flex items-center justify-start">
           <img
             src={LogoMThree}
             alt="M-THREE COMPUTER logo"
-            className="h-10 w-auto"
+            className="h-12 w-auto"
           />
         </div>
       </div>
 
-      {/* User Info */}
-      <div className="px-4 py-6 border-b border-border-default bg-surface-muted">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-card bg-text-inverse/20">
-            <span className="font-bold text-sm text-text-inverse">
-              {userName?.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm text-text-primary truncate">{userName}</p>
-            <span className={`text-[11px] px-2 py-0.5 rounded-pill font-medium ${
-              isAdmin
-                ? 'bg-orange-500/20 text-orange-300'
-                : 'bg-text-inverse/20 text-text-inverse'
-            }`}>
-              {userRole === 'admin' ? '⚙ Administrator' : '👤 Teknisi'}
-            </span>
-          </div>
-        </div>
-      </div>
+            {/* User Info */}
+            <div className="px-4 py-5 border-b border-border-default">
+              <div className="flex flex-col gap-2.5">
+                <p className="font-semibold text-sm text-text-primary truncate">{userName}</p>
+                <span className={`text-xs px-2.5 py-1 rounded-md font-medium inline-flex items-center gap-1.5 w-fit ${
+                  isAdmin
+                    ? 'bg-orange-500/20 text-orange-300'
+                    : 'bg-text-inverse/20 text-text-inverse'
+                }`}>
+                  {userRole === 'admin' ? 'Administrator' : 'Teknisi'}
+                </span>
+              </div>
+            </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-auto">
-        <p className="text-[10px] font-bold uppercase tracking-widest px-3 mb-4 text-text-secondary/50">
+            {/* Navigation */}
+      <nav className="flex-1 px-4 py-5 space-y-1 overflow-auto">
+        <p className="text-[10px] font-bold uppercase tracking-widest px-0 mb-3 text-text-secondary/50">
           Menu Utama
         </p>
 
@@ -136,20 +128,20 @@ function LayoutNavContent({
 
           return (
             <div key={item.id}>
-              <button
+                            <button
                 onClick={() => handleNavClick(item)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-sm text-left transition-fast focus-visible:outline-none focus-visible:shadow-focus ${
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-sm text-left transition-all duration-200 focus-visible:outline-none focus-visible:shadow-focus relative ${
                   isActive || isParentActive
-                    ? 'bg-text-inverse/10 text-text-inverse border-l-2 border-text-inverse'
-                    : 'bg-transparent text-text-secondary hover:bg-surface-muted hover:text-text-primary'
+                      ? 'bg-text-inverse/[0.08] text-text-inverse before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-text-inverse before:rounded-r-full'
+                      : 'bg-transparent text-text-secondary hover:bg-surface-muted hover:text-text-primary hover:translate-x-0.5'
                 }`}
               >
-                <Icon className="w-[18px] h-[18px] shrink-0" />
-                <span className="font-medium text-sm flex-1">{item.label}</span>
-                {hasChildren && (
+                                                                <Icon className={`w-5 h-5 shrink-0 transition-transform duration-200 ${(isActive || isParentActive) ? 'text-text-inverse' : ''}`} />
+                <span className={`font-medium text-sm flex-1 transition-colors duration-200 ${(isActive || isParentActive) ? 'text-text-inverse' : ''}`}>{item.label}</span>
+                                {hasChildren && (
                   isOpen
-                    ? <ChevronDown className="w-4 h-4 ml-auto text-text-secondary/50" />
-                    : <ChevronRight className="w-4 h-4 ml-auto text-text-secondary/50" />
+                    ? <ChevronDown className="w-5 h-5 ml-auto text-text-secondary/50" />
+                    : <ChevronRight className="w-5 h-5 ml-auto text-text-secondary/50" />
                 )}
               </button>
 
@@ -160,17 +152,17 @@ function LayoutNavContent({
                     const ChildIcon = child.icon;
                     const isChildActive = currentPage === child.id;
                     return (
-                      <button
+                                            <button
                         key={child.id}
                         onClick={() => onNavigate(child.id)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-left transition-fast text-sm focus-visible:outline-none focus-visible:shadow-focus ${
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-left transition-all duration-200 text-sm focus-visible:outline-none focus-visible:shadow-focus relative ${
                           isChildActive
-                            ? 'bg-text-inverse/10 text-text-inverse font-medium border-l-2 border-text-inverse pl-2'
-                            : 'bg-transparent text-text-secondary font-normal hover:bg-surface-muted hover:text-text-primary'
+                              ? 'bg-text-inverse/[0.08] font-medium before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-text-inverse before:rounded-r-full'
+                              : 'bg-transparent text-text-secondary font-normal hover:bg-surface-muted hover:text-text-primary hover:translate-x-0.5'
                         }`}
                       >
-                        <ChildIcon className="w-[14px] h-[14px] shrink-0" />
-                        {child.label}
+                                                                                                <ChildIcon className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isChildActive ? 'text-text-inverse' : ''}`} />
+                        <span className={`transition-colors duration-200 ${isChildActive ? 'text-text-inverse' : ''}`}>{child.label}</span>
                       </button>
                     );
                   })}
@@ -181,16 +173,16 @@ function LayoutNavContent({
         })}
       </nav>
 
-      {/* Logout Button */}
-      <div className="px-3 py-4 border-t border-border-default">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-sm text-left transition-fast text-red-500 hover:bg-red-500/10 focus-visible:outline-none focus-visible:shadow-focus"
-        >
-          <LogOut className="w-[18px] h-[18px] shrink-0" />
-          <span className="font-medium text-sm flex-1">Logout</span>
-        </button>
-      </div>
+            {/* Logout Button */}
+            <div className="px-3 py-4 border-t border-border-default">
+                            <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-sm text-left transition-all duration-200 text-red-500 hover:bg-red-500/10 hover:translate-x-0.5 focus-visible:outline-none focus-visible:shadow-focus"
+              >
+                <LogOut className="w-5 h-5 shrink-0" />
+                <span className="font-medium text-sm flex-1">Logout</span>
+              </button>
+            </div>
     </div>
   );
 }

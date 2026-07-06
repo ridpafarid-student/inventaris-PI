@@ -19,15 +19,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { ServiceItem, ServiceStatus } from '@/types';
 
 export default function ServiceStatus({ initialStatus = 'all' }: { initialStatus?: 'all' | ServiceStatus }) {
-  const { userData } = useAuth();
+  const { userData, isAdmin } = useAuth();
   const { barangList } = useBarang();
-  const {
+    const {
     services,
     loading,
     error,
     addService,
     updateService,
     updateServiceStatus,
+    deleteService,
   } = useServices();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<'all' | ServiceStatus>(initialStatus);
@@ -90,12 +91,16 @@ export default function ServiceStatus({ initialStatus = 'all' }: { initialStatus
     await updateServiceStatus(service.id, 'selesai');
   };
 
-  const handlePickup = async (service: ServiceItem) => {
+    const handlePickup = async (service: ServiceItem) => {
     if (service.status !== 'selesai') {
       return;
     }
 
     await updateServiceStatus(service.id, 'diambil');
+  };
+
+  const handleDelete = async (service: ServiceItem) => {
+    await deleteService(service.id);
   };
 
   useEffect(() => {
@@ -110,10 +115,10 @@ export default function ServiceStatus({ initialStatus = 'all' }: { initialStatus
           <p className="text-sm text-text-secondary mt-0.5">Kelola status dan monitoring servis pelanggan</p>
         </div>
 
-        <Button onClick={handleCreate} size="sm" className="sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Servis
-        </Button>
+                <Button variant="outline" onClick={handleCreate}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Servis
+                </Button>
       </div>
 
       {error && (
@@ -166,13 +171,15 @@ export default function ServiceStatus({ initialStatus = 'all' }: { initialStatus
           </div>
         ) : (
           filteredServices.map((service) => (
-            <ServiceCard
+                        <ServiceCard
               key={service.id}
               service={service}
               onEdit={handleEdit}
               onComplete={handleComplete}
               onPickup={handlePickup}
               onStatusChange={handleStatusChange}
+              onDelete={handleDelete}
+              isAdmin={isAdmin}
             />
           ))
         )}

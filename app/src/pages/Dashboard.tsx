@@ -5,7 +5,6 @@
 import { useState } from 'react';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/contexts/AuthContext';
-import { Badge } from '@/components/ui/badge';
 import {
   Wrench,
   CheckCircle2,
@@ -130,11 +129,11 @@ function StatCard({
     <>
       <div className="flex-1 min-w-0 text-left">
         <p className={`truncate text-sm font-medium leading-6 ${surface.secondary}`}>{title}</p>
-        <p className={`mt-1 text-base font-semibold leading-6 tabular-nums ${valueColor}`}>{value}</p>
+        <p className={`mt-1 text-2xl font-bold leading-8 tabular-nums ${valueColor}`}>{value}</p>
         {sub && <p className={`mt-1 text-[13px] font-normal leading-5 ${surface.secondary}`}>{sub}</p>}
       </div>
-      <div className={`shrink-0 rounded-md p-3.5 ${iconBg}`}>
-        <Icon className={`h-6 w-6 ${iconColor}`} />
+      <div className={`shrink-0 rounded-md p-4 transition-transform duration-300 ${iconBg} ${isClickable ? 'group-hover:scale-110' : ''}`}>
+        <Icon className={`h-7 w-7 transition-transform duration-300 ${iconColor} ${isClickable ? 'group-hover:rotate-3' : ''}`} />
       </div>
     </>
   );
@@ -144,10 +143,10 @@ function StatCard({
       <button
         type="button"
         onClick={onClick}
-        className={`flex w-full items-start justify-between gap-4 rounded-[12px] border p-5 text-left shadow-sm transition-colors duration-150 ${surface.panel} ${surface.panelHover} ${surface.focus} ${
+        className={`group flex w-full items-start justify-between gap-4 rounded-[12px] border p-5 text-left shadow-sm transition-all duration-300 cursor-pointer ${surface.panel} ${surface.focus} hover:-translate-y-1 hover:shadow-lg ${
           accent
-            ? `${surface.accentBorder} ring-1 ring-text-inverse/20 active:border-text-inverse`
-            : `${surface.border} active:border-border-default`
+            ? `${surface.accentBorder} ring-1 ring-text-inverse/20 hover:ring-2 hover:ring-text-inverse/30 hover:shadow-[0_8px_30px_rgba(200,53,42,0.25)] active:border-text-inverse`
+            : `${surface.border} hover:bg-surface-muted/80 active:border-border-default`
         }`}
       >
         {content}
@@ -246,13 +245,6 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
     );
   }
 
-  const today = new Date().toLocaleDateString('id-ID', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
   const pieData = servisByStatus.every((i) => i.value === 0)
     ? servisByStatus.map((i) => ({ ...i, chartValue: 1 }))
     : servisByStatus.map((i) => ({ ...i, chartValue: i.value }));
@@ -269,7 +261,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
             Dashboard
           </h1>
           <p className={`mt-0.5 text-sm font-normal leading-6 ${surface.secondary}`}>
-            Selamat datang, <span className={`font-medium ${surface.accent}`}>{userData?.name}</span> — {today}
+            Selamat datang, <span className={`font-medium ${surface.accent}`}>{userData?.name}</span> — {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
       </div>
@@ -283,7 +275,8 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           icon={Wrench}
           iconBg={surface.accentBg}
           iconColor={surface.accent}
-          valueColor={surface.accent}
+          valueColor={surface.text}
+          accent={true}
           onClick={() => onPageChange?.('servis', 'menunggu-sparepart')}
         />
         <StatCard
@@ -342,7 +335,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                     <th className={`px-5 py-3 text-left text-[13px] font-medium leading-5 ${surface.secondary}`}>No Nota</th>
                     <th className={`px-4 py-3 text-left text-[13px] font-medium leading-5 ${surface.secondary}`}>Pelanggan</th>
                     <th className={`hidden px-4 py-3 text-left text-[13px] font-medium leading-5 md:table-cell ${surface.secondary}`}>Model/Seri</th>
-                    <th className={`hidden px-4 py-3 text-left text-[13px] font-medium leading-5 lg:table-cell ${surface.secondary}`}>Keluhan</th>
+                    <th className={`hidden px-4 py-3 text-left text-[13px] font-medium leading-5 lg:table-cell ${surface.secondary}`}>Tanggal Masuk</th>
                     <th className={`px-4 py-3 text-left text-[13px] font-medium leading-5 ${surface.secondary}`}>Status</th>
                     <th className={`hidden px-4 py-3 text-left text-[13px] font-medium leading-5 md:table-cell ${surface.secondary}`}>Oleh</th>
                   </tr>
@@ -377,8 +370,12 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                           </div>
                         </td>
                         <td className="px-4 py-3.5 hidden lg:table-cell">
-                          <p className={`max-w-[180px] truncate text-sm leading-6 ${surface.secondary}`} title={service.deskripsiMasalah}>
-                            {service.deskripsiMasalah}
+                          <p className={`text-sm leading-6 ${surface.secondary}`}>
+                            {service.createdAt
+                              ? (service.createdAt as unknown as { toDate?: () => Date }).toDate
+                                ? (service.createdAt as unknown as { toDate: () => Date }).toDate().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                                : new Date(service.createdAt as unknown as string).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : '-'}
                           </p>
                         </td>
                         <td className="px-4 py-3.5">
@@ -457,7 +454,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
               { label: 'Selesai Hari Ini', value: stats.servisSelesaiHariIni, color: surface.secondary },
               { label: 'Masuk Hari Ini', value: stats.servisHariIni, color: surface.secondary },
             ].map((row) => (
-              <div key={row.label} className={`flex items-center justify-between border-b py-1.5 last:border-0 ${surface.border}`}>
+              <div key={row.label} className={`flex items-center justify-between border-b py-2 last:border-0 ${surface.border}`}>
                 <span className={`text-sm leading-6 ${surface.secondary}`}>{row.label}</span>
                 <span className={`text-sm font-bold ${row.color}`}>{row.value}</span>
               </div>
@@ -467,23 +464,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
         </div>
       </div>
 
-      {/* ── Status Legend Bar ───────────────────────────────── */}
-      <div className={`rounded-md border px-6 py-4 shadow-sm ${surface.panel} ${surface.border}`}>
-        <div className="flex flex-wrap gap-4 items-center">
-          <p className={`mr-2 text-[13px] font-medium leading-5 ${surface.secondary}`}>Keterangan status:</p>
-          {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-            <div key={key} className="flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-              <span className={`text-[13px] font-medium leading-5 ${surface.secondary}`}>{cfg.label}</span>
-            </div>
-          ))}
-          <div className={`ml-auto flex items-center gap-1.5 text-[13px] ${surface.secondary}`}>
-            <Badge variant="outline" className="border-orange-400/40 text-[13px] font-medium text-orange-300">
-              Stok mencapai ambang batas minimum = Kritikal
-            </Badge>
-          </div>
-        </div>
-      </div>
+
 
     </div>
   );

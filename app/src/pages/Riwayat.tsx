@@ -101,6 +101,24 @@ export default function Riwayat() {
     }).format(value);
   };
 
+    // Row fallback serviceStockTransaksi di-hardcode stokSebelum=0 & stokSesudah=0
+    // Transaksi resmi (dari syncSparepartUsage) punya nilai stok asli — ini pembeda paling akurat
+    // (ID format 'service-...' dipakai oleh keduanya sehingga tidak bisa dijadikan pembeda)
+    const isFallbackServiceTransaction = (transaksi: { stokSebelum: number; stokSesudah: number; source?: string; serviceId?: string }) =>
+      (transaksi.source === 'service' || Boolean(transaksi.serviceId)) &&
+      transaksi.stokSebelum === 0 &&
+      transaksi.stokSesudah === 0;
+
+    // Strip prefix 'Servis - ' dari userName untuk tampilan render
+  // (prefix ini disimpan permanen di Firestore, perbaikan di render agar data lama ikut terformat)
+  const formatUserName = (name: string) =>
+    name.startsWith('Servis - ') ? name.slice('Servis - '.length) : name;
+
+  // Transaksi servis: cek source === 'service' ATAU ada serviceId
+  // (data lama mungkin tidak punya field source, tapi punya serviceId)
+  const isServiceTransaction = (transaksi: { source?: string; serviceId?: string }) =>
+    transaksi.source === 'service' || Boolean(transaksi.serviceId);
+
   const formatDate = (timestamp: TransaksiStok['createdAt']) => {
     const date = timestamp instanceof Timestamp
       ? timestamp.toDate()
@@ -163,9 +181,14 @@ export default function Riwayat() {
                 <div key={transaksi.id} className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
-                      <p className="font-semibold text-text-primary break-words">{transaksi.barangNama}</p>
-                      <p className="text-xs text-text-secondary">{transaksi.barangKode}</p>
-                    </div>
+                                          <p className="font-semibold text-text-primary break-words">{transaksi.barangNama}</p>
+                                          <p className="text-xs text-text-secondary">{transaksi.barangKode}</p>
+                                          {isServiceTransaction(transaksi) && (transaksi as { keterangan?: string }).keterangan && (
+                                            <p className="text-xs text-text-secondary/50 mt-1.5 text-left">
+                                              {(transaksi as { keterangan?: string }).keterangan}
+                                            </p>
+                                          )}
+                                        </div>
                                         <Badge
                       variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
                       className={transaksi.tipe === 'masuk' ? 'bg-status-success/10 text-status-success hover:bg-status-success/10 shrink-0' : 'bg-status-danger/10 text-status-danger hover:bg-status-danger/10 shrink-0'}
@@ -188,9 +211,13 @@ export default function Riwayat() {
                       <p className="text-text-secondary">Jumlah</p>
                       <p className="mt-1 font-medium text-text-primary">{transaksi.jumlah}</p>
                     </div>
-                    <div className="rounded-sm bg-surface-muted p-3">
+                                        <div className="rounded-sm bg-surface-muted p-3">
                       <p className="text-text-secondary">Stok</p>
-                      <p className="mt-1 font-medium text-text-primary">{transaksi.stokSebelum} ke {transaksi.stokSesudah}</p>
+                      <p className="mt-1 font-medium text-text-primary">
+                        {isFallbackServiceTransaction(transaksi)
+                          ? '-'
+                          : `${transaksi.stokSebelum} ke ${transaksi.stokSesudah}`}
+                      </p>
                     </div>
                     {!shouldHideFinancials && (
                       <div className="rounded-sm bg-surface-muted p-3">
@@ -200,9 +227,9 @@ export default function Riwayat() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-text-secondary">
+                                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                     <User className="w-4 h-4" />
-                    <span>{transaksi.userName}</span>
+                    <span>{formatUserName(transaksi.userName)}</span>
                   </div>
                 </div>
               ))
@@ -233,15 +260,15 @@ export default function Riwayat() {
               )}
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Waktu</TableHead>
-                  <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Barang</TableHead>
-                  <TableHead className="px-1 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipe</TableHead>
-                  <TableHead className="px-1 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Jumlah</TableHead>
-                  <TableHead className="px-1 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Stok</TableHead>
-                  {!shouldHideFinancials && (
-                    <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</TableHead>
-                  )}
-                  <TableHead className="px-2 py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">Oleh</TableHead>
+                  <TableHead className="px-2 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Waktu</TableHead>
+                                    <TableHead className="px-2 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Barang</TableHead>
+                                    <TableHead className="px-1 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Tipe</TableHead>
+                                    <TableHead className="px-1 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Jumlah</TableHead>
+                                    <TableHead className="px-1 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Stok</TableHead>
+                                    {!shouldHideFinancials && (
+                                      <TableHead className="px-2 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Total</TableHead>
+                                    )}
+                                    <TableHead className="px-2 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Oleh</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -254,8 +281,8 @@ export default function Riwayat() {
                 ) : filteredTransaksi.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={shouldHideFinancials ? 6 : 7} className="text-center py-8">
-                      <History className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                      <p className="text-gray-500">Tidak ada riwayat transaksi</p>
+                      <History className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                                            <p className="text-text-secondary">Tidak ada riwayat transaksi</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -263,14 +290,17 @@ export default function Riwayat() {
                     <TableRow key={transaksi.id}>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <Calendar className="w-4 h-4 text-text-secondary/60" />
                           <span className="text-sm">{formatDate(transaksi.createdAt)}</span>
                         </div>
                       </TableCell>
                       <TableCell className="whitespace-normal text-center">
                         <div className="mx-auto max-w-full">
-                          <p className="break-words font-medium leading-snug">{transaksi.barangNama}</p>
-                          <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
+                                                    <p className="break-words font-medium leading-snug">{transaksi.barangNama}</p>
+                          <p className="text-xs text-text-secondary">{transaksi.barangKode}</p>
+                                                        {isServiceTransaction(transaksi) && (transaksi as { keterangan?: string }).keterangan && (
+                                                      <p className="text-xs text-text-secondary/50 mt-1.5 truncate text-left">{(transaksi as { keterangan?: string }).keterangan}</p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="px-1 text-center">
@@ -289,13 +319,15 @@ export default function Riwayat() {
                       <TableCell className="px-1 text-center font-medium tabular-nums">
                         {transaksi.jumlah}
                       </TableCell>
-                      <TableCell className="px-1 text-center tabular-nums">
-                        <span className="text-sm text-gray-500">
-                          {transaksi.stokSebelum} →
-                        </span>
-                        <span className="font-medium ml-1">
-                          {transaksi.stokSesudah}
-                        </span>
+                                            <TableCell className="px-1 text-center tabular-nums">
+                        {isFallbackServiceTransaction(transaksi) ? (
+                          <span className="text-sm text-text-secondary/50">-</span>
+                        ) : (
+                          <>
+                            <span className="text-sm text-text-secondary">{transaksi.stokSebelum} →</span>
+                            <span className="font-medium ml-1">{transaksi.stokSesudah}</span>
+                          </>
+                        )}
                       </TableCell>
                       {!shouldHideFinancials && (
                         <TableCell className="px-2 py-2 text-center font-medium tabular-nums">
@@ -303,9 +335,9 @@ export default function Riwayat() {
                         </TableCell>
                       )}
                       <TableCell className="px-2 py-2 text-center">
-                        <div className="flex items-center justify-center gap-2 whitespace-normal">
-                          <User className="w-4 h-4 shrink-0 text-gray-400" />
-                          <span className="text-sm break-words text-center">{transaksi.userName}</span>
+                                                <div className="flex items-center justify-center gap-2 whitespace-normal">
+                          <User className="w-4 h-4 shrink-0 text-text-secondary/60" />
+                          <span className="text-sm break-words text-center">{formatUserName(transaksi.userName)}</span>
                         </div>
                       </TableCell>
                     </TableRow>

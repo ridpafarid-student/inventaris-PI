@@ -310,8 +310,10 @@ export default function Laporan() {
         return 'bg-status-info/10 text-status-info';
       case 'menunggu-sparepart':
         return 'bg-status-warning/10 text-status-warning';
-      case 'selesai':
+            case 'selesai':
         return 'bg-status-success/10 text-status-success';
+      case 'diambil':
+        return 'bg-neutral-500/10 text-neutral-600';
       default:
         return 'bg-surface-muted text-text-secondary';
     }
@@ -325,8 +327,10 @@ export default function Laporan() {
         return 'Proses';
       case 'menunggu-sparepart':
         return 'Menunggu Sparepart';
-      case 'selesai':
+            case 'selesai':
         return 'Selesai';
+      case 'diambil':
+        return 'Diserahkan';
       default:
         return status;
     }
@@ -374,8 +378,8 @@ export default function Laporan() {
           <p className="text-sm text-text-secondary mt-0.5">Generate dan export laporan transaksi</p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button onClick={exportPDF} size="sm" variant="outline" className="w-full sm:w-auto">
-            <FileDown className="w-4 h-4 mr-2" />
+                    <Button onClick={exportPDF} size="sm" variant="outline" className="w-full sm:w-auto">
+            <FileDown className="w-5 h-5 mr-2" />
             Export PDF
           </Button>
         </div>
@@ -552,10 +556,10 @@ export default function Laporan() {
           </div>
         </div>
 
-        {restockRecommendations.length === 0 ? (
-          <div className="mt-4 rounded-md border border-dashed border-emerald-200 bg-emerald-50/60 p-6 text-center">
-            <p className="font-medium text-emerald-700">Semua stok masih di atas ambang batas minimum.</p>
-            <p className="mt-1 text-sm text-emerald-700/80">Belum ada barang yang perlu direstok dari filter saat ini.</p>
+                {restockRecommendations.length === 0 ? (
+          <div className="mt-4 rounded-md border border-dashed border-emerald-500/30 bg-emerald-500/10 p-6 text-center">
+            <p className="font-medium text-emerald-300">Semua stok masih di atas ambang batas minimum.</p>
+            <p className="mt-1 text-sm text-emerald-300/80">Belum ada barang yang perlu direstok dari filter saat ini.</p>
           </div>
         ) : (
           <>
@@ -629,8 +633,8 @@ export default function Laporan() {
         className="pointer-events-none fixed -left-[10000px] top-0 w-[1024px] overflow-hidden opacity-0"
       >
                 <div ref={reportRef} className="bg-white p-4 md:p-8 text-gray-900">
-        {/* Report Header */}
-        <div className="text-center mb-8 border-b border-gray-300 pb-4">
+                {/* Report Header */}
+                <div className="text-center mb-8 border-b-2 border-gray-800 pb-4">
           <h2 className="text-2xl font-bold text-gray-900">LAPORAN INVENTARIS & SERVIS</h2>
           <p className="text-gray-800 mt-1 font-medium">
             Periode: {startDate ? new Date(startDate).toLocaleDateString('id-ID') : 'Semua'} - {endDate ? new Date(endDate).toLocaleDateString('id-ID') : 'Semua'}
@@ -646,14 +650,19 @@ export default function Laporan() {
           </p>
         </div>
 
+                {/* ── SECTION: INVENTARIS ── */}
+        <div className="mt-2 mb-6 pt-3 border-t-4 border-gray-800">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-gray-500">Inventaris</p>
+        </div>
+
         <div className="mb-8">
           <h3 className="mb-1 text-lg font-semibold text-gray-900">
             Rekomendasi Restok Berdasarkan Ambang Batas
           </h3>
                     <p className="mb-3 text-sm text-gray-800">
-            Barang dengan stok saat ini kurang dari atau sama dengan stok minimum.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                                            Berdasarkan barang yang stoknya sudah mencapai atau berada di bawah ambang batas minimum.
+                                          </p>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="border border-gray-300 p-3 rounded-md">
                 <p className="text-sm text-gray-800 font-medium">Item Restok</p>
                 <p className="text-xl font-bold text-gray-900">{restockSummary.totalItem}</p>
@@ -707,36 +716,34 @@ export default function Laporan() {
           </Table>
         </div>
 
-                {/* Total Margin Penjualan */}
-      <div>
-                <h3 className="mb-3 text-lg font-semibold text-gray-900">Ringkasan Inventaris</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-white border border-gray-300 rounded-md p-4">
-            <p className="text-xs text-gray-800 font-semibold">Stok Masuk</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalMasuk}</p>
-          </div>
-          <div className="bg-white border border-gray-300 rounded-md p-4">
-            <p className="text-xs text-gray-800 font-semibold">Stok Keluar</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalKeluar}</p>
-          </div>
-          <div className="bg-white border border-gray-300 rounded-md p-4">
-            <p className="text-xs text-gray-800 font-semibold">Nilai Masuk</p>
-            <p className="text-base font-bold text-gray-900 mt-1">{formatRupiah(summary.nilaiMasuk)}</p>
-          </div>
-          <div className="bg-white border border-gray-300 rounded-md p-4">
-            <p className="text-xs text-gray-800 font-semibold">Nilai Keluar</p>
-            <p className="text-base font-bold text-gray-900 mt-1">{formatRupiah(summary.nilaiKeluar)}</p>
-          </div>
-          <div className="bg-white border border-gray-300 rounded-md p-4">
-            <p className="text-xs text-gray-800 font-semibold">Total Margin Penjualan</p>
-            <p className="text-base font-bold text-gray-900 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
-          </div>
-                    <div className="bg-white border border-gray-300 rounded-md p-4">
-            <p className="text-xs text-gray-800 font-semibold">Total Transaksi</p>
-            <p className="text-base font-bold text-gray-900 mt-1">{totalTransaksiMarginPeriodik} transaksi</p>
+                        {/* Ringkasan Inventaris */}
+        <div className="mb-8">
+          <h3 className="mb-3 text-lg font-semibold text-gray-900">Ringkasan Inventaris</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-white border border-gray-300 rounded-md p-4">
+              <p className="text-xs text-gray-800 font-semibold">Stok Masuk</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalMasuk}</p>
+            </div>
+            <div className="bg-white border border-gray-300 rounded-md p-4">
+              <p className="text-xs text-gray-800 font-semibold">Stok Keluar</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalKeluar}</p>
+            </div>
+            <div className="bg-white border border-gray-300 rounded-md p-4">
+              <p className="text-xs text-gray-800 font-semibold">Nilai Masuk</p>
+              <p className="text-base font-bold text-gray-900 mt-1">{formatRupiah(summary.nilaiMasuk)}</p>
+            </div>
+            <div className="bg-white border border-gray-300 rounded-md p-4">
+              <p className="text-xs text-gray-800 font-semibold">Nilai Keluar</p>
+              <p className="text-base font-bold text-gray-900 mt-1">{formatRupiah(summary.nilaiKeluar)}</p>
+            </div>
+            {/* Total Margin — emerald + font-black agar terbaca di cetak hitam-putih */}
+            <div className="bg-emerald-50 border border-emerald-300 rounded-md p-4">
+              <p className="text-xs text-emerald-800 font-black uppercase tracking-wide">Total Margin Penjualan</p>
+              <p className="text-2xl font-black text-emerald-700 mt-1">{formatRupiah(serviceSummary.labaPeriodik)}</p>
+              <p className="text-xs text-emerald-700 mt-0.5">{totalTransaksiMarginPeriodik} transaksi</p>
+            </div>
           </div>
         </div>
-      </div>
 
         <div className="mb-8">
           <h3 className="mb-3 text-lg font-semibold text-gray-900">Riwayat Transaksi Barang</h3>
@@ -811,8 +818,8 @@ export default function Laporan() {
                   <TableCell>
                     <p className="font-semibold text-gray-900">{transaksi.barangNama}</p>
                     <p className="text-xs text-gray-700 font-medium">{transaksi.barangKode}</p>
-                    {isServiceTransaction(transaksi) && (
-                      <p className="text-xs text-blue-800 font-semibold">{transaksi.keterangan}</p>
+                                        {isServiceTransaction(transaksi) && (
+                      <p className="text-xs text-gray-500 font-normal mt-0.5">{transaksi.keterangan}</p>
                     )}
                   </TableCell>
                   <TableCell className="text-center text-sm font-semibold">
@@ -829,9 +836,14 @@ export default function Laporan() {
           </div>
         </div>
 
-                                <div className="mb-8">
+                                        {/* ── SECTION: SERVIS ── */}
+        <div className="mt-10 mb-6 pt-3 border-t-4 border-gray-800">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-gray-500">Servis</p>
+        </div>
+
+        <div className="mb-8">
           <h3 className="mb-3 text-lg font-semibold text-gray-900">Ringkasan Servis</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-white border border-gray-300 rounded-md p-4">
               <p className="text-xs text-gray-800 font-semibold">Total Servis</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">{serviceSummary.totalServis}</p>
@@ -840,9 +852,10 @@ export default function Laporan() {
               <p className="text-xs text-gray-800 font-semibold">Servis Selesai</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">{serviceSummary.selesai}</p>
             </div>
-            <div className="bg-white border border-gray-300 rounded-md p-4">
-              <p className="text-xs text-gray-800 font-semibold">Nilai Jasa</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
+            {/* Nilai Jasa — emerald + font-black agar terbaca di cetak hitam-putih */}
+            <div className="bg-emerald-50 border border-emerald-300 rounded-md p-4">
+              <p className="text-xs text-emerald-800 font-black uppercase tracking-wide">Nilai Jasa</p>
+              <p className="text-2xl font-black text-emerald-700 mt-1">{formatRupiah(serviceSummary.totalBiayaJasa)}</p>
             </div>
           </div>
         </div>
@@ -955,10 +968,10 @@ export default function Laporan() {
           </div>
         </div>
 
-        {/* Footer */}
-                    <div className="mt-8 pt-4 border-t border-border-default text-center text-sm text-text-secondary">
-            <p>Laporan ini digenerate secara otomatis dari sistem inventaris dan servis</p>
-          </div>
+                {/* Footer */}
+        <div className="mt-8 pt-4 border-t border-gray-300 text-center text-sm text-gray-500">
+                        <p>Laporan ini digenerate secara otomatis dari sistem inventaris dan servis</p>
+        </div>
         </div>
       </div>
     </div>
