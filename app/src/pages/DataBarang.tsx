@@ -372,7 +372,7 @@ export default function DataBarang() {
             <Dialog open={isKategoriDialogOpen} onOpenChange={(open) => { setIsKategoriDialogOpen(open); if (!open) { setConfirmDeleteId(null); setKategoriError(''); } }}>
               <DialogTrigger asChild>
                 <Button variant="outline" onClick={resetKategoriForm}>
-                  <Plus className="w-6 h-6 mr-2" />
+                  <Plus style={{ width: '16px', height: '16px' }} className="mr-2" />
                   Tambah Kategori
                 </Button>
               </DialogTrigger>
@@ -440,7 +440,7 @@ export default function DataBarang() {
                                   className="h-10 w-10 p-0 text-red-600 hover:text-red-700 shrink-0"
                                   onClick={() => setConfirmDeleteId(kategori.id)}
                                 >
-                                  <Trash2 className="w-8 h-8" />
+                                  <Trash2 style={{ width: '18px', height: '18px' }} />
                                 </Button>
                               )}
                             </div>
@@ -467,7 +467,7 @@ export default function DataBarang() {
                         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" onClick={resetForm}>
-                  <Plus className="w-6 h-6 mr-2" />
+                  <Plus style={{ width: '16px', height: '16px' }} className="mr-2" />
                   Tambah Barang
                 </Button>
               </DialogTrigger>
@@ -499,7 +499,7 @@ export default function DataBarang() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+          <Search style={{ width: '20px', height: '20px' }} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
           <Input
             placeholder="Cari barang..."
             value={searchQuery}
@@ -526,7 +526,7 @@ export default function DataBarang() {
           <div className="md:hidden divide-y">
             {filteredBarang.length === 0 ? (
                             <div className="py-8 text-center">
-                <Package className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                <Package style={{ width: '48px', height: '48px' }} className="mx-auto text-text-secondary/30 mb-2" />
                 <p className="text-text-secondary">Tidak ada data barang</p>
               </div>
             ) : (
@@ -548,7 +548,7 @@ export default function DataBarang() {
                       <p className="text-text-secondary">Stok</p>
                                             <div className="mt-1 flex items-center gap-2">
                         {barang.stok <= barang.stokMinimum && (
-                          <AlertTriangle className="w-4 h-4 text-status-warning" />
+                          <AlertTriangle style={{ width: '16px', height: '16px' }} className="text-status-warning" />
                         )}
                         <span className={barang.stok <= barang.stokMinimum ? 'font-semibold text-status-warning' : 'font-semibold text-text-primary'}>
                           {barang.stok}
@@ -598,7 +598,7 @@ export default function DataBarang() {
                             className="flex-1"
                             onClick={() => openEditDialog(barang)}
                           >
-                            <Edit2 className="w-6 h-6 mr-2" />
+                            <Edit2 style={{ width: '16px', height: '16px' }} className="mr-2" />
                             Edit
                           </Button>
                                                     <Button
@@ -606,7 +606,7 @@ export default function DataBarang() {
                                                       className="flex-1 text-status-danger hover:text-status-danger/80 focus-visible:shadow-focus"
                                                       onClick={() => setConfirmDeleteBarangId(barang.id)}
                                                     >
-                                                      <Trash2 className="w-6 h-6 mr-2" />
+                                                      <Trash2 style={{ width: '16px', height: '16px' }} className="mr-2" />
                                                       Hapus
                                                     </Button>
                         </div>
@@ -621,22 +621,22 @@ export default function DataBarang() {
           <div className="hidden md:block overflow-x-auto">
             <Table className={shouldHideHargaBeli ? 'table-fixed text-sm min-w-full' : 'table-fixed min-w-full'}>
                             {shouldHideHargaBeli ? (
-                <colgroup>
+                                <colgroup>
                   <col className="w-[12%]" />
-                  <col className="w-[38%]" />
-                  <col className="w-[14%]" />
+                  <col className="w-[35%]" />
                   <col className="w-[12%]" />
-                  <col className="w-[24%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[15%]" />
                 </colgroup>
               ) : (
-                <colgroup>
+                                <colgroup>
                   <col className="w-[10%]" />
                   <col className="w-[32%]" />
-                  <col className="w-[12%]" />
                   <col className="w-[9%]" />
-                  <col className="w-[12%]" />
+                  <col className="w-[9%]" />
                   <col className="w-[14%]" />
-                  {isAdmin && <col className="w-[11%]" />}
+                  <col className="w-[14%]" />
+                  {isAdmin && <col className="w-[10%]" />}
                 </colgroup>
               )}
               <TableHeader>
@@ -654,7 +654,7 @@ export default function DataBarang() {
                 {filteredBarang.length === 0 ? (
                                     <TableRow>
                     <TableCell colSpan={(isAdmin ? 6 : 5) + (shouldHideHargaBeli ? 0 : 1)} className="text-center py-8">
-                      <Package className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                      <Package style={{ width: '48px', height: '48px' }} className="mx-auto text-text-secondary/30 mb-2" />
                       <p className="text-text-secondary">Tidak ada data barang</p>
                     </TableCell>
                   </TableRow>
@@ -676,7 +676,7 @@ export default function DataBarang() {
                       <TableCell className="px-3 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                           {barang.stok <= barang.stokMinimum && (
-                            <AlertTriangle className="w-4 h-4 text-status-warning" />
+                            <AlertTriangle style={{ width: '16px', height: '16px' }} className="text-status-warning" />
                           )}
                           <span className={barang.stok <= barang.stokMinimum ? 'text-status-warning font-medium' : ''}>
                             {barang.stok}
@@ -715,14 +715,14 @@ export default function DataBarang() {
                                 className="h-10 w-10 p-0"
                                 onClick={() => openEditDialog(barang)}
                               >
-                                <Edit2 className="w-8 h-8" />
+                                <Edit2 style={{ width: '18px', height: '18px' }} />
                               </Button>
                                                             <Button
                                                               variant="ghost"
                                                               className="h-10 w-10 p-0 text-status-danger hover:text-status-danger/80 focus-visible:shadow-focus"
                                                               onClick={() => setConfirmDeleteBarangId(barang.id)}
                                                             >
-                                                              <Trash2 className="w-8 h-8" />
+                                                              <Trash2 style={{ width: '18px', height: '18px' }} />
                                                             </Button>
                             </div>
                           )}

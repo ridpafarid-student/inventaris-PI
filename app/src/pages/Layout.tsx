@@ -3,12 +3,13 @@
 // ============================================
 
 import { useState } from 'react';
-import LogoMThree from '@/assets/logo-mthree-darkmode.svg';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
-  LayoutDashboard,
+    LayoutDashboard,
   Boxes,
   ArrowLeftRight,
   History,
@@ -17,10 +18,12 @@ import {
   Users,
   Menu,
   LogOut,
-    ChevronDown,
+  ChevronDown,
   ChevronRight,
   Package,
   Database,
+  Shield,
+  UserCircle,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -43,7 +46,6 @@ interface LayoutNavContentProps {
   onNavigate: (pageId: string) => void;
   userName?: string;
   userRole?: string;
-  isAdmin: boolean;
   onLogout?: () => void;
 }
 
@@ -70,10 +72,9 @@ const inventarisChildIds = ['barang', 'transaksi', 'riwayat'];
 function LayoutNavContent({
   visibleNavItems,
   currentPage,
-  onNavigate,
+    onNavigate,
   userName,
   userRole,
-  isAdmin,
   onLogout,
 }: LayoutNavContentProps) {
   const isInventarisActive = inventarisChildIds.includes(currentPage);
@@ -89,26 +90,27 @@ function LayoutNavContent({
   return (
     <div className="flex flex-col h-full bg-surface-base text-text-primary">
             {/* Logo / Brand */}
-      <div className="px-4 pt-6 pb-5 border-b border-border-default">
-        <div className="flex items-center justify-start">
-          <img
-            src={LogoMThree}
-            alt="M-THREE COMPUTER logo"
-            className="h-12 w-auto"
-          />
-        </div>
-      </div>
+            <div className="px-4 pt-6 pb-5 border-b border-border-default">
+              <div className="flex items-center justify-start">
+                <Logo width={180} height={45} />
+              </div>
+            </div>
 
-            {/* User Info */}
-            <div className="px-4 py-5 border-b border-border-default">
-              <div className="flex flex-col gap-2.5">
+                        {/* User Info */}
+            <div className="px-4 py-4 border-b border-border-default">
+              <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold text-sm text-text-primary truncate">{userName}</p>
-                <span className={`text-xs px-2.5 py-1 rounded-md font-medium inline-flex items-center gap-1.5 w-fit ${
-                  isAdmin
-                    ? 'bg-orange-500/20 text-orange-300'
-                    : 'bg-text-inverse/20 text-text-inverse'
+                                <span className={`text-xs px-2 py-0.5 rounded border shrink-0 font-medium inline-flex items-center gap-1 ${
+                  userRole === 'admin'
+                    ? 'bg-status-info/10 border-status-info/40 text-status-info'
+                    : 'bg-surface-muted border-border-default text-text-secondary'
                 }`}>
-                  {userRole === 'admin' ? 'Administrator' : 'Teknisi'}
+                  {userRole === 'admin' ? (
+                    <Shield style={{ width: '12px', height: '12px' }} />
+                  ) : (
+                    <UserCircle style={{ width: '12px', height: '12px' }} />
+                  )}
+                  {userRole === 'admin' ? 'Admin' : 'Teknisi'}
                 </span>
               </div>
             </div>
@@ -130,18 +132,18 @@ function LayoutNavContent({
             <div key={item.id}>
                             <button
                 onClick={() => handleNavClick(item)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-sm text-left transition-all duration-200 focus-visible:outline-none focus-visible:shadow-focus relative ${
+                                className={`w-full flex items-center gap-3 px-3 py-3 rounded-sm text-left transition-all duration-200 focus-visible:outline-none focus-visible:shadow-focus relative ${
                   isActive || isParentActive
-                      ? 'bg-text-inverse/[0.08] text-text-inverse before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-text-inverse before:rounded-r-full'
+                      ? 'bg-black/15 dark:bg-white/15 text-text-primary before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-text-primary before:rounded-r-full'
                       : 'bg-transparent text-text-secondary hover:bg-surface-muted hover:text-text-primary hover:translate-x-0.5'
                 }`}
               >
-                                                                <Icon className={`w-5 h-5 shrink-0 transition-transform duration-200 ${(isActive || isParentActive) ? 'text-text-inverse' : ''}`} />
-                <span className={`font-medium text-sm flex-1 transition-colors duration-200 ${(isActive || isParentActive) ? 'text-text-inverse' : ''}`}>{item.label}</span>
+                                                                <Icon style={{ width: '20px', height: '20px' }} className={`shrink-0 transition-transform duration-200 ${(isActive || isParentActive) ? 'text-text-primary' : ''}`} />
+                <span className={`font-medium text-sm flex-1 transition-colors duration-200 ${(isActive || isParentActive) ? 'text-text-primary' : ''}`}>{item.label}</span>
                                 {hasChildren && (
-                  isOpen
-                    ? <ChevronDown className="w-5 h-5 ml-auto text-text-secondary/50" />
-                    : <ChevronRight className="w-5 h-5 ml-auto text-text-secondary/50" />
+                                    isOpen
+                    ? <ChevronDown style={{ width: '20px', height: '20px' }} className="ml-auto text-text-secondary/50" />
+                    : <ChevronRight style={{ width: '20px', height: '20px' }} className="ml-auto text-text-secondary/50" />
                 )}
               </button>
 
@@ -155,14 +157,14 @@ function LayoutNavContent({
                                             <button
                         key={child.id}
                         onClick={() => onNavigate(child.id)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-left transition-all duration-200 text-sm focus-visible:outline-none focus-visible:shadow-focus relative ${
+                                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-left transition-all duration-200 text-sm focus-visible:outline-none focus-visible:shadow-focus relative ${
                           isChildActive
-                              ? 'bg-text-inverse/[0.08] font-medium before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-text-inverse before:rounded-r-full'
+                              ? 'bg-black/15 dark:bg-white/15 font-medium before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-text-primary before:rounded-r-full'
                               : 'bg-transparent text-text-secondary font-normal hover:bg-surface-muted hover:text-text-primary hover:translate-x-0.5'
                         }`}
                       >
-                                                                                                <ChildIcon className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isChildActive ? 'text-text-inverse' : ''}`} />
-                        <span className={`transition-colors duration-200 ${isChildActive ? 'text-text-inverse' : ''}`}>{child.label}</span>
+                                                                                                <ChildIcon style={{ width: '16px', height: '16px' }} className={`shrink-0 transition-transform duration-200 ${isChildActive ? 'text-text-primary' : ''}`} />
+                        <span className={`transition-colors duration-200 ${isChildActive ? 'text-text-primary' : ''}`}>{child.label}</span>
                       </button>
                     );
                   })}
@@ -179,7 +181,7 @@ function LayoutNavContent({
                 onClick={onLogout}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-sm text-left transition-all duration-200 text-red-500 hover:bg-red-500/10 hover:translate-x-0.5 focus-visible:outline-none focus-visible:shadow-focus"
               >
-                <LogOut className="w-5 h-5 shrink-0" />
+                <LogOut style={{ width: '20px', height: '20px' }} className="shrink-0" />
                 <span className="font-medium text-sm flex-1">Logout</span>
               </button>
             </div>
@@ -213,7 +215,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 text-text-primary hover:bg-surface-muted focus-visible:shadow-focus">
-                  <Menu className="w-5 h-5" />
+                  <Menu style={{ width: '20px', height: '20px' }} />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-72 p-0 border-0">
@@ -222,8 +224,7 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
                   currentPage={currentPage}
                   onNavigate={handleNavClick}
                   userName={userData?.name}
-                  userRole={userData?.role}
-                  isAdmin={isAdmin}
+                                    userRole={userData?.role}
                   onLogout={handleLogout}
                 />
               </SheetContent>
@@ -231,10 +232,20 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
           </div>
 
                     <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-1 rounded-xs font-medium bg-text-inverse/20 text-text-secondary">
-              {userData?.role === 'admin' ? 'Admin' : 'Teknisi'}
-            </span>
-          </div>
+                      <ThemeToggle />
+                                            <span className={`text-xs px-2 py-0.5 rounded border font-medium inline-flex items-center gap-1 ${
+                        userData?.role === 'admin'
+                          ? 'bg-status-info/10 border-status-info/40 text-status-info'
+                          : 'bg-surface-muted border-border-default text-text-secondary'
+                                            }`}>
+                        {userData?.role === 'admin' ? (
+                          <Shield style={{ width: '12px', height: '12px' }} />
+                        ) : (
+                          <UserCircle style={{ width: '12px', height: '12px' }} />
+                        )}
+                        {userData?.role === 'admin' ? 'Admin' : 'Teknisi'}
+                      </span>
+                    </div>
         </div>
       </header>
 
@@ -247,7 +258,6 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
             onNavigate={handleNavClick}
             userName={userData?.name}
             userRole={userData?.role}
-            isAdmin={isAdmin}
             onLogout={handleLogout}
           />
         </aside>
@@ -255,13 +265,15 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
         {/* Main Content */}
         <main className="flex-1 min-h-screen lg:min-h-0 overflow-x-hidden">
                     {/* Top bar */}
-          <div className="hidden lg:flex items-center justify-between px-8 py-4 bg-surface-base border-b border-border-default shadow-card sticky top-0 z-10">
-                        <div>
+                    <div className="hidden lg:flex items-center justify-between px-8 py-6 bg-surface-base border-b border-border-default shadow-card sticky top-0 z-10">
+            <div>
               <p className="text-xs text-text-secondary font-medium uppercase tracking-wider">
-                M-THREE COMPUTER — {isAdmin ? 'Admin Panel' : 'Teknisi Panel'}
+                MTHREE COMPUTER — {isAdmin ? 'Admin Panel' : 'Teknisi Panel'}
               </p>
             </div>
-
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+            </div>
           </div>
 
           <div className="p-4 lg:p-8">

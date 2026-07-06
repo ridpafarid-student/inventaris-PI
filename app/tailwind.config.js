@@ -41,11 +41,11 @@ module.exports = {
         'border-default': 'hsl(var(--color-border-default))',
         'border-muted': 'hsl(var(--color-border-muted))',
         
-        /* Status tokens (project extension) */
-        'status-warning': 'hsl(var(--color-status-warning))',
-        'status-danger': 'hsl(var(--color-status-danger))',
-        'status-success': 'hsl(var(--color-status-success))',
-        'status-info': 'hsl(var(--color-status-info))',
+                /* Status tokens (project extension) */
+        'status-warning': 'hsl(var(--color-status-warning) / <alpha-value>)',
+        'status-danger': 'hsl(var(--color-status-danger) / <alpha-value>)',
+        'status-success': 'hsl(var(--color-status-success) / <alpha-value>)',
+        'status-info': 'hsl(var(--color-status-info) / <alpha-value>)',
         
         /* Legacy compatibility */
         border: "hsl(var(--border))",

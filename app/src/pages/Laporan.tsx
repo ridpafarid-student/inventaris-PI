@@ -913,31 +913,30 @@ export default function Laporan() {
           </div>
 
                     <div className="hidden md:block">
-          <Table>
+                    <Table>
             <TableHeader className="border-b border-gray-300">
               <TableRow>
-                <TableHead className="text-gray-900 font-bold">No</TableHead>
-                <TableHead className="text-gray-900 font-bold">Tanggal</TableHead>
+                <TableHead className="text-gray-900 font-bold">No Nota</TableHead>
+                <TableHead className="text-gray-900 font-bold">Tanggal Serah</TableHead>
                 <TableHead className="text-gray-900 font-bold">Pelanggan</TableHead>
                 <TableHead className="text-gray-900 font-bold">Perangkat</TableHead>
-                <TableHead className="text-gray-900 font-bold">Status</TableHead>
                 <TableHead className="text-gray-900 font-bold">Sparepart</TableHead>
                 <TableHead className="text-right text-gray-900 font-bold">Biaya Jasa</TableHead>
-                <TableHead className="text-right text-gray-900 font-bold">Total Tagihan</TableHead>
+                <TableHead className="text-right text-gray-900 font-bold">Total</TableHead>
               </TableRow>
             </TableHeader>
           <TableBody>
             {filteredServices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Tidak ada data servis
                   </TableCell>
                 </TableRow>
                             ) : (
-                filteredServices.map((service, index) => (
+                filteredServices.map((service) => (
                   <TableRow key={service.id} className="border-b border-gray-200">
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{formatDate(service.createdAt)}</TableCell>
+                    <TableCell className="font-mono text-sm">{service.noNota ?? '-'}</TableCell>
+                    <TableCell>{formatDate(service.pickedUpAt ?? service.updatedAt ?? service.createdAt)}</TableCell>
                     <TableCell>
                       <p className="font-semibold text-gray-900">{service.namaPelanggan}</p>
                       <p className="text-xs text-gray-700 font-medium">{service.nomorHp}</p>
@@ -945,9 +944,6 @@ export default function Laporan() {
                     <TableCell>
                       <p className="font-semibold text-gray-900">{service.modelPerangkat}</p>
                       <p className="text-xs text-gray-700 font-medium">{service.jenisPerangkat}</p>
-                    </TableCell>
-                    <TableCell className="text-center text-sm font-semibold">
-                      {getServiceStatusLabel(service.status)}
                     </TableCell>
                     <TableCell>
                       {service.sparepartDigunakan?.length

@@ -189,10 +189,10 @@ export default function Riwayat() {
                                             </p>
                                           )}
                                         </div>
-                                        <Badge
-                      variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
-                      className={transaksi.tipe === 'masuk' ? 'bg-status-success/10 text-status-success hover:bg-status-success/10 shrink-0' : 'bg-status-danger/10 text-status-danger hover:bg-status-danger/10 shrink-0'}
-                    >
+                                                                                <Badge
+                                                                                  variant={transaksi.tipe === 'masuk' ? 'outline' : 'outline'}
+                                                                                  className={transaksi.tipe === 'masuk' ? 'bg-status-success/10 text-status-success hover:bg-status-success/10 border-status-success/40 shrink-0' : 'bg-status-danger/10 text-status-danger hover:bg-status-danger/10 border-status-danger/40 shrink-0'}
+                                                                                >
                       {transaksi.tipe === 'masuk' ? (
                         <ArrowDownLeft className="w-3 h-3 mr-1" />
                       ) : (
@@ -238,30 +238,30 @@ export default function Riwayat() {
 
           <div className="hidden md:block overflow-x-auto">
             <Table className="min-w-full table-fixed">
-              {shouldHideFinancials ? (
+                            {shouldHideFinancials ? (
                 <colgroup>
                   <col className="w-[18%]" />
-                  <col className="w-[34%]" />
-                  <col className="w-[9%]" />
+                  <col className="w-[40%]" />
                   <col className="w-[8%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[21%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[18%]" />
                 </colgroup>
               ) : (
                 <colgroup>
-                  <col className="w-[16%]" />
-                  <col className="w-[26%]" />
-                  <col className="w-[7%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[32%]" />
+                  <col className="w-[6%]" />
+                  <col className="w-[6%]" />
                   <col className="w-[6%]" />
                   <col className="w-[8%]" />
                   <col className="w-[15%]" />
-                  <col className="w-[22%]" />
                 </colgroup>
               )}
               <TableHeader>
                 <TableRow>
                   <TableHead className="px-2 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Waktu</TableHead>
-                                    <TableHead className="px-2 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Barang</TableHead>
+                                    <TableHead className="px-2 py-2 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">Barang</TableHead>
                                     <TableHead className="px-1 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Tipe</TableHead>
                                     <TableHead className="px-1 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Jumlah</TableHead>
                                     <TableHead className="px-1 py-2 text-center text-xs font-semibold text-text-secondary uppercase tracking-wide">Stok</TableHead>
@@ -294,8 +294,8 @@ export default function Riwayat() {
                           <span className="text-sm">{formatDate(transaksi.createdAt)}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="whitespace-normal text-center">
-                        <div className="mx-auto max-w-full">
+                                            <TableCell className="whitespace-normal text-left">
+                        <div className="max-w-full">
                                                     <p className="break-words font-medium leading-snug">{transaksi.barangNama}</p>
                           <p className="text-xs text-text-secondary">{transaksi.barangKode}</p>
                                                         {isServiceTransaction(transaksi) && (transaksi as { keterangan?: string }).keterangan && (
@@ -304,8 +304,8 @@ export default function Riwayat() {
                         </div>
                       </TableCell>
                       <TableCell className="px-1 text-center">
-                        <Badge 
-                          variant={transaksi.tipe === 'masuk' ? 'default' : 'destructive'}
+                                                                                                <Badge 
+                          variant="outline"
                           className={transaksi.tipe === 'masuk' ? 'bg-status-success/10 border-status-success/40 text-status-success' : 'bg-status-danger/10 border-status-danger/40 text-status-danger'}
                         >
                           {transaksi.tipe === 'masuk' ? (

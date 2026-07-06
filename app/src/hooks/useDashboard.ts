@@ -252,6 +252,90 @@ export function useDashboard() {
     }));
   }, [transaksiList, services]);
 
+  // Grafik penjualan — mingguan (7 hari terakhir) & bulanan (4 minggu terakhir)
+  const grafikPenjualan = useMemo(() => {
+    const toDate = (value: Date | Timestamp | string | null | undefined): Date | null => {
+      if (!value) return null;
+      return value instanceof Timestamp ? value.toDate() : new Date(value);
+    };
+
+    const now = new Date();
+
+    // ── Mingguan: 7 hari terakhir ──────────────────────────────
+    const weeklyLabels: string[] = [];
+    const weeklyDates: Date[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      weeklyDates.push(d);
+      weeklyLabels.push(d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' }));
+    }
+
+    const weeklyData = weeklyDates.map((dayStart, idx) => {
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const penjualanBarang = transaksiList
+        .filter((t) => {
+          const d = toDate(t.createdAt);
+          return t.tipe === 'keluar' && !t.serviceId && t.source !== 'service' && d && d >= dayStart && d <= dayEnd;
+        })
+        .reduce((sum, t) => sum + (t.totalHarga > 0 ? t.totalHarga : t.hargaSatuan * t.jumlah), 0);
+
+      const jasaServis = services
+        .filter((s) => {
+          const d = toDate(s.pickedUpAt ?? s.updatedAt ?? s.createdAt);
+          return s.status === 'diambil' && d && d >= dayStart && d <= dayEnd;
+        })
+        .reduce((sum, s) => {
+          const sparepartVal = (s.sparepartDigunakan ?? []).reduce((sub, item) => {
+            const barang = barangList.find((b) => b.id === item.productId);
+            return sub + ((barang?.hargaJual ?? barang?.hargaBeli ?? 0) * item.jumlah);
+          }, 0);
+          return sum + (s.biayaJasa ?? 0) + sparepartVal;
+        }, 0);
+
+      return { name: weeklyLabels[idx], penjualanBarang, jasaServis };
+    });
+
+    // ── Bulanan: 4 minggu terakhir ─────────────────────────────
+    const monthlyData = Array.from({ length: 4 }, (_, i) => {
+      const weekEnd = new Date(now);
+      weekEnd.setDate(now.getDate() - i * 7);
+      weekEnd.setHours(23, 59, 59, 999);
+      const weekStart = new Date(weekEnd);
+      weekStart.setDate(weekEnd.getDate() - 6);
+      weekStart.setHours(0, 0, 0, 0);
+
+      const label = `${weekStart.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${weekEnd.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`;
+
+      const penjualanBarang = transaksiList
+        .filter((t) => {
+          const d = toDate(t.createdAt);
+          return t.tipe === 'keluar' && !t.serviceId && t.source !== 'service' && d && d >= weekStart && d <= weekEnd;
+        })
+        .reduce((sum, t) => sum + (t.totalHarga > 0 ? t.totalHarga : t.hargaSatuan * t.jumlah), 0);
+
+      const jasaServis = services
+        .filter((s) => {
+          const d = toDate(s.pickedUpAt ?? s.updatedAt ?? s.createdAt);
+          return s.status === 'diambil' && d && d >= weekStart && d <= weekEnd;
+        })
+        .reduce((sum, s) => {
+          const sparepartVal = (s.sparepartDigunakan ?? []).reduce((sub, item) => {
+            const barang = barangList.find((b) => b.id === item.productId);
+            return sub + ((barang?.hargaJual ?? barang?.hargaBeli ?? 0) * item.jumlah);
+          }, 0);
+          return sum + (s.biayaJasa ?? 0) + sparepartVal;
+        }, 0);
+
+      return { name: label, penjualanBarang, jasaServis };
+    }).reverse();
+
+    return { weekly: weeklyData, monthly: monthlyData };
+  }, [barangList, transaksiList, services]);
+
   const servisByStatus: ChartData[] = useMemo(() => {
     const today = new Date(todayKey);
     today.setHours(0, 0, 0, 0);
@@ -270,7 +354,7 @@ export function useDashboard() {
       'Menunggu Sparepart': services.filter((service) => service.status === 'menunggu-sparepart').length,
       Proses: services.filter((service) => service.status === 'proses').length,
       Selesai: services.filter((service) => service.status === 'selesai').length,
-      Diambil: services.filter((service) =>
+      Diserahkan: services.filter((service) =>
         service.status === 'diambil' &&
         isSameDayOrAfterStart(service.pickedUpAt ?? service.updatedAt ?? service.createdAt)
       ).length,
@@ -279,12 +363,13 @@ export function useDashboard() {
     return Object.entries(data).map(([name, value]) => ({ name, value }));
   }, [services, todayKey]);
 
-  return {
+    return {
     stats,
     alertStok,
     stokByKategori,
     aktivitas7Hari,
     servisByStatus,
+    grafikPenjualan,
     loading
   };
 }

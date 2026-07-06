@@ -156,7 +156,7 @@ export default function Users() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
             <Button variant="outline" onClick={resetForm} className="w-full sm:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus style={{ width: '16px', height: '16px' }} className="mr-2" />
               Tambah User
             </Button>
           </DialogTrigger>
@@ -202,7 +202,7 @@ export default function Users() {
                       checked={formData.role === 'admin'}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                     />
-                    <Shield className="w-4 h-4 text-status-info" />
+                    <Shield style={{ width: '16px', height: '16px' }} className="text-status-info" />
                     <span className="text-sm text-text-primary">Admin</span>
                   </label>
                   <label className="flex items-center gap-2 p-3 border border-border-default rounded-sm cursor-pointer hover:bg-surface-muted flex-1">
@@ -213,7 +213,7 @@ export default function Users() {
                       checked={formData.role === 'Teknisi'}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                     />
-                    <UserCircle className="w-4 h-4 text-text-secondary" />
+                    <UserCircle style={{ width: '16px', height: '16px' }} className="text-text-secondary" />
                     <span className="text-sm text-text-primary">Teknisi</span>
                   </label>
                 </div>
@@ -254,7 +254,7 @@ export default function Users() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+        <Search style={{ width: '20px', height: '20px' }} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
         <Input
           placeholder="Cari pengguna..."
           value={searchQuery}
@@ -273,7 +273,7 @@ export default function Users() {
               </div>
             ) : filteredUsers.length === 0 ? (
                             <div className="py-8 text-center">
-                <User className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                <User style={{ width: '48px', height: '48px' }} className="mx-auto text-text-secondary/30 mb-2" />
                 <p className="text-text-secondary">Tidak ada data pengguna</p>
               </div>
             ) : (
@@ -298,13 +298,13 @@ export default function Users() {
                         : 'bg-surface-muted border-border-default text-text-secondary shrink-0'}
                     >
                       {user.role === 'admin' ? (
-                        <Shield className="w-3 h-3 mr-1" />
+                        <Shield style={{ width: '12px', height: '12px' }} className="mr-1" />
                       ) : (
-                        <UserCircle className="w-3 h-3 mr-1" />
+                        <UserCircle style={{ width: '12px', height: '12px' }} className="mr-1" />
                       )}
-                      {user.role === 'admin' ? 'Administrator' : 'Teknisi'}
-                    </Badge>
-                  </div>
+                      {user.role === 'admin' ? 'Admin' : 'Teknisi'}
+    </Badge>
+  </div>
 
                                     <div className="rounded-sm bg-surface-muted border border-border-default p-3 text-sm">
                     <p className="text-text-secondary">Bergabung</p>
@@ -346,7 +346,7 @@ export default function Users() {
                         className="w-full text-status-danger hover:text-status-danger hover:bg-status-danger/5 border-status-danger/30"
                         onClick={() => setConfirmDeleteUserId(user.uid)}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
+                        <Trash2 style={{ width: '16px', height: '16px' }} className="mr-2" />
                         Hapus Pengguna
                       </Button>
                     )
@@ -376,7 +376,7 @@ export default function Users() {
                 ) : filteredUsers.length === 0 ? (
                   <TableRow>
                                         <TableCell colSpan={4} className="text-center py-8">
-                      <User className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+                      <User style={{ width: '48px', height: '48px' }} className="mx-auto text-text-secondary/30 mb-2" />
                       <p className="text-text-secondary">Tidak ada data pengguna</p>
                     </TableCell>
                   </TableRow>
@@ -404,13 +404,13 @@ export default function Users() {
                             : 'bg-surface-muted border-border-default text-text-secondary'}
                         >
                           {user.role === 'admin' ? (
-                            <Shield className="w-3 h-3 mr-1" />
+                            <Shield style={{ width: '12px', height: '12px' }} className="mr-1" />
                           ) : (
-                            <UserCircle className="w-3 h-3 mr-1" />
+                            <UserCircle style={{ width: '12px', height: '12px' }} className="mr-1" />
                           )}
-                          {user.role === 'admin' ? 'Administrator' : 'Teknisi'}
-                        </Badge>
-                      </TableCell>
+                          {user.role === 'admin' ? 'Admin' : 'Teknisi'}
+    </Badge>
+  </TableCell>
                       <TableCell>
                         {formatDate(user.createdAt)}
                       </TableCell>
@@ -442,7 +442,7 @@ export default function Users() {
                               className="text-status-danger hover:text-status-danger hover:bg-status-danger/10"
                               onClick={() => setConfirmDeleteUserId(user.uid)}
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 style={{ width: '16px', height: '16px' }} />
                             </Button>
                           )
                         )}
@@ -460,7 +460,7 @@ export default function Users() {
             <div className="grid md:grid-cols-2 gap-3">
         <div className="bg-surface-base border border-border-default rounded-sm p-4">
           <div className="flex items-start gap-3">
-            <Shield className="w-4 h-4 text-status-info mt-0.5" />
+            <Shield style={{ width: '16px', height: '16px' }} className="text-status-info mt-0.5" />
             <div>
               <h4 className="font-semibold text-text-primary text-sm">Administrator</h4>
               <ul className="text-sm text-text-secondary mt-1.5 space-y-1">
@@ -475,7 +475,7 @@ export default function Users() {
 
         <div className="bg-surface-base border border-border-default rounded-sm p-4">
           <div className="flex items-start gap-3">
-            <UserCircle className="w-4 h-4 text-text-secondary mt-0.5" />
+            <UserCircle style={{ width: '16px', height: '16px' }} className="text-text-secondary mt-0.5" />
             <div>
               <h4 className="font-semibold text-text-primary text-sm">Teknisi</h4>
               <ul className="text-sm text-text-secondary mt-1.5 space-y-1">

@@ -21,6 +21,11 @@ import {
   Cell,
   Tooltip,
   ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from 'recharts';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -55,28 +60,28 @@ const STATUS_CONFIG = {
   'menunggu-sparepart': {
     label: 'Menunggu Sparepart',
     bg: 'bg-orange-500/10',
-    text: 'text-orange-300',
+    text: 'text-orange-600 dark:text-orange-300',
     dot: 'bg-orange-400',
     ring: 'ring-orange-400/30',
   },
   proses: {
     label: 'Proses',
     bg: 'bg-yellow-500/10',
-    text: 'text-yellow-300',
+    text: 'text-yellow-600 dark:text-yellow-300',
     dot: 'bg-yellow-400',
     ring: 'ring-yellow-400/30',
   },
   selesai: {
     label: 'Selesai',
     bg: 'bg-emerald-500/10',
-    text: 'text-emerald-300',
+    text: 'text-emerald-600 dark:text-emerald-300',
     dot: 'bg-emerald-400',
     ring: 'ring-emerald-400/30',
   },
   diambil: {
     label: 'Diserahkan',
     bg: 'bg-neutral-500/10',
-    text: 'text-neutral-300',
+    text: 'text-neutral-600 dark:text-neutral-400',
     dot: 'bg-neutral-400',
     ring: 'ring-neutral-400/30',
   },
@@ -96,10 +101,10 @@ function StatusBadge({ status }: { status: keyof typeof STATUS_CONFIG }) {
 
 // ─── Device icon ──────────────────────────────────────────────────────────
 function DeviceIcon({ type }: { type: string }) {
-  if (type === 'Smartphone' || type === 'Tablet') return <Smartphone className={`h-3.5 w-3.5 ${surface.secondary}`} />;
-  if (type === 'CPU') return <Cpu className={`h-3.5 w-3.5 ${surface.secondary}`} />;
-  if (type === 'Printer') return <Printer className={`h-3.5 w-3.5 ${surface.secondary}`} />;
-  return <Laptop className={`h-3.5 w-3.5 ${surface.secondary}`} />;
+  if (type === 'Smartphone' || type === 'Tablet') return <Smartphone style={{ width: '14px', height: '14px' }} className={surface.secondary} />;
+  if (type === 'CPU') return <Cpu style={{ width: '14px', height: '14px' }} className={surface.secondary} />;
+  if (type === 'Printer') return <Printer style={{ width: '14px', height: '14px' }} className={surface.secondary} />;
+  return <Laptop style={{ width: '14px', height: '14px' }} className={surface.secondary} />;
 }
 
 // ─── Stats Card ──────────────────────────────────────────────────────────
@@ -111,7 +116,6 @@ function StatCard({
   iconBg,
   iconColor,
   valueColor = surface.text,
-  accent = false,
   onClick,
 }: {
   title: string;
@@ -121,7 +125,6 @@ function StatCard({
   iconBg: string;
   iconColor: string;
   valueColor?: string;
-  accent?: boolean;
   onClick?: () => void;
 }) {
   const isClickable = Boolean(onClick);
@@ -133,7 +136,7 @@ function StatCard({
         {sub && <p className={`mt-1 text-[13px] font-normal leading-5 ${surface.secondary}`}>{sub}</p>}
       </div>
       <div className={`shrink-0 rounded-md p-4 transition-transform duration-300 ${iconBg} ${isClickable ? 'group-hover:scale-110' : ''}`}>
-        <Icon className={`h-7 w-7 transition-transform duration-300 ${iconColor} ${isClickable ? 'group-hover:rotate-3' : ''}`} />
+        <Icon style={{ width: '28px', height: '28px' }} className={`transition-transform duration-300 ${iconColor} ${isClickable ? 'group-hover:rotate-3' : ''}`} />
       </div>
     </>
   );
@@ -143,11 +146,7 @@ function StatCard({
       <button
         type="button"
         onClick={onClick}
-        className={`group flex w-full items-start justify-between gap-4 rounded-[12px] border p-5 text-left shadow-sm transition-all duration-300 cursor-pointer ${surface.panel} ${surface.focus} hover:-translate-y-1 hover:shadow-lg ${
-          accent
-            ? `${surface.accentBorder} ring-1 ring-text-inverse/20 hover:ring-2 hover:ring-text-inverse/30 hover:shadow-[0_8px_30px_rgba(200,53,42,0.25)] active:border-text-inverse`
-            : `${surface.border} hover:bg-surface-muted/80 active:border-border-default`
-        }`}
+        className={`group flex w-full items-start justify-between gap-4 rounded-[12px] border p-5 text-left shadow-sm transition-all duration-300 cursor-pointer ${surface.panel} ${surface.focus} hover:-translate-y-1 hover:shadow-lg ${surface.border} hover:bg-surface-muted/80 active:border-border-default`}
       >
         {content}
       </button>
@@ -156,11 +155,7 @@ function StatCard({
 
   return (
     <div
-      className={`flex items-start justify-between gap-4 rounded-[12px] border p-5 shadow-sm transition-colors duration-150 ${surface.panel} ${surface.panelHover} ${
-        accent
-          ? `${surface.accentBorder} ring-1 ring-text-inverse/20`
-          : surface.border
-      }`}
+      className={`flex items-start justify-between gap-4 rounded-[12px] border p-5 shadow-sm transition-colors duration-150 ${surface.panel} ${surface.panelHover} ${surface.border}`}
     >
       {content}
     </div>
@@ -209,7 +204,8 @@ function formatRp(n: number) {
 // ═══════════════════════════════════════════════════════════════
 
 export default function Dashboard({ onPageChange }: { onPageChange?: (page: string, status?: 'all' | ServiceStatus | 'perlu-restock') => void }) {
-  const { stats, servisByStatus, loading } = useDashboard();
+  const { stats, servisByStatus, grafikPenjualan, loading } = useDashboard();
+  const [grafikMode, setGrafikMode] = useState<'mingguan' | 'bulanan'>('mingguan');
   const { userData, isTeknisi } = useAuth();
 
   // Ambil 5 servis terbaru langsung
@@ -273,10 +269,9 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           value={stats.servisAktif}
           sub={`${stats.servisMenungguSparepart} Menunggu Konfirmasi`}
           icon={Wrench}
-          iconBg={surface.accentBg}
-          iconColor={surface.accent}
+          iconBg="bg-yellow-500/10"
+          iconColor="text-yellow-500"
           valueColor={surface.text}
-          accent={true}
           onClick={() => onPageChange?.('servis', 'menunggu-sparepart')}
         />
         <StatCard
@@ -284,8 +279,8 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           value={siapDiambil}
           sub="Unit selesai diperbaiki"
           icon={CheckCircle2}
-          iconBg="bg-text-secondary/10"
-          iconColor={surface.secondary}
+          iconBg="bg-emerald-500/10"
+          iconColor="text-emerald-500"
           valueColor={surface.text}
           onClick={() => onPageChange?.('servis', 'selesai')}
         />
@@ -294,8 +289,8 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
           value={stats.stokMenipis}
           sub="Spare part stok rendah"
           icon={AlertTriangle}
-          iconBg="bg-text-secondary/10"
-          iconColor={surface.secondary}
+          iconBg="bg-orange-500/10"
+          iconColor="text-orange-500"
           valueColor={surface.text}
           onClick={() => isTeknisi ? onPageChange?.('transaksi', 'perlu-restock') : onPageChange?.('laporan')}
         />
@@ -305,9 +300,10 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
             value={formatRp(stats.labaHariIni)}
             sub={`${stats.totalTransaksiHariIni} transaksi hari ini`}
             icon={TrendingUp}
-            iconBg="bg-text-secondary/10"
-            iconColor={surface.secondary}
+            iconBg="bg-emerald-500/10"
+            iconColor="text-emerald-500"
             valueColor={surface.text}
+            onClick={() => onPageChange?.('riwayat')}
           />
         )}
       </div>
@@ -316,7 +312,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         {/* LEFT — service table (2/3 width) */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="xl:col-span-2 flex flex-col gap-6">
 
 
           {/* Tabel Servis Terbaru */}
@@ -344,7 +340,7 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                   {recentServices.length === 0 ? (
                     <tr>
                       <td colSpan={6} className={`py-12 text-center ${surface.secondary}`}>
-                        <Wrench className={`mx-auto mb-2 h-10 w-10 ${surface.tertiary}`} />
+                        <Wrench style={{ width: '40px', height: '40px' }} className={`mx-auto mb-2 ${surface.tertiary}`} />
                         <p className="text-sm leading-6">Belum ada data servis</p>
                       </td>
                     </tr>
@@ -389,6 +385,117 @@ export default function Dashboard({ onPageChange }: { onPageChange?: (page: stri
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* GRAFIK PENJUALAN — di bawah tabel servis terkini */}
+          <div className={`overflow-hidden rounded-md border shadow-sm flex flex-col flex-1 ${surface.panel} ${surface.border}`}>
+          <div className={`flex items-center justify-between border-b px-6 py-5 ${surface.border}`}>
+            <div>
+              <h3 className={`text-base font-semibold leading-6 ${surface.text}`}>Grafik Penjualan</h3>
+              <p className={`mt-0.5 text-[13px] leading-5 ${surface.secondary}`}>Penjualan barang & jasa servis</p>
+            </div>
+            <div className={`flex gap-1 rounded-md border p-1 ${surface.border}`}>
+              {(['mingguan', 'bulanan'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setGrafikMode(mode)}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors capitalize ${
+                    grafikMode === mode
+                      ? 'bg-text-inverse/10 text-text-inverse'
+                      : `${surface.secondary} hover:text-text-primary`
+                  }`}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+            </div>
+            <div className="px-2 py-4 flex-1 min-h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={grafikMode === 'mingguan' ? grafikPenjualan.weekly : grafikPenjualan.monthly}
+                margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="gradBarang" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--color-text-inverse))" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="hsl(var(--color-text-inverse))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradServis" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(142 70% 45%)" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="hsl(142 70% 45%)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--color-border-default))"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: 'hsl(var(--color-text-secondary))' }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval={0}
+                  angle={grafikMode === 'bulanan' ? -12 : 0}
+                  textAnchor={grafikMode === 'bulanan' ? 'end' : 'middle'}
+                  height={grafikMode === 'bulanan' ? 40 : 24}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'hsl(var(--color-text-secondary))' }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={60}
+                  tickFormatter={(v) =>
+                    v === 0 ? '0' : v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}jt` : `${(v / 1_000).toFixed(0)}rb`
+                  }
+                />
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value),
+                    name === 'penjualanBarang' ? 'Penjualan Barang' : 'Jasa Servis',
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--color-surface-base))',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid hsl(var(--color-border-default))',
+                    color: 'hsl(var(--color-text-primary))',
+                    fontSize: '0.75rem',
+                    padding: '8px 12px',
+                  }}
+                  itemStyle={{ color: 'hsl(var(--color-text-primary))' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="penjualanBarang"
+                  stroke="hsl(var(--color-text-inverse))"
+                  strokeWidth={2}
+                  fill="url(#gradBarang)"
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="jasaServis"
+                  stroke="hsl(142 70% 45%)"
+                  strokeWidth={2}
+                  fill="url(#gradServis)"
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+            </div>
+            <div className={`flex items-center gap-4 px-6 pb-4 text-[13px] ${surface.secondary}`}>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: 'hsl(var(--color-text-inverse))' }} />
+              Penjualan Barang
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: 'hsl(142 70% 45%)' }} />
+              Jasa Servis
+            </span>
             </div>
           </div>
         </div>

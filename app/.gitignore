@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 .vite/
+.cache/
 
 # Environment variables
 .env
@@ -25,8 +26,11 @@ lerna-debug.log*
 
 # OS files
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
 desktop.ini
+ehthumbs.db
 
 # Editor directories
 .idea/
@@ -36,6 +40,8 @@ desktop.ini
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
 
 # TypeScript
 *.tsbuildinfo
@@ -45,6 +51,16 @@ desktop.ini
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+.firebaserc
+
+# Vite
+vite.config.ts.timestamp-*
+
+# Misc
+*.local
+*.orig
+*.bak
+*.tmp
 
 # Project docs (local only)
 DESIGN.md

@@ -87,10 +87,10 @@ const statusConfig: Record<ServiceStatus, { label: string; className: string }> 
 const selectableStatuses: ServiceStatus[] = ['pending', 'menunggu-sparepart', 'proses'];
 
 function DeviceIcon({ type }: { type: ServiceItem['jenisPerangkat'] }) {
-  if (type === 'Smartphone' || type === 'Tablet') return <Smartphone className="h-3.5 w-3.5" />;
-  if (type === 'CPU') return <Cpu className="h-3.5 w-3.5" />;
-  if (type === 'Printer') return <Printer className="h-3.5 w-3.5" />;
-  return <Laptop className="h-3.5 w-3.5" />;
+  if (type === 'Smartphone' || type === 'Tablet') return <Smartphone style={{ width: '14px', height: '14px' }} />;
+  if (type === 'CPU') return <Cpu style={{ width: '14px', height: '14px' }} />;
+  if (type === 'Printer') return <Printer style={{ width: '14px', height: '14px' }} />;
+  return <Laptop style={{ width: '14px', height: '14px' }} />;
 }
 
 function formatRupiah(value: number) {
@@ -239,20 +239,20 @@ export default function ServiceCard({
 
         <div className="space-y-2 text-sm text-text-primary">
           <div className="flex items-center gap-2">
-            <UserRound className="h-4 w-4 text-text-secondary shrink-0" />
+            <UserRound style={{ width: '16px', height: '16px' }} className="text-text-secondary shrink-0" />
             <span className="truncate font-medium">{service.namaPelanggan}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Clock3 className="h-4 w-4 text-text-secondary shrink-0" />
+            <Clock3 style={{ width: '16px', height: '16px' }} className="text-text-secondary shrink-0" />
             <span className="text-text-secondary">{service.nomorHp}</span>
           </div>
           <div className="flex items-start gap-2">
-            <Wrench className="mt-0.5 h-4 w-4 text-text-secondary shrink-0" />
+            <Wrench style={{ width: '16px', height: '16px' }} className="mt-0.5 text-text-secondary shrink-0" />
             <p className="line-clamp-2 text-text-secondary">{service.deskripsiMasalah}</p>
           </div>
           <div className="flex items-center justify-between border-t border-border-default/50 pt-2 mt-2 text-sm">
             <span className="text-text-secondary flex items-center gap-1.5">
-              <Banknote className="h-4 w-4 text-text-secondary" />
+              <Banknote style={{ width: '16px', height: '16px' }} className="text-text-secondary" />
               Biaya Jasa
             </span>
             <span className="font-semibold text-text-primary">{formatRupiah(biayaJasa)}</span>
@@ -296,7 +296,7 @@ export default function ServiceCard({
                     size="icon"
                     className="h-10 w-10 shrink-0 text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 style={{ width: '16px', height: '16px' }} />
                   </Button>
                 </AlertDialogTrigger>
                               <AlertDialogContent>
@@ -343,25 +343,25 @@ export default function ServiceCard({
             className="flex-1 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => onEdit(service)}
           >
-            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            <Pencil style={{ width: '14px', height: '14px' }} className="mr-1.5" />
             Edit
           </Button>
-          <Button
-            variant="default"
-            className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                    <Button
+            variant="outline"
+            className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 hover:text-emerald-600"
             onClick={() => onComplete(service)}
             disabled={service.status === 'selesai' || service.status === 'diambil'}
           >
-            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+            <CheckCircle2 style={{ width: '14px', height: '14px' }} className="mr-1.5" />
             Selesai
           </Button>
           <Button
-            variant="default"
-            className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            variant="outline"
+            className="flex-1 text-xs disabled:opacity-40 disabled:cursor-not-allowed text-blue-600 border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-600"
             onClick={() => onPickup(service)}
             disabled={service.status !== 'selesai'}
           >
-            <PackageCheck className="mr-1.5 h-3.5 w-3.5" />
+            <PackageCheck style={{ width: '14px', height: '14px' }} className="mr-1.5" />
             Serahkan
           </Button>
         </div>

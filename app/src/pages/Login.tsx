@@ -7,7 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
 import { getFirebaseAuthErrorMessage } from '@/lib/firebase-auth-errors';
-import logoMthree from '@/assets/logo-mthree-darkmode.svg';
+import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import ForgotPasswordDialog from '@/components/ForgotPasswordDialog';
 
 export default function Login() {
@@ -45,14 +46,14 @@ export default function Login() {
   };
 
       return (
-    <div className={`flex min-h-screen bg-black transition-opacity duration-700 ${
+        <div className={`flex min-h-screen bg-surface-base transition-opacity duration-700 ${
       mounted ? 'opacity-100' : 'opacity-0'
     }`}>
       {/* Left Panel - Branding */}
       <div 
-        className="login-left-panel w-[45%] bg-black flex flex-col justify-between p-12 border-r border-[#1f1f1f] relative overflow-hidden"
+        className="login-left-panel w-[45%] bg-surface-base flex flex-col justify-between p-12 border-r border-border-default relative overflow-hidden"
         style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, #161616 1.5px, transparent 0)',
+          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(128,128,128,0.15) 1.5px, transparent 0)',
           backgroundSize: '24px 24px',
         }}
       >
@@ -61,7 +62,7 @@ export default function Login() {
 
                 {/* Logo */}
         <div className="relative z-10">
-          <img src={logoMthree} alt="Mthree Computer Logo" className="h-16 w-auto transition-all duration-700 hover:scale-105" />
+          <Logo width={216} height={54} className="transition-all duration-700 hover:scale-105" />
         </div>
 
                 {/* Center content */}
@@ -83,9 +84,9 @@ export default function Login() {
                     {/* Clean feature list with big numbers */}
           <div className="flex flex-col gap-6">
             {[
-                            { no: '01', title: 'Manajemen Inventaris Barang', delay: 'delay-&lsqb;200ms&rsqb;' },
-              { no: '02', title: 'Pencatatan Data Servis', delay: 'delay-&lsqb;400ms&rsqb;' },
-              { no: '03', title: 'Laporan & Statistik', delay: 'delay-&lsqb;600ms&rsqb;' },
+                            { no: '01', title: 'Manajemen Inventaris Barang', delay: 'delay-200' },
+                              { no: '02', title: 'Monitoring Status Jasa Servis', delay: 'delay-300' },
+                              { no: '03', title: 'Rekomendasi Restock Berdasarkan Ambang Batas Minimum Stok', delay: 'delay-500' },
             ].map((item) => (
               <div 
                 key={item.no} 
@@ -110,12 +111,15 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-[#080808] relative">
+            {/* Right Panel - Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-surface-muted relative">
+        <div className="absolute top-4 right-4 z-20">
+          <ThemeToggle />
+        </div>
                 {/* Subtle background glow */}
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-[#c8352a]/5 rounded-full blur-[120px] pointer-events-none animate-pulse" />
 
-                <div className={`w-full max-w-[420px] bg-black/40 border border-[#161616] backdrop-blur-xl rounded-xl p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.8)] hover:border-[#1f1f1f] hover:shadow-[0_8px_40px_rgb(200,53,42,0.15)] relative z-10 transition-all duration-500 ${
+                <div className={`w-full max-w-[420px] bg-surface-base border border-border-default backdrop-blur-xl rounded-xl p-8 md:p-10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.8)] hover:border-border-muted hover:shadow-[0_8px_40px_rgb(200,53,42,0.15)] relative z-10 transition-all duration-500 ${
                   mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                 } ${
                   shake ? 'animate-shake' : ''
@@ -166,7 +170,7 @@ export default function Login() {
                                   required
                                   aria-label="Email"
                                   aria-required="true"
-                  className="w-full h-11 pl-10 pr-4 border border-[#1f1f1f] rounded-md text-sm text-text-primary bg-black transition-all duration-200 focus-visible:outline-none focus-visible:border-[#c8352a] focus-visible:ring-2 focus-visible:ring-[#c8352a]/30 focus-visible:shadow-[0_0_15px_rgba(200,53,42,0.15)]"
+                  className="w-full h-11 pl-10 pr-4 border border-border-default rounded-md text-sm text-text-primary bg-surface-base transition-all duration-200 focus-visible:outline-none focus-visible:border-[#c8352a] focus-visible:ring-2 focus-visible:ring-[#c8352a]/30 focus-visible:shadow-[0_0_15px_rgba(200,53,42,0.15)]"
                 />
               </div>
             </div>
@@ -201,7 +205,7 @@ export default function Login() {
                   required
                   aria-label="Password"
                   aria-required="true"
-                  className="w-full h-11 pl-10 pr-11 border border-[#1f1f1f] rounded-md text-sm text-text-primary bg-black transition-all duration-200 focus-visible:outline-none focus-visible:border-[#c8352a] focus-visible:ring-2 focus-visible:ring-[#c8352a]/30 focus-visible:shadow-[0_0_15px_rgba(200,53,42,0.15)]"
+                  className="w-full h-11 pl-10 pr-11 border border-border-default rounded-md text-sm text-text-primary bg-surface-base transition-all duration-200 focus-visible:outline-none focus-visible:border-[#c8352a] focus-visible:ring-2 focus-visible:ring-[#c8352a]/30 focus-visible:shadow-[0_0_15px_rgba(200,53,42,0.15)]"
                 />
                                 <button
                                   type="button"
@@ -223,7 +227,7 @@ export default function Login() {
                 id="rememberMe"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-[#1f1f1f] bg-black text-[#c8352a] focus:ring-2 focus:ring-[#c8352a]/30 focus:ring-offset-0 cursor-pointer transition-all duration-200"
+                className="w-4 h-4 rounded border-border-default bg-surface-base text-[#c8352a] focus:ring-2 focus:ring-[#c8352a]/30 focus:ring-offset-0 cursor-pointer transition-all duration-200"
               />
               <label
                 htmlFor="rememberMe"

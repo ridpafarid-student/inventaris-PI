@@ -4,6 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inventaris Barang</title>
+    
+    <!-- Anti-FOUC: Apply theme class before first render -->
+    <script>
+      (function() {
+        try {
+          const theme = localStorage.getItem('theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.classList.add(theme);
+            document.documentElement.setAttribute('data-theme', theme);
+          } else {
+            // Fallback to system preference
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const defaultTheme = prefersDark ? 'dark' : 'light';
+            document.documentElement.classList.add(defaultTheme);
+            document.documentElement.setAttribute('data-theme', defaultTheme);
+          }
+        } catch (e) {
+          // Fallback to dark if localStorage fails
+          document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

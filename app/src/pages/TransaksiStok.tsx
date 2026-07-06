@@ -166,7 +166,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
         )}
         <div className="flex flex-col sm:flex-row gap-3">
                     <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+            <Search style={{ width: '20px', height: '20px' }} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
             <Input
               placeholder="Cari barang..."
               value={searchQuery}
@@ -176,9 +176,9 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
           </div>
           <Select value={selectedKategori} onValueChange={setSelectedKategori}>
                                                 <SelectTrigger
-              className={`w-full sm:w-56 ${
+                            className={`w-full sm:w-56 ${
                 isFilterRestock
-                  ? 'border-status-danger ring-1 ring-status-danger/20'
+                  ? 'border-status-danger/40 ring-1 ring-status-danger/10'
                   : ''
               }`}
             >
@@ -191,7 +191,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
               ))}
               <SelectSeparator />
                                                         <SelectItem value="perlu-restock">
-                <span className="flex items-center gap-1.5 text-status-danger font-semibold">
+                                <span className="flex items-center gap-1.5 text-status-danger/70 font-medium">
                   <AlertTriangle style={{ width: '13px', height: '13px' }} />
                   Perlu Restock
                 </span>
@@ -203,7 +203,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                 {/* Banner info saat filter Perlu Restock aktif */}
                                 {isFilterRestock && (
                                     <div className="flex items-center gap-2 bg-status-danger/10 border border-status-danger/20 text-status-danger text-sm font-medium px-4 py-2.5 rounded-sm ring-1 ring-status-danger/10">
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <AlertTriangle style={{ width: '16px', height: '16px' }} className="shrink-0" />
                     <span>
                       Menampilkan <strong>{filteredBarang.length}</strong> item yang telah mencapai atau berada di bawah ambang batas minimum stok
                     </span>
@@ -239,7 +239,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredBarang.length === 0 ? (
           <div className="col-span-full text-center py-12">
-            <Package className="w-12 h-12 mx-auto text-text-secondary/30 mb-2" />
+            <Package style={{ width: '48px', height: '48px' }} className="mx-auto text-text-secondary/30 mb-2" />
             <p className="text-text-secondary">
               {isFilterRestock ? '🎉 Semua stok aman! Tidak ada item yang perlu restock.' : 'Tidak ada data barang'}
             </p>
@@ -253,10 +253,10 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                             <div
                             key={barang.id}
                                                         className={`flex flex-col rounded-sm p-4 transition-all bg-surface-base border ${
-                              isHabis
-                                ? 'border-status-danger ring-2 ring-status-danger/20 hover:shadow-card'
+                                                            isHabis
+                                ? 'border-status-danger/40 ring-1 ring-status-danger/10 hover:shadow-card'
                                 : isRendah
-                                  ? 'border-status-warning ring-1 ring-status-warning/20 hover:shadow-card'
+                                  ? 'border-status-warning/40 ring-1 ring-status-warning/10 hover:shadow-card'
                                   : 'border-border-default hover:border-text-secondary hover:shadow-card'
                             }`}
               >
@@ -272,13 +272,13 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                       {barang.kategoriNama}
                     </span>
                                         {isHabis && (
-                      <span className="flex items-center gap-1 text-xs font-bold bg-status-danger text-white px-2 py-0.5 rounded-pill">
+                      <span className="flex items-center gap-1 text-xs font-semibold bg-status-danger/10 text-status-danger px-2 py-0.5 rounded-pill">
                         <AlertTriangle style={{ width: '11px', height: '11px' }} />
                         HABIS
                       </span>
                     )}
-                    {isRendah && (
-                      <span className="flex items-center gap-1 text-xs font-bold bg-status-warning text-surface-base px-2 py-0.5 rounded-pill">
+                                        {isRendah && (
+                      <span className="flex items-center gap-1 text-xs font-semibold bg-status-warning/10 text-status-warning px-2 py-0.5 rounded-pill">
                         <AlertTriangle style={{ width: '11px', height: '11px' }} />
                         RENDAH
                       </span>
@@ -303,8 +303,8 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                   </div>
                                     {isKritis && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-status-warning">Min stok</span>
-                      <span className="text-status-warning font-medium">{barang.stokMinimum} {barang.satuan}</span>
+                      <span className="text-text-secondary">Min stok</span>
+                      <span className="text-text-secondary font-medium">{barang.stokMinimum} {barang.satuan}</span>
                     </div>
                   )}
                                     {!shouldHideHargaBeli && (
@@ -323,16 +323,16 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                                                                         <Button
                     variant="outline"
                     size="default"
-                    className={`flex-1 text-xs !py-3 ${
+                                        className={`flex-1 text-xs !py-3 ${
                       isHabis
-                        ? 'border-status-danger text-status-danger hover:bg-status-danger/10 font-semibold'
+                        ? 'border-status-danger/40 text-status-danger hover:bg-status-danger/5 font-semibold'
                         : isRendah
-                          ? 'border-status-warning text-status-warning hover:bg-status-warning/10'
+                          ? 'border-status-warning/40 text-status-warning hover:bg-status-warning/5'
                           : ''
                     }`}
                     onClick={() => openDialog(barang, 'masuk')}
                   >
-                    <ArrowDownLeft className="w-3.5 h-3.5 mr-1" />
+                    <ArrowDownLeft style={{ width: '14px', height: '14px' }} className="mr-1" />
                     Masuk
                   </Button>
                   <Button
@@ -342,7 +342,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                     onClick={() => openDialog(barang, 'keluar')}
                     disabled={barang.stok === 0}
                   >
-                    <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
+                    <ArrowUpRight style={{ width: '14px', height: '14px' }} className="mr-1" />
                     Keluar
                   </Button>
                 </div>
@@ -359,12 +359,12 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
             <DialogTitle className="flex items-center gap-2">
               {formData.tipe === 'masuk' ? (
                 <>
-                  <ArrowDownLeft className="w-5 h-5 text-status-success" />
+                  <ArrowDownLeft style={{ width: '20px', height: '20px' }} className="text-status-success" />
                   Stok Masuk
                 </>
               ) : (
                 <>
-                  <ArrowUpRight className="w-5 h-5 text-status-danger" />
+                  <ArrowUpRight style={{ width: '20px', height: '20px' }} className="text-status-danger" />
                   Stok Keluar
                 </>
               )}
