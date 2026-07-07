@@ -240,7 +240,7 @@ export default function Laporan() {
   const restockRecommendations = useMemo<RestockRecommendationItem[]>(() => (
     barangList
       .filter((barang) => filterKategori === 'all' || barang.kategoriId === filterKategori)
-      .filter((barang) => barang.stokMinimum > 0 && barang.stok <= barang.stokMinimum)
+      .filter((barang) => barang.stokMinimum > 0 && barang.stok < barang.stokMinimum)
       .map((barang) => {
         const kekurangan = Math.max(barang.stokMinimum - barang.stok, 0);
         const rekomendasiBeli = kekurangan;
@@ -536,7 +536,7 @@ export default function Laporan() {
               Rekomendasi Restok
             </h2>
             <p className="mt-1 text-sm text-text-secondary">
-              Berdasarkan barang yang stoknya sudah mencapai atau berada di bawah ambang batas minimum.
+              Berdasarkan barang yang stoknya sudah berada di bawah ambang batas minimum.
             </p>
           </div>
         </div>
@@ -660,7 +660,7 @@ export default function Laporan() {
             Rekomendasi Restok Berdasarkan Ambang Batas
           </h3>
                     <p className="mb-3 text-sm text-gray-800">
-                                            Berdasarkan barang yang stoknya sudah mencapai atau berada di bawah ambang batas minimum.
+                                            Berdasarkan barang yang stoknya sudah berada di bawah ambang batas minimum.
                                           </p>
                     <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="border border-gray-300 p-3 rounded-md">

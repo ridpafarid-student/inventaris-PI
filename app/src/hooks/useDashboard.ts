@@ -114,7 +114,7 @@ export function useDashboard() {
       transaksi.source !== 'service' && 
       isSameDayOrAfterStart(transaksi.createdAt)
     ).length;
-    const stokMenipis = barangList.filter(b => b.stok <= b.stokMinimum).length;
+    const stokMenipis = barangList.filter(b => b.stok < b.stokMinimum).length;
     const nilaiInventori = barangList.reduce((sum, barang) => sum + (barang.stok * barang.hargaBeli), 0);
     const totalServis = services.length;
     const servisHariIni = services.filter((service) => isSameDayOrAfterStart(service.createdAt)).length;
@@ -182,7 +182,7 @@ export function useDashboard() {
   // Get alert stok (barang dengan stok <= stokMinimum)
   const alertStok: AlertStok[] = useMemo(() => {
     return barangList
-      .filter(b => b.stok <= b.stokMinimum)
+      .filter(b => b.stok < b.stokMinimum)
       .map(b => ({
         barangId: b.id,
         barangNama: b.nama,

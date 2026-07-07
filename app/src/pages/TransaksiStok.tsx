@@ -65,7 +65,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
         selectedKategori === 'all'
           ? true
           : selectedKategori === 'perlu-restock'
-            ? barang.stok <= barang.stokMinimum
+            ? barang.stok < barang.stokMinimum
             : barang.kategoriId === selectedKategori;
       return matchesSearch && matchesKategori;
     })
@@ -204,8 +204,8 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
                                 {isFilterRestock && (
                                     <div className="flex items-center gap-2 bg-status-danger/10 border border-status-danger/20 text-status-danger text-sm font-medium px-4 py-2.5 rounded-sm ring-1 ring-status-danger/10">
                     <AlertTriangle style={{ width: '16px', height: '16px' }} className="shrink-0" />
-                    <span>
-                      Menampilkan <strong>{filteredBarang.length}</strong> item yang telah mencapai atau berada di bawah ambang batas minimum stok
+                                        <span>
+                      Menampilkan <strong>{filteredBarang.length}</strong> item yang stoknya berada di bawah ambang batas minimum stok
                     </span>
                   </div>
                 )}
@@ -247,7 +247,7 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
         ) : (
                     filteredBarang.map((barang) => {
             const isHabis = barang.stok === 0;
-            const isRendah = barang.stok > 0 && barang.stok <= barang.stokMinimum;
+            const isRendah = barang.stok > 0 && barang.stok < barang.stokMinimum;
             const isKritis = isHabis || isRendah;
             return (
                             <div

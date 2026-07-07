@@ -547,10 +547,10 @@ export default function DataBarang() {
                     <div className="rounded-sm bg-surface-muted p-3">
                       <p className="text-text-secondary">Stok</p>
                                             <div className="mt-1 flex items-center gap-2">
-                        {barang.stok <= barang.stokMinimum && (
+                        {barang.stok < barang.stokMinimum && (
                           <AlertTriangle style={{ width: '16px', height: '16px' }} className="text-status-warning" />
                         )}
-                        <span className={barang.stok <= barang.stokMinimum ? 'font-semibold text-status-warning' : 'font-semibold text-text-primary'}>
+                        <span className={barang.stok < barang.stokMinimum ? 'font-semibold text-status-warning' : 'font-semibold text-text-primary'}>
                           {barang.stok}
                         </span>
                       </div>
@@ -675,10 +675,10 @@ export default function DataBarang() {
                       </TableCell>
                       <TableCell className="px-3 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                          {barang.stok <= barang.stokMinimum && (
+                          {barang.stok < barang.stokMinimum && (
                             <AlertTriangle style={{ width: '16px', height: '16px' }} className="text-status-warning" />
                           )}
-                          <span className={barang.stok <= barang.stokMinimum ? 'text-status-warning font-medium' : ''}>
+                          <span className={barang.stok < barang.stokMinimum ? 'text-status-warning font-medium' : ''}>
                             {barang.stok}
                           </span>
                         </div>
