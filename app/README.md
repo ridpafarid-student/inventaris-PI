@@ -72,8 +72,3 @@ app/
 |-- package.json
 `-- vite.config.ts
 ```
-
-## Catatan
-
-logika udah bener 
-tinggal typography
