@@ -64,6 +64,7 @@ vite.config.ts.timestamp-*
 
 # Project docs (local only)
 DESIGN.md
+info.md
 
 # Package manager locks (keep only one — uncomment the one not in use)
 # yarn.lock
