@@ -1,1 +1,0 @@
-{"installCommand":"NODE_ENV=development npm install","buildCommand":"npm run build"}
