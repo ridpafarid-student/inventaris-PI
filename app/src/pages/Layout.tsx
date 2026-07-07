@@ -14,14 +14,15 @@ import {
   ArrowLeftRight,
   History,
   FileText,
-  Wrench,
+    Wrench,
   Users,
+  Database,
   Menu,
   LogOut,
   ChevronDown,
   ChevronRight,
   Package,
-  Database,
+
   Shield,
   UserCircle,
 } from 'lucide-react';
@@ -37,6 +38,7 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   adminOnly?: boolean;
+  devOnly?: boolean;
   children?: { id: string; label: string; icon: React.ElementType }[];
 }
 
@@ -62,9 +64,10 @@ const navItems: NavItem[] = [
     ],
   },
   { id: 'servis', label: 'Jasa Servis', icon: Wrench },
-  { id: 'laporan', label: 'Laporan', icon: FileText, adminOnly: true },
+    { id: 'laporan', label: 'Laporan', icon: FileText, adminOnly: true },
   { id: 'users', label: 'Pengguna', icon: Users, adminOnly: true },
-  { id: 'seed', label: 'Developer Tools', icon: Database, adminOnly: true },
+  { id: 'seed', label: 'Developer Tools', icon: Database, adminOnly: true, devOnly: true },
+
 ];
 
 const inventarisChildIds = ['barang', 'transaksi', 'riwayat'];
@@ -202,8 +205,8 @@ export default function Layout({ children, currentPage, onPageChange }: LayoutPr
     setMobileMenuOpen(false);
   };
 
-  const visibleNavItems = navItems.filter(item =>
-    !item.adminOnly || isAdmin
+    const visibleNavItems = navItems.filter(item =>
+    (!item.adminOnly || isAdmin) && (!item.devOnly || import.meta.env.DEV)
   );
 
   return (

@@ -14,8 +14,9 @@ import TransaksiStok from '@/pages/TransaksiStok';
 import Riwayat from '@/pages/Riwayat';
 import Laporan from '@/pages/Laporan';
 import Users from '@/pages/Users';
-import ServiceStatus from '@/pages/ServiceStatus';
 import SeedData from '@/pages/SeedData';
+import ServiceStatus from '@/pages/ServiceStatus';
+
 import { Toaster } from '@/components/ui/sonner';
 
 const ADMIN_ONLY_PAGES = ['laporan', 'users', 'seed'];
@@ -57,10 +58,11 @@ function AppContent() {
         return isAdmin ? <Laporan /> : <Dashboard onPageChange={handlePageChange} />;
       case 'users':
         return isAdmin ? <Users /> : <Dashboard onPageChange={handlePageChange} />;
-      case 'servis':
+            case 'servis':
         return <ServiceStatus initialStatus={serviceFilterStatus} />;
       case 'seed':
-        return isAdmin ? <SeedData /> : <Dashboard onPageChange={handlePageChange} />;
+        return (isAdmin && import.meta.env.DEV) ? <SeedData /> : <Dashboard onPageChange={handlePageChange} />;
+      
       default:
         return <Dashboard />;
     }

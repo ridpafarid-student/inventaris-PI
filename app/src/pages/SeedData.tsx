@@ -149,41 +149,40 @@ export default function SeedData() {
         });
       };
 
-      // Transaksi lebih bervariasi untuk grafik yang lebih menarik
       addTransaksi(findBarang('SPR-KBD-001'), 'masuk', 8, 0, daysAgo(45), 'Pembelian awal stok keyboard');
       addTransaksi(findBarang('SPR-KBD-001'), 'keluar', 2, 8, daysAgo(25), 'Penjualan keyboard manual');
       addTransaksi(findBarang('SPR-KBD-001'), 'keluar', 1, 6, daysAgo(15), 'Penjualan keyboard manual');
       addTransaksi(findBarang('SPR-KBD-001'), 'keluar', 2, 5, daysAgo(8), 'Penjualan keyboard manual');
-      
+
       addTransaksi(findBarang('SPR-SSD-256'), 'masuk', 6, 0, daysAgo(40), 'Pembelian SSD untuk stok servis');
       addTransaksi(findBarang('SPR-SSD-256'), 'keluar', 1, 6, daysAgo(28), 'Penjualan SSD manual');
       addTransaksi(findBarang('SPR-SSD-256'), 'keluar', 1, 5, daysAgo(18), 'Penjualan SSD manual');
       addTransaksi(findBarang('SPR-SSD-256'), 'keluar', 2, 4, daysAgo(12), 'Penjualan SSD manual');
-      
+
       addTransaksi(findBarang('SPR-CHG-19V'), 'masuk', 3, 0, daysAgo(35), 'Pembelian charger laptop');
       addTransaksi(findBarang('SPR-CHG-19V'), 'keluar', 3, 3, daysAgo(4), 'Stok charger habis untuk pelanggan');
-      
+
       addTransaksi(findBarang('SPR-RAM-8GB'), 'masuk', 12, 0, daysAgo(42), 'Pembelian RAM DDR4');
       addTransaksi(findBarang('SPR-RAM-8GB'), 'keluar', 2, 12, daysAgo(22), 'Penjualan RAM manual');
       addTransaksi(findBarang('SPR-RAM-8GB'), 'keluar', 2, 10, daysAgo(9), 'Penjualan RAM untuk upgrade');
-      
+
       addTransaksi(findBarang('AKS-MSE-001'), 'masuk', 20, 0, daysAgo(30), 'Pembelian mouse wireless');
       addTransaksi(findBarang('AKS-MSE-001'), 'keluar', 2, 20, daysAgo(22), 'Penjualan mouse wireless');
       addTransaksi(findBarang('AKS-MSE-001'), 'keluar', 1, 18, daysAgo(14), 'Penjualan mouse wireless');
       addTransaksi(findBarang('AKS-MSE-001'), 'keluar', 2, 17, daysAgo(5), 'Penjualan mouse wireless');
-      
+
       addTransaksi(findBarang('AKS-HDM-002'), 'masuk', 15, 0, daysAgo(32), 'Pembelian kabel HDMI');
       addTransaksi(findBarang('AKS-HDM-002'), 'keluar', 1, 15, daysAgo(20), 'Penjualan kabel HDMI');
       addTransaksi(findBarang('AKS-HDM-002'), 'keluar', 2, 14, daysAgo(10), 'Penjualan kabel HDMI');
-      
+
       addTransaksi(findBarang('CON-TPS-001'), 'masuk', 12, 0, daysAgo(20), 'Pembelian thermal paste');
       addTransaksi(findBarang('CON-TPS-001'), 'keluar', 2, 12, daysAgo(16), 'Penjualan thermal paste');
       addTransaksi(findBarang('CON-TPS-001'), 'keluar', 3, 10, daysAgo(11), 'Penjualan thermal paste');
-      
+
       addTransaksi(findBarang('DEV-LTP-001'), 'masuk', 3, 0, daysAgo(50), 'Pembelian laptop bekas');
       addTransaksi(findBarang('DEV-LTP-001'), 'keluar', 1, 3, daysAgo(7), 'Penjualan laptop bekas');
 
-      // 4. Generate Servis sesuai alur baru stok-servis
+      // 4. Generate Servis sesuai alur stok-servis
       const serviceScenarios: Array<{
         noNota: string;
         namaPelanggan: string;
@@ -273,12 +272,10 @@ export default function SeedData() {
         },
       ];
 
-      // Lacak pengurangan stok per barang untuk disesuaikan di dokumen barang
       const stokReduction = new Map<string, number>();
 
       serviceScenarios.forEach((service) => {
         const serviceRef = doc(collection(db, 'services'));
-        // Stok dikurangi saat proses/selesai/diambil dan ada sparepart
         const shouldDeductStock = service.status === 'proses' || service.status === 'selesai' || service.status === 'diambil';
         const stokDikurangi = shouldDeductStock && service.spareparts.length > 0;
         const isPickedUp = service.status === 'diambil';
@@ -310,7 +307,6 @@ export default function SeedData() {
         });
 
         if (stokDikurangi) {
-          // Kumpulkan pengurangan stok untuk diterapkan ke dokumen barang
           service.spareparts.forEach((sparepart) => {
             stokReduction.set(
               sparepart.barang.id,
@@ -319,15 +315,12 @@ export default function SeedData() {
           });
         }
 
-        // Buat entry transaksi resmi HANYA untuk servis berstatus 'diambil'
-        // (konsisten dengan logika syncSparepartUsage di useServices.ts)
         if (isPickedUp && stokDikurangi) {
           service.spareparts.forEach((sparepart) => {
             const jumlahTerpakai = sparepart.jumlah;
             const stokSesudah = sparepart.barang.stok - (stokReduction.get(sparepart.barang.id) ?? jumlahTerpakai);
             const stokSebelum = stokSesudah + jumlahTerpakai;
             const hargaSatuan = sparepart.barang.hargaJual;
-            // ID deterministik agar sesuai pola officialServiceTransactionIds di Riwayat.tsx
             const transaksiRef = doc(db, 'transaksi', `service-${serviceRef.id}-${sparepart.barang.id}`);
             batch.set(transaksiRef, {
               barangId: sparepart.barang.id,
@@ -351,7 +344,6 @@ export default function SeedData() {
         }
       });
 
-      // Terapkan pengurangan stok ke dokumen barang
       stokReduction.forEach((jumlahKurang, barangId) => {
         const barangItem = barang.find((b) => b.id === barangId);
         if (barangItem) {
