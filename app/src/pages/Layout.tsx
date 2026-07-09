@@ -55,7 +55,7 @@ const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   {
     id: 'inventaris',
-    label: 'Inventaris',
+    label: 'Manajemen Inventaris',
     icon: Boxes,
     children: [
       { id: 'barang', label: 'Data Barang', icon: Package },

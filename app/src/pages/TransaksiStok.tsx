@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, ArrowDownLeft, ArrowUpRight, Package, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Barang, TipeTransaksi } from '@/types';
 
 export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFilterMode?: 'all' | 'perlu-restock' } = {}) {
@@ -129,10 +130,19 @@ export default function TransaksiStok({ initialFilterMode = 'all' }: { initialFi
       userData?.name || ''
     );
 
-    if (result.success) {
+        if (result.success) {
       setIsDialogOpen(false);
       setSelectedBarang(null);
       resetForm();
+            if (formData.tipe === 'masuk') {
+        toast.success('Stok masuk berhasil dicatat', {
+          description: `${selectedBarang.nama} — ${formData.jumlah} ${selectedBarang.satuan}`
+        });
+      } else {
+        toast.info('Stok keluar berhasil dicatat', {
+          description: `${selectedBarang.nama} — ${formData.jumlah} ${selectedBarang.satuan}`
+        });
+      }
     } else {
       setError(result.error || transaksiError || 'Gagal melakukan transaksi');
     }
