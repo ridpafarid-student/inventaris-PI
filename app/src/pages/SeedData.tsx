@@ -186,7 +186,7 @@ export default function SeedData() {
       const serviceScenarios: Array<{
         noNota: string;
         namaPelanggan: string;
-        nomorHp: string;
+        nomorHp: number;
         jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
         modelPerangkat: string;
         deskripsiMasalah: string;
@@ -198,7 +198,7 @@ export default function SeedData() {
         {
           noNota: 'NT-0001',
           namaPelanggan: 'Raka Pratama',
-          nomorHp: '081234560001',
+          nomorHp: 81234560001,
           jenisPerangkat: 'Laptop',
           modelPerangkat: 'ASUS A456U',
           deskripsiMasalah: 'Laptop mati total, menunggu pengecekan awal',
@@ -210,7 +210,7 @@ export default function SeedData() {
         {
           noNota: 'NT-0002',
           namaPelanggan: 'Dina Safitri',
-          nomorHp: '081234560002',
+          nomorHp: 81234560002,
           jenisPerangkat: 'Laptop',
           modelPerangkat: 'Lenovo Ideapad 330',
           deskripsiMasalah: 'Adaptor rusak dan stok charger sedang kosong',
@@ -222,7 +222,7 @@ export default function SeedData() {
         {
           noNota: 'NT-0003',
           namaPelanggan: 'Bima Saputra',
-          nomorHp: '081234560003',
+          nomorHp: 81234560003,
           jenisPerangkat: 'Laptop',
           modelPerangkat: 'Acer Aspire 5',
           deskripsiMasalah: 'Keyboard beberapa tombol tidak berfungsi',
@@ -234,7 +234,7 @@ export default function SeedData() {
         {
           noNota: 'NT-0004',
           namaPelanggan: 'Sari Wulandari',
-          nomorHp: '081234560004',
+          nomorHp: 81234560004,
           jenisPerangkat: 'Laptop',
           modelPerangkat: 'HP Pavilion 14',
           deskripsiMasalah: 'Upgrade SSD dan instal ulang sistem',
@@ -246,7 +246,7 @@ export default function SeedData() {
         {
           noNota: 'NT-0005',
           namaPelanggan: 'Agus Setiawan',
-          nomorHp: '081234560005',
+          nomorHp: 81234560005,
           jenisPerangkat: 'CPU',
           modelPerangkat: 'PC Rakitan i5',
           deskripsiMasalah: 'Upgrade RAM dan pembersihan thermal',
@@ -261,7 +261,7 @@ export default function SeedData() {
         {
           noNota: 'NT-0006',
           namaPelanggan: 'Maya Kartika',
-          nomorHp: '081234560006',
+          nomorHp: 81234560006,
           jenisPerangkat: 'Laptop',
           modelPerangkat: 'Dell Inspiron 14',
           deskripsiMasalah: 'LCD pecah, penggantian panel sedang diproses',

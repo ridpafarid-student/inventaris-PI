@@ -31,7 +31,7 @@ interface AddServiceModalProps {
 export interface ServiceFormState {
   noNota: string;
   namaPelanggan: string;
-  nomorHp: string;
+    nomorHp: number;
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
   modelPerangkat: string;
   deskripsiMasalah: string;
@@ -43,7 +43,7 @@ export interface ServiceFormState {
 const initialForm: ServiceFormState = {
   noNota: '',
   namaPelanggan: '',
-  nomorHp: '',
+    nomorHp: 0,
   jenisPerangkat: 'Smartphone',
   modelPerangkat: '',
   deskripsiMasalah: '',
@@ -168,8 +168,8 @@ export default function AddServiceModal({
   const handleSubmit = async () => {
     setFormError('');
 
-    if (!formData.namaPelanggan.trim() || !formData.nomorHp.trim() || !formData.modelPerangkat.trim()) {
-      setFormError('Nama pelanggan, nomor HP, dan model perangkat wajib diisi');
+        if (!formData.namaPelanggan.trim() || !formData.nomorHp || !formData.modelPerangkat.trim()) {
+      setFormError('Nama pelanggan, nomor telepon, dan model perangkat wajib diisi');
       return;
     }
 
@@ -188,7 +188,7 @@ export default function AddServiceModal({
       ...formData,
       noNota: formData.noNota.trim(),
       namaPelanggan: formData.namaPelanggan.trim(),
-      nomorHp: formData.nomorHp.trim(),
+      nomorHp: formData.nomorHp,
       modelPerangkat: formData.modelPerangkat.trim(),
       deskripsiMasalah: formData.deskripsiMasalah.trim(),
       sparepartDigunakan: formData.sparepartDigunakan.filter((item) => item.productId),
@@ -228,12 +228,17 @@ export default function AddServiceModal({
               />
             </div>
             <div className="space-y-2">
-              <Label>Nomor HP</Label>
-              <Input
-                value={formData.nomorHp}
-                onChange={(event) => handleFieldChange('nomorHp', event.target.value)}
-                placeholder="08xxxxxxxxxx"
-              />
+              <Label>Nomor Telepon</Label>
+                <Input
+                  type="tel"
+                  inputMode="numeric"
+                  value={formData.nomorHp === 0 ? '' : String(formData.nomorHp)}
+                  onChange={(event) => {
+                    const digits = event.target.value.replace(/\D/g, '');
+                    handleFieldChange('nomorHp', digits ? parseInt(digits, 10) : 0);
+                  }}
+                  placeholder="08xxxxxxxxxx"
+                />
             </div>
           </div>
 

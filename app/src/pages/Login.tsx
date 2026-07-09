@@ -70,7 +70,7 @@ export default function Login() {
           <h2 className={`text-text-primary text-[32px] font-bold tracking-tight leading-tight mb-2 transition-all duration-700 ${
             mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
           }`}>
-            Sistem Manajemen<br />Inventaris & Servis
+            Sistem Informasi<br />Inventaris & Servis
           </h2>
           <div className={`w-12 h-1 bg-[#c8352a] rounded-full mb-6 transition-all duration-700 delay-100 ${
             mounted ? 'opacity-100 w-12' : 'opacity-0 w-0'
@@ -78,7 +78,7 @@ export default function Login() {
           <p className={`text-text-secondary text-sm leading-relaxed max-w-[320px] mb-10 transition-all duration-700 delay-200 ${
             mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
           }`}>
-            Kelola stok barang, data servis, dan laporan operasional toko dalam satu platform terpusat.
+            Kelola stok barang, data servis, dan laporan operasional toko dalam satu sistem terpusat.
           </p>
 
                     {/* Clean feature list with big numbers */}
@@ -86,7 +86,7 @@ export default function Login() {
             {[
                             { no: '01', title: 'Manajemen Inventaris Barang', delay: 'delay-200' },
                               { no: '02', title: 'Monitoring Status Jasa Servis', delay: 'delay-300' },
-                              { no: '03', title: 'Rekomendasi Restock Berdasarkan Ambang Batas Minimum Stok', delay: 'delay-500' },
+                              { no: '03', title: 'Rekomendasi Restock Berbasis Ambang Batas Stok Minimum', delay: 'delay-500' },
             ].map((item) => (
               <div 
                 key={item.no} 

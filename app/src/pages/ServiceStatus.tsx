@@ -50,7 +50,7 @@ export default function ServiceStatus({ initialStatus = 'all' }: { initialStatus
     const matchesSearch = [
       service.namaPelanggan,
       service.noNota ?? '',
-      service.nomorHp,
+            String(service.nomorHp),
       service.modelPerangkat,
       service.deskripsiMasalah,
     ].some((value) => value.toLowerCase().includes(query));
@@ -64,8 +64,8 @@ export default function ServiceStatus({ initialStatus = 'all' }: { initialStatus
     return services
       .filter((service) => service.status === 'diambil')
       .filter((service) =>
-        [service.namaPelanggan, service.noNota ?? '', service.nomorHp, service.modelPerangkat]
-          .some((value) => value.toLowerCase().includes(query))
+        [service.namaPelanggan, service.noNota ?? '', String(service.nomorHp), service.modelPerangkat]
+              .some((value) => value.toLowerCase().includes(query))
       )
       .sort((a, b) => {
         const dateA = a.pickedUpAt instanceof Timestamp ? a.pickedUpAt.toDate() : new Date(a.pickedUpAt ?? a.updatedAt ?? a.createdAt);

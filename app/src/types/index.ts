@@ -119,7 +119,7 @@ export interface ServiceItem {
   id: string;
   noNota?: string;
   namaPelanggan: string;
-  nomorHp: string;
+    nomorHp: number;
   jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
   modelPerangkat: string;
   deskripsiMasalah: string;
