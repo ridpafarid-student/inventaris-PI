@@ -119,12 +119,12 @@ export interface ServiceItem {
   id: string;
   noNota?: string;
   namaPelanggan: string;
-    nomorHp: number;
-  jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
-  modelPerangkat: string;
-  deskripsiMasalah: string;
-  biayaJasa?: number;
-  status: ServiceStatus;
+    nomorHp: string;
+    jenisPerangkat: 'Laptop' | 'Smartphone' | 'Tablet' | 'CPU' | 'Printer';
+    modelPerangkat: string;
+    deskripsiMasalah: string;
+    biayaJasa?: number;
+    status: ServiceStatus;
   sparepartDigunakan?: ServiceSparepartItem[];
   stokDikurangi?: boolean;
   completedAt?: Date | null;
