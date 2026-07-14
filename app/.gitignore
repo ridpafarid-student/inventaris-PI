@@ -66,6 +66,9 @@ vite.config.ts.timestamp-*
 DESIGN.md
 info.md
 
+# Skenario pengujian (local only)
+skenario pengujian-code/
+
 # Package manager locks (keep only one — uncomment the one not in use)
 # yarn.lock
 # pnpm-lock.yaml

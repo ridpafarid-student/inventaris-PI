@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, Package, Wrench, ShoppingCart } from 'lucide-react';
 import { getFirebaseAuthErrorMessage } from '@/lib/firebase-auth-errors';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -46,12 +46,12 @@ export default function Login() {
   };
 
       return (
-        <div className={`flex min-h-screen bg-surface-base transition-opacity duration-700 ${
+                <div className={`flex min-h-screen w-full overflow-hidden bg-surface-base transition-opacity duration-700 ${
       mounted ? 'opacity-100' : 'opacity-0'
     }`}>
       {/* Left Panel - Branding */}
       <div 
-        className="login-left-panel w-[45%] bg-surface-base flex flex-col justify-between p-12 border-r border-border-default relative overflow-hidden"
+        className="hidden md:flex w-[45%] bg-surface-base flex-col justify-between p-12 border-r border-border-default relative overflow-hidden"
         style={{
           backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(128,128,128,0.15) 1.5px, transparent 0)',
           backgroundSize: '24px 24px',
@@ -81,20 +81,20 @@ export default function Login() {
             Kelola stok barang, data servis, dan laporan operasional toko dalam satu sistem terpusat.
           </p>
 
-                    {/* Clean feature list with big numbers */}
+                                        {/* Clean feature list with icons */}
           <div className="flex flex-col gap-6">
             {[
-                            { no: '01', title: 'Manajemen Inventaris Barang', delay: 'delay-200' },
-                              { no: '02', title: 'Monitoring Status Jasa Servis', delay: 'delay-300' },
-                              { no: '03', title: 'Rekomendasi Restock Berbasis Ambang Batas Stok Minimum', delay: 'delay-500' },
+              { icon: Package, title: 'Manajemen Inventaris Barang', delay: 'delay-200' },
+              { icon: Wrench, title: 'Monitoring Status Jasa Servis', delay: 'delay-300' },
+              { icon: ShoppingCart, title: 'Rekomendasi Restock Berbasis Ambang Batas Stok Minimum', delay: 'delay-500' },
             ].map((item) => (
-              <div 
-                key={item.no} 
-                className={`flex items-baseline gap-4 transition-all duration-500 ${
+              <div
+                key={item.title}
+                className={`flex items-start gap-4 transition-all duration-500 ${
                   mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
                 } ${item.delay}`}
               >
-                <span className="font-mono text-md font-bold text-[#c8352a] select-none">{item.no}</span>
+                <item.icon size={16} className="text-[#c8352a] shrink-0 mt-0.5" />
                 <span className="text-text-primary text-sm font-medium tracking-wide">{item.title}</span>
               </div>
             ))}
@@ -112,26 +112,45 @@ export default function Login() {
       </div>
 
             {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-surface-muted relative">
-        <div className="absolute top-4 right-4 z-20">
-          <ThemeToggle />
-        </div>
-                {/* Subtle background glow */}
+            <div
+              className="flex-1 min-w-0 flex flex-col items-center justify-center min-h-screen py-8 px-4 sm:px-8 bg-surface-muted relative overflow-hidden"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(128,128,128,0.08) 1.5px, transparent 0)',
+          backgroundSize: '24px 24px',
+        }}
+      >
+                                {/* ThemeToggle — absolut pojok kanan atas, semua ukuran layar */}
+                <div className="absolute top-4 right-4 z-20">
+                  <ThemeToggle />
+                </div>
+        {/* Subtle background glow */}
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-[#c8352a]/5 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-[#c8352a]/5 rounded-full blur-[100px] pointer-events-none animate-pulse" />
 
-                <div className={`w-full max-w-[420px] bg-surface-base border border-border-default backdrop-blur-xl rounded-xl p-8 md:p-10 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.8)] hover:border-border-muted hover:shadow-[0_8px_40px_rgb(200,53,42,0.15)] relative z-10 transition-all duration-500 ${
+                {/* Mobile brand zone — center, hanya tampil di bawah md */}
+        <div className={`w-full max-w-[380px] mb-5 md:hidden transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+          <div className="flex flex-col items-center text-center gap-2">
+            <Logo width={180} height={45} />
+            <p className="text-text-secondary/50 text-[11px] tracking-widest uppercase font-medium">Sistem Informasi Inventaris &amp; Servis</p>
+          </div>
+          
+        </div>
+
+                <div className={`w-full max-w-[380px] md:max-w-[420px] bg-surface-base border border-border-default backdrop-blur-xl rounded-xl p-5 sm:p-6 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.85)] hover:shadow-[0_24px_70px_rgba(200,53,42,0.18)] relative z-10 transition-all duration-500 ${
                   mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                 } ${
                   shake ? 'animate-shake' : ''
                 }`}>
 
-                    <div className="mb-8">
-            <h1 className={`text-[24px] font-bold text-text-primary mb-2 tracking-tight transition-all duration-500 ${
+                                                                                
+
+                                        <div className="mb-6 md:mb-8 text-center">
+            <h1 className={`text-[22px] font-bold text-text-primary mb-1.5 tracking-tight transition-all duration-500 ${
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
             }`}>
               Masuk ke Akun Anda
             </h1>
-            <p className={`text-text-secondary/80 text-sm transition-all duration-500 delay-100 ${
+            <p className={`text-text-secondary/70 text-xs transition-all duration-500 delay-100 ${
               mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
             }`}>
               Gunakan email dan password yang terdaftar
@@ -254,7 +273,29 @@ export default function Login() {
               )}
             </button>
           </form>
-        </div>
+                </div>
+
+                {/* Mobile fitur bawah — hanya tampil di bawah md */}
+                <div className={`w-full max-w-[380px] mt-8 md:hidden transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+                  <div className="h-px bg-border-default/40 mb-3" />
+                                    <div className="flex flex-col items-center gap-2.5">
+                                        {[
+                      { icon: Package, lines: ['Manajemen Inventaris Barang'] },
+                      { icon: Wrench, lines: ['Monitoring Status Jasa Servis'] },
+                      { icon: ShoppingCart, lines: ['Rekomendasi Restock Berbasis', 'Ambang Batas Stok Minimum'] },
+                    ].map((item) => (
+                      <div key={item.lines[0]} className="flex items-start gap-2.5">
+                        <item.icon size={13} className="text-[#c8352a] shrink-0 mt-0.5" />
+                        <span className="text-text-secondary/70 text-xs tracking-wide">
+                          {item.lines.map((line, i) => (
+                            <span key={i} className="block">{line}</span>
+                          ))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-text-secondary/30 text-[11px] mt-4 text-center">© 2026 Mthree Computer · Sistem Internal</p>
+                </div>
       </div>
 
             {/* Forgot Password Dialog */}
@@ -263,13 +304,8 @@ export default function Login() {
               onOpenChange={setShowForgotPassword}
             />
 
-            {/* Responsive style */}
+                        {/* Responsive style */}
             <style>{`
-              @media (max-width: 768px) {
-                .login-left-panel {
-                  display: none !important;
-                }
-              }
               @keyframes shake {
                 0%, 100% { transform: translateX(0); }
                 25% { transform: translateX(-8px); }

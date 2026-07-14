@@ -8,7 +8,7 @@ import { useBarang } from '@/hooks/useBarang';
 import { useServices } from '@/hooks/useServices';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+
 import {
   Select,
   SelectContent,
@@ -302,24 +302,7 @@ export default function Laporan() {
     });
   };
 
-    const getServiceStatusBadgeClass = (status: ServiceStatus) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-surface-muted text-text-secondary';
-      case 'proses':
-        return 'bg-status-info/10 text-status-info';
-      case 'menunggu-sparepart':
-        return 'bg-status-warning/10 text-status-warning';
-            case 'selesai':
-        return 'bg-status-success/10 text-status-success';
-      case 'diambil':
-        return 'bg-neutral-500/10 text-neutral-600';
-      default:
-        return 'bg-surface-muted text-text-secondary';
-    }
-  };
-
-  const getServiceStatusLabel = (status: ServiceStatus) => {
+    const getServiceStatusLabel = (status: ServiceStatus) => {
     switch (status) {
       case 'pending':
         return 'Pending';
@@ -336,15 +319,28 @@ export default function Laporan() {
     }
   };
 
-  // Export PDF
+    // Export PDF
   const exportPDF = async () => {
     if (!reportRef.current) return;
 
-    const canvas = await html2canvas(reportRef.current, {
+    // Paksa light mode pada elemen report sebelum di-capture
+    // agar dark mode dari browser/OS tidak ikut ter-render ke PDF
+    const el = reportRef.current;
+    const prevColorScheme = el.style.colorScheme;
+    const prevFilter = el.style.filter;
+    el.style.colorScheme = 'light';
+    el.style.filter = 'none';
+
+    const canvas = await html2canvas(el, {
       scale: 2,
       useCORS: true,
-      logging: false
+      logging: false,
+      backgroundColor: '#ffffff',
     });
+
+    // Kembalikan style semula
+    el.style.colorScheme = prevColorScheme;
+    el.style.filter = prevFilter;
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -629,10 +625,11 @@ export default function Laporan() {
 
       {/* Report Content (for PDF export) */}
       <div
-        aria-hidden="true"
+                aria-hidden="true"
         className="pointer-events-none fixed -left-[10000px] top-0 w-[1024px] overflow-hidden opacity-0"
+        style={{ colorScheme: 'light' }}
       >
-                <div ref={reportRef} className="bg-white p-4 md:p-8 text-gray-900">
+                <div ref={reportRef} className="bg-white p-4 md:p-8 text-gray-900" style={{ colorScheme: 'light', color: '#111827', backgroundColor: '#ffffff' }}>
                 {/* Report Header */}
                 <div className="text-center mb-8 border-b-2 border-gray-800 pb-4">
           <h2 className="text-2xl font-bold text-gray-900">LAPORAN INVENTARIS & SERVIS</h2>
@@ -748,41 +745,38 @@ export default function Laporan() {
         <div className="mb-8">
           <h3 className="mb-3 text-lg font-semibold text-gray-900">Riwayat Transaksi Barang</h3>
                     <div className="md:hidden space-y-3">
-            {filteredTransaksiGabungan.length === 0 ? (
-              <div className="rounded-sm border border-border-default py-8 text-center text-text-secondary">
+                        {filteredTransaksiGabungan.length === 0 ? (
+              <div className="rounded-sm border border-gray-300 py-8 text-center text-gray-500">
                 Tidak ada data transaksi
               </div>
             ) : (
               filteredTransaksiGabungan.map((transaksi, index) => (
-                <div key={transaksi.id} className="rounded-sm border border-border-default p-4 space-y-3">
+                <div key={transaksi.id} className="rounded-sm border border-gray-200 p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs text-text-secondary">#{index + 1} - {formatDate(transaksi.createdAt)}</p>
-                      <p className="font-semibold text-text-primary break-words">{transaksi.barangNama}</p>
-                      <p className="text-xs text-text-secondary">{transaksi.barangKode}</p>
-                                            {isServiceTransaction(transaksi) && (
-                        <p className="text-xs text-status-info mt-1">{transaksi.keterangan}</p>
+                      <p className="text-xs text-gray-500">#{index + 1} - {formatDate(transaksi.createdAt)}</p>
+                      <p className="font-semibold text-gray-900 break-words">{transaksi.barangNama}</p>
+                      <p className="text-xs text-gray-500">{transaksi.barangKode}</p>
+                      {isServiceTransaction(transaksi) && (
+                        <p className="text-xs text-blue-600 mt-1">{transaksi.keterangan}</p>
                       )}
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={transaksi.tipe === 'masuk' ? 'bg-status-success/10 border-status-success/40 text-status-success shrink-0' : 'bg-status-danger/10 border-status-danger/40 text-status-danger shrink-0'}
-                    >
+                    <span className={`text-xs font-semibold px-2 py-1 rounded shrink-0 ${transaksi.tipe === 'masuk' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {transaksi.tipe === 'masuk' ? 'Masuk' : 'Keluar'}
-                    </Badge>
+                    </span>
                   </div>
-                                    <div className="grid grid-cols-3 gap-3 text-sm">
-                    <div className="rounded-sm bg-surface-muted p-3">
-                      <p className="text-text-secondary">Jumlah</p>
-                      <p className="mt-1 font-medium text-text-primary">{transaksi.jumlah}</p>
+                  <div className="grid grid-cols-3 gap-3 text-sm">
+                    <div className="rounded-sm bg-gray-100 p-3">
+                      <p className="text-gray-500">Jumlah</p>
+                      <p className="mt-1 font-medium text-gray-900">{transaksi.jumlah}</p>
                     </div>
-                    <div className="rounded-sm bg-surface-muted p-3">
-                      <p className="text-text-secondary">Harga</p>
-                      <p className="mt-1 font-medium text-text-primary break-words">{formatRupiah(transaksi.hargaSatuan)}</p>
+                    <div className="rounded-sm bg-gray-100 p-3">
+                      <p className="text-gray-500">Harga</p>
+                      <p className="mt-1 font-medium text-gray-900 break-words">{formatRupiah(transaksi.hargaSatuan)}</p>
                     </div>
-                    <div className="rounded-sm bg-surface-muted p-3">
-                      <p className="text-text-secondary">Total</p>
-                      <p className="mt-1 font-semibold text-text-primary break-words">{formatRupiah(transaksi.totalHarga)}</p>
+                    <div className="rounded-sm bg-gray-100 p-3">
+                      <p className="text-gray-500">Total</p>
+                      <p className="mt-1 font-semibold text-gray-900 break-words">{formatRupiah(transaksi.totalHarga)}</p>
                     </div>
                   </div>
                 </div>
@@ -862,49 +856,49 @@ export default function Laporan() {
 
                                 <div>
           <h3 className="mb-3 text-lg font-semibold text-gray-900">Riwayat Transaksi Servis</h3>
-          <div className="md:hidden space-y-3">
+                    <div className="md:hidden space-y-3">
             {filteredServices.length === 0 ? (
-              <div className="rounded-sm border border-border-default py-8 text-center text-text-secondary">
+              <div className="rounded-sm border border-gray-300 py-8 text-center text-gray-500">
                 Tidak ada data servis
               </div>
             ) : (
               filteredServices.map((service, index) => (
-                <div key={service.id} className="rounded-sm border border-border-default p-4 space-y-3">
+                <div key={service.id} className="rounded-sm border border-gray-200 p-4 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs text-text-secondary">#{index + 1} - {formatDate(service.createdAt)}</p>
-                      <p className="font-semibold text-text-primary">{service.namaPelanggan}</p>
-                      <p className="text-xs text-text-secondary">{service.nomorHp}</p>
+                      <p className="text-xs text-gray-500">#{index + 1} - {formatDate(service.createdAt)}</p>
+                      <p className="font-semibold text-gray-900">{service.namaPelanggan}</p>
+                      <p className="text-xs text-gray-500">{service.nomorHp}</p>
                     </div>
-                    <Badge className={`${getServiceStatusBadgeClass(service.status)} shrink-0`}>
+                    <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-100 text-gray-700 shrink-0">
                       {getServiceStatusLabel(service.status)}
-                    </Badge>
+                    </span>
                   </div>
-                                    <div className="rounded-sm bg-surface-muted p-3">
-                    <p className="text-text-secondary text-sm">Perangkat</p>
-                    <p className="mt-1 font-medium text-text-primary">{service.modelPerangkat}</p>
-                    <p className="text-xs text-text-secondary">{service.jenisPerangkat}</p>
+                  <div className="rounded-sm bg-gray-100 p-3">
+                    <p className="text-gray-500 text-sm">Perangkat</p>
+                    <p className="mt-1 font-medium text-gray-900">{service.modelPerangkat}</p>
+                    <p className="text-xs text-gray-500">{service.jenisPerangkat}</p>
                   </div>
-                  <div className="rounded-sm bg-surface-muted p-3">
-                    <p className="text-text-secondary text-sm">Sparepart</p>
-                    <p className="mt-1 text-sm text-text-primary break-words">
+                  <div className="rounded-sm bg-gray-100 p-3">
+                    <p className="text-gray-500 text-sm">Sparepart</p>
+                    <p className="mt-1 text-sm text-gray-900 break-words">
                       {service.sparepartDigunakan?.length
                         ? service.sparepartDigunakan.map((item) => `${item.namaProduk} x${item.jumlah}`).join(', ')
                         : '-'}
                     </p>
                   </div>
-                  <div className="rounded-sm bg-surface-muted p-3">
-                    <p className="text-text-secondary text-sm">Total</p>
-                    <p className="mt-1 font-semibold text-text-primary">{getServiceSparepartTotal(service)}</p>
+                  <div className="rounded-sm bg-gray-100 p-3">
+                    <p className="text-gray-500 text-sm">Total</p>
+                    <p className="mt-1 font-semibold text-gray-900">{getServiceSparepartTotal(service)}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-sm bg-surface-muted p-3">
-                      <p className="text-text-secondary text-sm">Biaya Jasa</p>
-                      <p className="mt-1 font-semibold text-text-primary">{formatRupiah(service.biayaJasa ?? 0)}</p>
+                    <div className="rounded-sm bg-gray-100 p-3">
+                      <p className="text-gray-500 text-sm">Biaya Jasa</p>
+                      <p className="mt-1 font-semibold text-gray-900">{formatRupiah(service.biayaJasa ?? 0)}</p>
                     </div>
-                    <div className="rounded-sm bg-surface-muted p-3">
-                      <p className="text-text-secondary text-sm">Total Tagihan</p>
-                      <p className="mt-1 font-semibold text-text-primary">{formatRupiah(getServiceTotalValue(service))}</p>
+                    <div className="rounded-sm bg-gray-100 p-3">
+                      <p className="text-gray-500 text-sm">Total Tagihan</p>
+                      <p className="mt-1 font-semibold text-gray-900">{formatRupiah(getServiceTotalValue(service))}</p>
                     </div>
                   </div>
                 </div>
