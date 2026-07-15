@@ -132,11 +132,11 @@ function StatCard({
     <>
       <div className="flex-1 min-w-0 text-left">
         <p className={`truncate text-sm font-medium leading-6 ${surface.secondary}`}>{title}</p>
-        <p className={`mt-1 text-2xl font-bold leading-8 tabular-nums ${valueColor}`}>{value}</p>
+        <p className={`mt-1 text-base sm:text-2xl font-bold leading-tight tabular-nums ${valueColor}`}>{value}</p>
         {sub && <p className={`mt-1 text-[13px] font-normal leading-5 ${surface.secondary}`}>{sub}</p>}
       </div>
-      <div className={`shrink-0 rounded-md p-4 transition-transform duration-300 ${iconBg} ${isClickable ? 'group-hover:scale-110' : ''}`}>
-        <Icon style={{ width: '28px', height: '28px' }} className={`transition-transform duration-300 ${iconColor} ${isClickable ? 'group-hover:rotate-3' : ''}`} />
+      <div className={`shrink-0 rounded-md p-2.5 sm:p-4 transition-transform duration-300 ${iconBg} ${isClickable ? 'group-hover:scale-110' : ''}`}>
+        <Icon className={`w-4 h-4 sm:w-7 sm:h-7 transition-transform duration-300 ${iconColor} ${isClickable ? 'group-hover:rotate-3' : ''}`} />
       </div>
     </>
   );
@@ -146,7 +146,7 @@ function StatCard({
       <button
         type="button"
         onClick={onClick}
-        className={`group flex w-full items-start justify-between gap-4 rounded-[12px] border p-5 text-left shadow-sm transition-all duration-300 cursor-pointer ${surface.panel} ${surface.focus} hover:-translate-y-1 hover:shadow-lg ${surface.border} hover:bg-surface-muted/80 active:border-border-default`}
+        className={`group flex w-full items-start justify-between gap-2 sm:gap-4 rounded-[12px] border p-3 sm:p-5 text-left shadow-sm transition-all duration-300 cursor-pointer ${surface.panel} ${surface.focus} hover:-translate-y-1 hover:shadow-lg ${surface.border} hover:bg-surface-muted/80 active:border-border-default`}
       >
         {content}
       </button>
@@ -155,7 +155,7 @@ function StatCard({
 
   return (
     <div
-      className={`flex items-start justify-between gap-4 rounded-[12px] border p-5 shadow-sm transition-colors duration-150 ${surface.panel} ${surface.panelHover} ${surface.border}`}
+      className={`flex items-start justify-between gap-2 sm:gap-4 rounded-[12px] border p-3 sm:p-5 shadow-sm transition-colors duration-150 ${surface.panel} ${surface.panelHover} ${surface.border}`}
     >
       {content}
     </div>
